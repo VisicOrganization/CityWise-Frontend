@@ -35,42 +35,27 @@ const DEFAULT_VIEW_STATE: ViewState = {
   pitch: 0,
 };
 
-
-function DemoMarker({ marker }: { marker: DemoMapMarker }) {
-  const appearance = categoryAppearance[marker.category];
-
-  return (
-    <Marker longitude={marker.longitude} latitude={marker.latitude} anchor="bottom">
-      <button
-        type="button"
-        className={`demo-marker ${appearance.className} ${marker.kind === "search" ? "marker-search-hit" : ""}`}
-        aria-label={marker.label}
-      >
-        <span className="demo-marker-icon">{appearance.icon}</span>
-      </button>
-      <div className="demo-marker-label">{marker.label}</div>
-    </Marker>
-  );
-}
-
-
 interface CityDemoMapProps {
   markers?: DemoMapMarker[];
+  activeMarkerId?: string | null;
   searchQuery: string;
   searchResults: string[];
   onSearchChange: (value: string) => void;
   onSearchSubmit: () => void;
   onSelectResult: (label: string) => void;
+  onMarkerSelect: (marker: DemoMapMarker) => void;
 }
 
 
 export function CityDemoMap({
   markers = demoMapMarkers,
+  activeMarkerId,
   searchQuery,
   searchResults,
   onSearchChange,
   onSearchSubmit,
   onSelectResult,
+  onMarkerSelect,
 }: CityDemoMapProps) {
   const [viewState, setViewState] = useState(DEFAULT_VIEW_STATE);
 
@@ -98,7 +83,17 @@ export function CityDemoMap({
         style={{ width: "100%", height: "100%" }}
       >
         {markers.map((marker) => (
-          <DemoMarker key={marker.id} marker={marker} />
+          <Marker key={marker.id} longitude={marker.longitude} latitude={marker.latitude} anchor="bottom">
+            <button
+              type="button"
+              className={`demo-marker ${categoryAppearance[marker.category].className} ${marker.kind === "search" ? "marker-search-hit" : ""} ${activeMarkerId === marker.id ? "marker-active" : ""}`}
+              aria-label={marker.label}
+              onClick={() => onMarkerSelect(marker)}
+            >
+              <span className="demo-marker-icon">{categoryAppearance[marker.category].icon}</span>
+            </button>
+            <div className="demo-marker-label">{marker.label}</div>
+          </Marker>
         ))}
       </Map>
 

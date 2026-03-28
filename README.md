@@ -16,8 +16,14 @@
 - the landing page and `/map` view use mock-only content and markers
 - the `/map` screen uses a general LA-focused mock map, not backend data
 - the `/map` search uses a demo geocoding hack and drops a generated sample marker at the searched location so the map feels alive before the side panel exists
-- the details side panel is intentionally not implemented yet
+- clicking a map marker opens a details panel that pulls one real project record from the backend and shows its title, voting record, and timeline
 - the district overview route remains available for the backend-driven MVP slice
+
+## Demo-only hacks
+
+- the map pins are still mock markers and are not spatially tied to the backend project being shown in the details panel
+- each marker click pairs the clicked pin with a random real backend project so the demo can visibly prove live data is flowing before the production interaction model exists
+- the `/map` geocoding flow drops a generated sample marker at the searched location instead of creating a production-quality place or project record
 
 ## Local Docker workflow
 

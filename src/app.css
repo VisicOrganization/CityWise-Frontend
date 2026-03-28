@@ -217,6 +217,7 @@ button {
 }
 
 .map-demo-screen {
+  position: relative;
   height: 100vh;
   padding: 5.8rem 1rem 1rem;
 }
@@ -328,6 +329,11 @@ button {
   box-shadow: 0 12px 24px rgba(16, 32, 51, 0.18);
 }
 
+.marker-active {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 30px rgba(16, 32, 51, 0.24);
+}
+
 .marker-housing {
   background: #c97b2d;
 }
@@ -350,6 +356,192 @@ button {
   font-weight: 600;
   white-space: nowrap;
   box-shadow: 0 8px 16px rgba(16, 32, 51, 0.12);
+}
+
+.project-details-panel {
+  position: absolute;
+  top: 7.1rem;
+  left: 1.8rem;
+  z-index: 12;
+  width: min(24rem, calc(100vw - 3.6rem));
+  max-height: calc(100vh - 9.4rem);
+  overflow: auto;
+  padding: 1.25rem;
+  border-radius: 26px;
+  background: rgba(255, 252, 246, 0.96);
+  border: 1px solid rgba(16, 32, 51, 0.08);
+  box-shadow: 0 28px 70px rgba(16, 32, 51, 0.18);
+  backdrop-filter: blur(14px);
+}
+
+.project-details-header,
+.project-details-section-header,
+.project-details-list li,
+.project-details-subhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.project-details-header {
+  align-items: start;
+}
+
+.project-details-eyebrow {
+  margin: 0 0 0.45rem;
+  color: #b45309;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.project-details-header h2 {
+  margin: 0;
+  font-family: "Fraunces", "Georgia", serif;
+  font-size: 1.85rem;
+  line-height: 1;
+}
+
+.project-details-close {
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(16, 32, 51, 0.08);
+  color: #102033;
+  font-size: 1.4rem;
+}
+
+.project-details-subhead {
+  flex-wrap: wrap;
+  justify-content: start;
+  margin-top: 1rem;
+}
+
+.details-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  background: #198754;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.details-chip-muted {
+  background: rgba(16, 32, 51, 0.08);
+  color: #102033;
+  text-transform: capitalize;
+}
+
+.project-details-section {
+  margin-top: 1.2rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid rgba(16, 32, 51, 0.08);
+}
+
+.project-detail-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin: 0;
+}
+
+.project-detail-meta-grid div {
+  padding: 0.8rem 0.9rem;
+  border-radius: 18px;
+  background: rgba(16, 32, 51, 0.05);
+}
+
+.project-detail-meta-grid dt {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(16, 32, 51, 0.56);
+}
+
+.project-detail-meta-grid dd {
+  margin: 0.35rem 0 0;
+  font-weight: 600;
+}
+
+.project-details-summary,
+.details-status-message {
+  margin: 1rem 0 0;
+  color: rgba(16, 32, 51, 0.78);
+}
+
+.details-status-error {
+  color: #991b1b;
+}
+
+.project-details-section-header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.project-details-section-header span {
+  color: rgba(16, 32, 51, 0.58);
+  font-size: 0.84rem;
+}
+
+.project-details-list,
+.project-timeline {
+  display: grid;
+  gap: 0.8rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.project-details-list li {
+  padding: 0.8rem 0.9rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.project-details-list strong {
+  color: #198754;
+}
+
+.project-timeline li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.8rem;
+}
+
+.project-timeline-dot {
+  width: 0.8rem;
+  height: 0.8rem;
+  margin-top: 0.32rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #198754, #f59e0b);
+}
+
+.project-timeline-date,
+.project-timeline-text,
+.project-timeline-doc {
+  margin: 0;
+}
+
+.project-timeline-date {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: rgba(16, 32, 51, 0.56);
+}
+
+.project-timeline-text {
+  margin-top: 0.2rem;
+}
+
+.project-timeline-doc {
+  margin-top: 0.28rem;
+  font-size: 0.86rem;
+  color: #198754;
 }
 
 .hero-panel,
@@ -561,6 +753,15 @@ button {
 
   .project-grid {
     grid-template-columns: 1fr;
+  }
+
+  .project-details-panel {
+    top: auto;
+    bottom: 1rem;
+    left: 1rem;
+    right: 1rem;
+    width: auto;
+    max-height: 48vh;
   }
 }
 

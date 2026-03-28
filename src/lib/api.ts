@@ -1,4 +1,4 @@
-import type { DistrictProjectsResponse } from "./contracts";
+import type { DistrictProjectsResponse, ProjectDetail } from "./contracts";
 
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:18100";
@@ -19,4 +19,15 @@ export async function getDistrictProjects(
   }
 
   return response.json() as Promise<DistrictProjectsResponse>;
+}
+
+export async function getProjectDetail(projectId: string): Promise<ProjectDetail> {
+  const url = new URL(`/projects/${projectId}`, API_BASE_URL);
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Failed to load project ${projectId}`);
+  }
+
+  return response.json() as Promise<ProjectDetail>;
 }

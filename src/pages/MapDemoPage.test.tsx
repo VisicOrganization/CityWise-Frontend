@@ -1,8 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import App from "../App";
 
@@ -17,6 +17,14 @@ vi.stubGlobal("fetch", fetchMock);
 
 
 describe("mock app routes", () => {
+  beforeEach(() => {
+    fetchMock.mockReset();
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
   it("renders the landing page as the entry point", async () => {
     const user = userEvent.setup();
     render(
@@ -55,5 +63,116 @@ describe("mock app routes", () => {
     expect(screen.getByText("John Lee • District 12")).toBeInTheDocument();
     expect(await screen.findByLabelText("Search query")).toHaveValue("123 Main St");
     expect(await screen.findByText("123 Main St, Los Angeles, California, United States")).toBeInTheDocument();
+  });
+
+  it("opens the details panel with backend project data when a marker is clicked", async () => {
+    const user = userEvent.setup();
+    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
+
+    fetchMock
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            district_id: 11,
+            page: 1,
+            page_size: 12,
+            total: 2,
+            total_pages: 1,
+            items: [
+              {
+                id: "25-0358",
+                title: "Council File 25-0358",
+                summary: "Wildfire recovery motion.",
+                status: "planned",
+                district_id: 11,
+                last_changed_date: "2025-04-11",
+                start_date: "2025-04-04",
+                meeting_date: "2025-04-11",
+                primary_movers: ["TRACI PARK"],
+                secondary_movers: ["HEATHER HUTT"],
+                document_count: 2,
+              },
+              {
+                id: "25-0400",
+                title: "Council File 25-0400",
+                summary: "Transit corridor updates.",
+                status: "in progress",
+                district_id: 11,
+                last_changed_date: "2025-04-12",
+                start_date: "2025-04-08",
+                meeting_date: "2025-04-12",
+                primary_movers: ["TRACI PARK"],
+                secondary_movers: [],
+                document_count: 1,
+              },
+            ],
+          }),
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            project: {
+              id: "25-0358",
+              source_council_file_id: "25-0358",
+              title: "Council File 25-0358",
+              summary: "Wildfire recovery motion.",
+              status: "planned",
+              district_id: 11,
+              about: null,
+              start_date: "2025-04-04",
+              last_changed_date: "2025-04-11",
+              end_date: null,
+              meeting_date: "2025-04-11",
+              meeting_type: "Regular",
+              vote_action: "Adopted Forthwith",
+              vote_given: "(15 - 0 - 0)",
+              reference_numbers: null,
+              mover_seconder_comment: "Wildfire recovery motion.",
+            },
+            movers: {
+              primary: [{ id: 7, name: "TRACI PARK", district_id: 11 }],
+              secondary: [],
+              other: [],
+            },
+            votes: [
+              {
+                member: { id: 7, name: "TRACI PARK", district_id: 11 },
+                vote: "YES",
+              },
+            ],
+            timeline: [
+              {
+                date: "2025-04-04",
+                type: "file_activity",
+                text: "Motion introduced.",
+                documents: [
+                  {
+                    url: "https://example.com/motion.pdf",
+                    title: "Motion PDF",
+                    date: "2025-04-04",
+                  },
+                ],
+              },
+            ],
+            documents: [],
+          }),
+        ),
+      );
+
+    render(
+      <MemoryRouter initialEntries={["/map"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByLabelText("Porter Ranch Community Park"));
+
+    expect(await screen.findByLabelText("Project details")).toBeInTheDocument();
+    expect(await screen.findByText("Council File 25-0358")).toBeInTheDocument();
+    expect(await screen.findByText("TRACI PARK")).toBeInTheDocument();
+    expect(await screen.findByText("Motion introduced.")).toBeInTheDocument();
+
+    randomSpy.mockRestore();
   });
 });
