@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 import { DistrictMap } from "../components/map/DistrictMap";
+import { AppShell } from "../components/shell/AppShell";
 import { getDistrictProjects } from "../lib/api";
 import type { DistrictProjectsResponse } from "../lib/contracts";
-import { getDistrictContent } from "../lib/districtContent";
+import { getDeterministicProjectBudget, getDistrictContent } from "../lib/districtContent";
 
 
 const PAGE_SIZE = 3;
-
 
 function formatDate(value: string | null): string {
   if (!value) {
@@ -17,44 +17,52 @@ function formatDate(value: string | null): string {
 
   return new Date(`${value}T00:00:00`).toLocaleDateString("en-US", {
     year: "numeric",
-    month: "short",
+    month: "long",
     day: "numeric",
   });
 }
 
+function formatBudget(value: number): string {
+  return value.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  });
+}
+
+function formatCompletion(status: string, lastChangedDate: string | null): string {
+  if (status === "completed" && lastChangedDate) {
+    return formatDate(lastChangedDate);
+  }
+
+  return "In progress";
+}
 
 export function DistrictOverviewPage() {
   const params = useParams<{ districtId: string }>();
   const districtId = Number(params.districtId);
   const districtContent = getDistrictContent(districtId);
 
-  const [page, setPage] = useState(1);
   const [response, setResponse] = useState<DistrictProjectsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    setPage(1);
-  }, [districtId]);
 
   useEffect(() => {
     let ignore = false;
     setIsLoading(true);
     setError(null);
 
-    getDistrictProjects(districtId, page, PAGE_SIZE)
+    getDistrictProjects(districtId, 1, PAGE_SIZE)
       .then((nextResponse) => {
-        if (ignore) {
-          return;
+        if (!ignore) {
+          setResponse(nextResponse);
         }
-        setResponse(nextResponse);
       })
       .catch((nextError: Error) => {
-        if (ignore) {
-          return;
+        if (!ignore) {
+          setError(nextError.message);
+          setResponse(null);
         }
-        setError(nextError.message);
-        setResponse(null);
       })
       .finally(() => {
         if (!ignore) {
@@ -65,94 +73,118 @@ export function DistrictOverviewPage() {
     return () => {
       ignore = true;
     };
-  }, [districtId, page]);
+  }, [districtId]);
 
   return (
-    <main className="page-shell">
-      <section className="hero-panel">
-        <div className="hero-copy">
-          <p className="eyebrow">CityWise MVP</p>
-          <h1>{districtContent.title} projects</h1>
-          <p className="lede">{districtContent.summary}</p>
-          <p className="supporting-copy">{districtContent.about}</p>
-          <dl className="district-meta">
-            <div>
-              <dt>Representative</dt>
-              <dd>{districtContent.representative}</dd>
-            </div>
-            <div>
-              <dt>Pagination</dt>
-              <dd>Fixed backend ordering, 3 projects per page</dd>
-            </div>
-          </dl>
-        </div>
-        <DistrictMap activeDistrictId={districtId} />
-      </section>
-
-      <section className="projects-panel">
-        <div className="panel-header">
-          <div>
-            <p className="eyebrow">District overview</p>
-            <h2>Projects</h2>
+    <AppShell className="district-page-shell">
+      <main className="district-overview-page">
+        <section className="district-profile-panel">
+          <div className="district-portrait" aria-hidden="true">
+            <span>{districtContent.representative.split(" ").map((part) => part[0]).join("")}</span>
           </div>
-          {response ? (
-            <p className="result-meta">
-              Page {response.page} of {Math.max(response.total_pages, 1)} · {response.total} total projects
-            </p>
-          ) : null}
-        </div>
 
-        {isLoading ? <p className="status-message">Loading district projects…</p> : null}
-        {error ? <p className="status-message error-message">{error}</p> : null}
+          <div className="district-profile-copy">
+            <h1>
+              {districtContent.representative} • {districtContent.title}
+            </h1>
 
-        {!isLoading && !error && response ? (
-          <>
-            <div className="project-grid">
+            <dl className="district-contact-grid">
+              <div>
+                <dt>Website</dt>
+                <dd>
+                  <a href={districtContent.website} target="_blank" rel="noreferrer">
+                    {districtContent.website}
+                  </a>
+                </dd>
+              </div>
+              <div>
+                <dt>Phone</dt>
+                <dd>{districtContent.phone}</dd>
+              </div>
+              <div>
+                <dt>Email</dt>
+                <dd>{districtContent.email}</dd>
+              </div>
+            </dl>
+
+            <div className="district-about-block">
+              <h2>About</h2>
+              <p>{districtContent.about}</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="district-impact-panel">
+          <p className="district-section-label">Impact Summary</p>
+          <div className="district-impact-grid">
+            {districtContent.impactSummary.map((item) => (
+              <article key={item.id} className="district-impact-card">
+                <h3>{item.label}</h3>
+                <strong>{item.stat}</strong>
+                <p>{item.description}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="district-recent-panel">
+          <div className="district-recent-header">
+            <div>
+              <p className="district-section-label">Recent Projects</p>
+              <h2>{districtContent.summary}</h2>
+            </div>
+            {response ? (
+              <p className="result-meta">
+                Showing {response.items.length} of {response.total} projects
+              </p>
+            ) : null}
+          </div>
+
+          {isLoading ? <p className="status-message">Loading district projects…</p> : null}
+          {error ? <p className="status-message error-message">{error}</p> : null}
+
+          {!isLoading && !error && response ? (
+            <div className="district-recent-list">
               {response.items.map((project) => (
-                <article key={project.id} className="project-card">
-                  <div className="card-topline">
-                    <span className="status-pill">{project.status}</span>
-                    <span className="project-id">{project.id}</span>
-                  </div>
-                  <h3>{project.title}</h3>
-                  <p>{project.summary}</p>
-                  <dl className="project-meta">
+                <article key={project.id} className="district-recent-card">
+                  <div className="district-recent-topline">
                     <div>
-                      <dt>Last updated</dt>
-                      <dd>{formatDate(project.last_changed_date)}</dd>
+                      <h3>{project.title}</h3>
+                      <p>{project.summary}</p>
+                    </div>
+                    <span className="status-pill">{project.status}</span>
+                  </div>
+
+                  <dl className="district-project-facts">
+                    <div>
+                      <dt>Budget</dt>
+                      <dd>{formatBudget(getDeterministicProjectBudget(districtId, project.id))}</dd>
                     </div>
                     <div>
-                      <dt>Introduced</dt>
+                      <dt>Started</dt>
                       <dd>{formatDate(project.start_date)}</dd>
                     </div>
                     <div>
-                      <dt>Documents</dt>
-                      <dd>{project.document_count}</dd>
+                      <dt>Completed</dt>
+                      <dd>{formatCompletion(project.status, project.last_changed_date)}</dd>
                     </div>
                   </dl>
-                  <div className="mover-row">
-                    <strong>Primary movers</strong>
-                    <span>{project.primary_movers.join(", ") || "Not available"}</span>
-                  </div>
                 </article>
               ))}
             </div>
+          ) : null}
 
-            <div className="pagination-row">
-              <button type="button" onClick={() => setPage((current) => current - 1)} disabled={page <= 1}>
-                Previous
-              </button>
-              <button
-                type="button"
-                onClick={() => setPage((current) => current + 1)}
-                disabled={page >= response.total_pages}
-              >
-                Next
-              </button>
-            </div>
-          </>
-        ) : null}
-      </section>
-    </main>
+          <div className="district-overview-footer">
+            <Link className="district-open-map" to="/map">
+              Open Map
+            </Link>
+          </div>
+        </section>
+
+        <section className="district-map-panel">
+          <DistrictMap activeDistrictId={districtId} />
+        </section>
+      </main>
+    </AppShell>
   );
 }

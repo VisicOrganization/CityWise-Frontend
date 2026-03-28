@@ -243,8 +243,10 @@ button {
   padding: 0.5rem 1rem 0.5rem 0.6rem;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.96);
+  border: 0;
   box-shadow: 0 10px 24px rgba(16, 32, 51, 0.16);
   font-weight: 600;
+  cursor: pointer;
 }
 
 .map-district-avatar {
@@ -554,6 +556,184 @@ button {
   box-shadow: 0 24px 80px rgba(16, 32, 51, 0.08);
 }
 
+.district-page-shell {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 252, 246, 0.9)),
+    radial-gradient(circle at top left, rgba(25, 135, 84, 0.08), transparent 28rem);
+}
+
+.district-overview-page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 7rem 1.25rem 2rem;
+}
+
+.district-profile-panel,
+.district-impact-panel,
+.district-recent-panel,
+.district-map-panel {
+  border: 1px solid rgba(16, 32, 51, 0.1);
+  border-radius: 28px;
+  background: rgba(255, 252, 246, 0.94);
+  box-shadow: 0 20px 48px rgba(16, 32, 51, 0.08);
+}
+
+.district-profile-panel {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1.5rem;
+  padding: 1.75rem;
+}
+
+.district-portrait {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 11rem;
+  height: 11rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #198754, #7bc47f);
+  color: white;
+  box-shadow: inset 0 0 0 6px rgba(255, 255, 255, 0.72);
+}
+
+.district-portrait span {
+  font-family: "Fraunces", "Georgia", serif;
+  font-size: 3.4rem;
+}
+
+.district-profile-copy h1,
+.district-recent-header h2 {
+  margin: 0;
+  font-family: "Fraunces", "Georgia", serif;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 0.98;
+}
+
+.district-contact-grid,
+.district-project-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin: 1.25rem 0 0;
+}
+
+.district-contact-grid div,
+.district-project-facts div {
+  min-width: 0;
+}
+
+.district-contact-grid dt,
+.district-project-facts dt {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: rgba(16, 32, 51, 0.58);
+}
+
+.district-contact-grid dd,
+.district-project-facts dd {
+  margin: 0.25rem 0 0;
+}
+
+.district-contact-grid a {
+  color: #198754;
+  word-break: break-word;
+}
+
+.district-about-block {
+  margin-top: 1.2rem;
+}
+
+.district-about-block h2,
+.district-impact-card h3,
+.district-recent-card h3 {
+  margin: 0;
+}
+
+.district-about-block p,
+.district-impact-card p,
+.district-recent-card p {
+  margin: 0.45rem 0 0;
+  color: rgba(16, 32, 51, 0.76);
+}
+
+.district-impact-panel,
+.district-recent-panel,
+.district-map-panel {
+  margin-top: 1.25rem;
+  padding: 1.5rem;
+}
+
+.district-section-label {
+  margin: 0;
+  color: rgba(16, 32, 51, 0.56);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.district-impact-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.district-impact-card {
+  padding: 1.15rem;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.district-impact-card strong {
+  display: block;
+  margin-top: 0.55rem;
+  font-size: 1.2rem;
+}
+
+.district-recent-header,
+.district-recent-topline,
+.district-overview-footer {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.district-recent-list {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.district-recent-card {
+  padding: 1.25rem;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(16, 32, 51, 0.06);
+}
+
+.district-recent-topline .status-pill {
+  white-space: nowrap;
+}
+
+.district-overview-footer {
+  justify-content: center;
+  margin-top: 1.25rem;
+}
+
+.district-open-map {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 13rem;
+  padding: 0.9rem 1.4rem;
+  border-radius: 999px;
+  background: #198754;
+  color: white;
+  text-decoration: none;
+  font-weight: 700;
+}
+
 .hero-panel {
   display: grid;
   grid-template-columns: 1.05fr 0.95fr;
@@ -763,6 +943,26 @@ button {
     width: auto;
     max-height: 48vh;
   }
+
+  .district-profile-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .district-portrait {
+    width: 8.5rem;
+    height: 8.5rem;
+  }
+
+  .district-impact-grid,
+  .district-contact-grid,
+  .district-project-facts {
+    grid-template-columns: 1fr;
+  }
+
+  .district-recent-header,
+  .district-recent-topline {
+    flex-direction: column;
+  }
 }
 
 @media (max-width: 640px) {
@@ -837,5 +1037,18 @@ button {
   .pagination-row {
     align-items: start;
     flex-direction: column;
+  }
+
+  .district-overview-page {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .district-profile-panel,
+  .district-impact-panel,
+  .district-recent-panel,
+  .district-map-panel {
+    padding: 1rem;
+    border-radius: 20px;
   }
 }

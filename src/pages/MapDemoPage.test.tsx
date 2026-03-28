@@ -32,6 +32,7 @@ vi.mock("react-map-gl/maplibre", () => ({
   ),
   Layer: () => null,
   Marker: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
+  NavigationControl: () => null,
   Source: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
 }));
 
@@ -296,6 +297,22 @@ describe("mock app routes", () => {
     expect(await screen.findByText("John Lee • District 12")).toBeInTheDocument();
     await user.click(screen.getByTestId("mock-boundary-click"));
     expect(await screen.findByText("Jordan Alvarez • District 11")).toBeInTheDocument();
+  });
+
+  it("opens the selected district overview from the pill", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={["/map"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    await user.click(await screen.findByLabelText("Council File 25-0358"));
+    await user.click(screen.getByLabelText("Open District 11 overview"));
+
+    expect(await screen.findByText("Jordan Alvarez • District 11")).toBeInTheDocument();
+    expect(await screen.findByText("councilmember.jordan.alvarez@lacity.org")).toBeInTheDocument();
   });
 
   it("submits the map search from the icon and Enter key", async () => {

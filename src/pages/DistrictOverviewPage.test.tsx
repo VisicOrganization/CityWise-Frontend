@@ -97,7 +97,12 @@ describe("DistrictOverviewPage", () => {
     });
 
     expect(screen.getByText("Wildfire recovery motion.")).toBeInTheDocument();
-    expect(screen.getByText("District 11 projects")).toBeInTheDocument();
+    expect(screen.getByText("Jordan Alvarez • District 11")).toBeInTheDocument();
+    expect(screen.getByText("councilmember.jordan.alvarez@lacity.org")).toBeInTheDocument();
+    expect(screen.getByText("Impact Summary")).toBeInTheDocument();
+    expect(screen.getByText("Budget")).toBeInTheDocument();
+    expect(screen.getByText("Started")).toBeInTheDocument();
+    expect(screen.getByText("Completed")).toBeInTheDocument();
     expect(screen.getByTestId("district-map-shell")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalled();
   });

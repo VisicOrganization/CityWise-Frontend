@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Map, { Layer, Marker, Source, type MapLayerMouseEvent, type ViewState } from "react-map-gl/maplibre";
+import { useNavigate } from "react-router-dom";
 
 import type { DistrictBoundaryCollection } from "../../lib/districtBoundaries";
 import { categoryAppearance, getDemoDistrict, type DemoMapMarker } from "../../lib/mock/mapDemo";
@@ -66,6 +67,7 @@ export function CityDemoMap({
   onDistrictSelect,
 }: CityDemoMapProps) {
   const [viewState, setViewState] = useState(DEFAULT_VIEW_STATE);
+  const navigate = useNavigate();
   const activeDistrict = getDemoDistrict(activeDistrictId);
 
   useEffect(() => {
@@ -136,12 +138,17 @@ export function CityDemoMap({
         ))}
       </Map>
 
-      <div className="map-district-pill">
+      <button
+        type="button"
+        className="map-district-pill"
+        onClick={() => navigate(`/districts/${activeDistrict.id}`)}
+        aria-label={`Open ${activeDistrict.label} overview`}
+      >
         <span className="map-district-avatar">{activeDistrict.representative.split(" ").map((part) => part[0]).join("")}</span>
         <span>
           {activeDistrict.representative} • {activeDistrict.label}
         </span>
-      </div>
+      </button>
 
       <form
         className="map-search-dock"
