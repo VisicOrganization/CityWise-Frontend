@@ -21,7 +21,22 @@ Recommended non-clashing defaults:
 Run:
 
 ```bash
+cp .env.example .env.local
 docker compose -f compose.local.yml --env-file .env.local up --build
+```
+
+Run the backend alongside it from [CityWise-Backend](/home/codex/workspace/VISIC/CityWise-Backend):
+
+```bash
+cp .env.example .env.local
+docker compose -f compose.local.yml --env-file .env.local up --build -d db api
+docker compose -f compose.local.yml --env-file .env.local run --rm seed
+```
+
+Then open:
+
+```text
+http://localhost:15173/districts/11
 ```
 
 Key settings:
@@ -29,11 +44,13 @@ Key settings:
 - `FRONTEND_HOST_PORT` controls the published frontend port
 - `VITE_PORT` controls the port inside the container/dev server
 - `VITE_API_BASE_URL` points the frontend at the backend API
+- change them in `.env.local`
 
 ## Validation
 
 ```bash
 npm install
+npm run lint
 npm run typecheck
 npm run test
 npm run build

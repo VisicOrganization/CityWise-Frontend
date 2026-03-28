@@ -111,10 +111,18 @@ button {
 }
 
 .district-map-shell {
-  min-height: 420px;
+  position: relative;
+  height: 420px;
   overflow: hidden;
   border-radius: 22px;
   border: 1px solid rgba(16, 32, 51, 0.12);
+}
+
+.district-map-shell .maplibregl-map,
+.district-map-shell .mapboxgl-map,
+.district-map-shell .mapboxgl-canvas-container,
+.district-map-shell .maplibregl-canvas-container {
+  height: 100%;
 }
 
 .projects-panel {
@@ -233,6 +241,10 @@ button {
   .projects-panel {
     border-radius: 20px;
     padding: 1rem;
+  }
+
+  .district-map-shell {
+    height: 360px;
   }
 
   .panel-header,

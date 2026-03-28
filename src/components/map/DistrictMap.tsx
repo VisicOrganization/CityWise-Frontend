@@ -83,7 +83,7 @@ export function DistrictMap({ activeDistrictId }: DistrictMapProps) {
   }, [activeDistrictId]);
 
   return (
-    <div className="district-map-shell">
+    <div className="district-map-shell" data-testid="district-map-shell">
       <Map
         {...viewState}
         onMove={(event) => setViewState(event.viewState)}

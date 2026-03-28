@@ -98,6 +98,7 @@ describe("DistrictOverviewPage", () => {
 
     expect(screen.getByText("Wildfire recovery motion.")).toBeInTheDocument();
     expect(screen.getByText("District 11 projects")).toBeInTheDocument();
+    expect(screen.getByTestId("district-map-shell")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalled();
   });
 });

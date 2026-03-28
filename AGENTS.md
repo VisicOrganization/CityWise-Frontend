@@ -15,6 +15,11 @@ Local development:
   - backend host port `18100`
 - configure frontend ports and API base URL in `.env.local`
 - configure published frontend port mapping in `compose.local.yml`
+- exact local startup commands:
+  - `cp .env.example .env.local`
+  - `docker compose -f compose.local.yml --env-file .env.local up --build`
+- default demo route:
+  - `http://localhost:15173/districts/11`
 
 Validation commands:
 - run lint with `npm run lint`
