@@ -8,7 +8,28 @@ import App from "../App";
 
 
 vi.mock("react-map-gl/maplibre", () => ({
-  default: ({ children }: { children?: ReactNode }) => <div data-testid="demo-map">{children}</div>,
+  default: ({ children, onClick }: { children?: ReactNode; onClick?: (event: unknown) => void }) => (
+    <div data-testid="demo-map">
+      <button
+        type="button"
+        data-testid="mock-boundary-click"
+        onClick={() =>
+          onClick?.({
+            features: [
+              {
+                properties: {
+                  District: 11,
+                },
+              },
+            ],
+          })
+        }
+      >
+        mock boundary click
+      </button>
+      {children}
+    </div>
+  ),
   Layer: () => null,
   Marker: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
   Source: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
@@ -247,6 +268,34 @@ describe("mock app routes", () => {
     expect(screen.getByText("John Lee • District 12")).toBeInTheDocument();
     expect(await screen.findByLabelText("Search query")).toHaveValue("123 Main St");
     expect(await screen.findByText("123 Main St, Los Angeles, California, United States")).toBeInTheDocument();
+  });
+
+  it("updates the district pill when a project pin is clicked", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={["/map"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText("John Lee • District 12")).toBeInTheDocument();
+    await user.click(screen.getByLabelText("Council File 25-0358"));
+    expect(await screen.findByText("Jordan Alvarez • District 11")).toBeInTheDocument();
+  });
+
+  it("updates the district pill when a district boundary is clicked", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={["/map"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText("John Lee • District 12")).toBeInTheDocument();
+    await user.click(screen.getByTestId("mock-boundary-click"));
+    expect(await screen.findByText("Jordan Alvarez • District 11")).toBeInTheDocument();
   });
 
   it("submits the map search from the icon and Enter key", async () => {

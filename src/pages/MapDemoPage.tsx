@@ -54,6 +54,7 @@ export function MapDemoPage() {
   const [projectMarkers, setProjectMarkers] = useState<DemoMapMarker[]>([]);
   const [searchMarker, setSearchMarker] = useState<DemoMapMarker | null>(null);
   const [activeMarker, setActiveMarker] = useState<DemoMapMarker | null>(null);
+  const [activeDistrictId, setActiveDistrictId] = useState(12);
   const [activeProject, setActiveProject] = useState<ProjectDetail | null>(null);
   const [detailsError, setDetailsError] = useState<string | null>(null);
   const [isDetailsLoading, setIsDetailsLoading] = useState(false);
@@ -122,6 +123,9 @@ export function MapDemoPage() {
 
   async function handleMarkerSelect(marker: DemoMapMarker) {
     setActiveMarker(marker);
+    if (marker.districtId) {
+      setActiveDistrictId(marker.districtId);
+    }
     setActiveProject(null);
     setDetailsError(null);
     setIsDetailsLoading(true);
@@ -155,6 +159,7 @@ export function MapDemoPage() {
           boundaries={boundaries}
           markers={searchMarker ? [...projectMarkers, searchMarker] : projectMarkers}
           activeMarkerId={activeMarker?.id ?? null}
+          activeDistrictId={activeDistrictId}
           searchQuery={searchQuery}
           searchResults={results.map((result) => result.label)}
           onSearchChange={setSearchQuery}
@@ -164,6 +169,9 @@ export function MapDemoPage() {
           onSelectResult={handleSelectResult}
           onMarkerSelect={(marker) => {
             void handleMarkerSelect(marker);
+          }}
+          onDistrictSelect={(districtId) => {
+            setActiveDistrictId(districtId);
           }}
         />
         {(activeMarker || isDetailsLoading || detailsError) ? (

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import Map, { Layer, Marker, Source, type ViewState } from "react-map-gl/maplibre";
+import Map, { Layer, Marker, Source, type MapLayerMouseEvent, type ViewState } from "react-map-gl/maplibre";
 
 import type { DistrictBoundaryCollection } from "../../lib/districtBoundaries";
-import { categoryAppearance, demoDistrict, type DemoMapMarker } from "../../lib/mock/mapDemo";
+import { categoryAppearance, getDemoDistrict, type DemoMapMarker } from "../../lib/mock/mapDemo";
 import { districtFillLayer, districtOutlineLayer } from "../../lib/map/districtLayers";
 
 
@@ -41,12 +41,14 @@ interface CityDemoMapProps {
   boundaries: DistrictBoundaryCollection | null;
   markers: DemoMapMarker[];
   activeMarkerId?: string | null;
+  activeDistrictId: number;
   searchQuery: string;
   searchResults: string[];
   onSearchChange: (value: string) => void;
   onSearchSubmit: () => void;
   onSelectResult: (label: string) => void;
   onMarkerSelect: (marker: DemoMapMarker) => void;
+  onDistrictSelect: (districtId: number) => void;
 }
 
 
@@ -54,14 +56,17 @@ export function CityDemoMap({
   boundaries,
   markers,
   activeMarkerId,
+  activeDistrictId,
   searchQuery,
   searchResults,
   onSearchChange,
   onSearchSubmit,
   onSelectResult,
   onMarkerSelect,
+  onDistrictSelect,
 }: CityDemoMapProps) {
   const [viewState, setViewState] = useState(DEFAULT_VIEW_STATE);
+  const activeDistrict = getDemoDistrict(activeDistrictId);
 
   useEffect(() => {
     const searchMarker = markers.find((marker) => marker.kind === "search");
@@ -77,11 +82,32 @@ export function CityDemoMap({
     }));
   }, [markers]);
 
+  function handleMapClick(event: MapLayerMouseEvent) {
+    const clickedFeature = event.features?.find((feature) => {
+      const districtValue = feature.properties?.District;
+      return typeof districtValue === "number" || typeof districtValue === "string";
+    });
+
+    if (!clickedFeature) {
+      return;
+    }
+
+    const districtValue = clickedFeature.properties?.District;
+    const parsedDistrictId = Number(districtValue);
+    if (Number.isNaN(parsedDistrictId)) {
+      return;
+    }
+
+    onDistrictSelect(parsedDistrictId);
+  }
+
   return (
     <div className="city-demo-map">
       <Map
         {...viewState}
         onMove={(event) => setViewState(event.viewState)}
+        onClick={handleMapClick}
+        interactiveLayerIds={["district-fill"]}
         mapStyle={DEMO_MAP_STYLE}
         attributionControl={false}
         style={{ width: "100%", height: "100%" }}
@@ -111,9 +137,9 @@ export function CityDemoMap({
       </Map>
 
       <div className="map-district-pill">
-        <span className="map-district-avatar">{demoDistrict.representative.split(" ").map((part) => part[0]).join("")}</span>
+        <span className="map-district-avatar">{activeDistrict.representative.split(" ").map((part) => part[0]).join("")}</span>
         <span>
-          {demoDistrict.representative} • {demoDistrict.label}
+          {activeDistrict.representative} • {activeDistrict.label}
         </span>
       </div>
 
