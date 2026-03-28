@@ -5,24 +5,84 @@ import { AppShell } from "../components/shell/AppShell";
 import { CityDemoMap } from "../components/map/CityDemoMap";
 import { ProjectDetailsPanel } from "../components/panels/ProjectDetailsPanel";
 import { getDistrictProjects, getProjectDetail } from "../lib/api";
-import type { ProjectDetail } from "../lib/contracts";
+import type { DistrictProjectCard, ProjectDetail } from "../lib/contracts";
+import { loadDistrictBoundaries, type DistrictBoundaryCollection } from "../lib/districtBoundaries";
+import { buildProjectMarkers } from "../lib/map/projectMarkers";
 import { buildDemoMarkerFromSearch, searchDemoAddresses, type DemoGeocodeResult } from "../lib/mock/demoGeocoding";
-import { demoMapMarkers, type DemoMapMarker } from "../lib/mock/mapDemo";
+import type { DemoMapMarker } from "../lib/mock/mapDemo";
 
 
-const DEMO_PROJECT_SOURCE_DISTRICT_ID = 11;
-const DEMO_PROJECT_SOURCE_PAGE_SIZE = 12;
+const DISTRICT_IDS = Array.from({ length: 15 }, (_, index) => index + 1);
+const DEMO_PROJECT_PAGE_SIZE = 100;
+
+async function loadDistrictProjectCards(districtId: number): Promise<DistrictProjectCard[]> {
+  const firstPage = await getDistrictProjects(districtId, 1, DEMO_PROJECT_PAGE_SIZE);
+  if (firstPage.total_pages <= 1) {
+    return firstPage.items;
+  }
+
+  const remainingPages = await Promise.all(
+    Array.from({ length: firstPage.total_pages - 1 }, (_, index) =>
+      getDistrictProjects(districtId, index + 2, DEMO_PROJECT_PAGE_SIZE),
+    ),
+  );
+
+  return [firstPage, ...remainingPages].flatMap((page) => page.items);
+}
+
+async function loadAllProjectCards(): Promise<DistrictProjectCard[]> {
+  const districtPages = await Promise.all(
+    DISTRICT_IDS.map(async (districtId) => {
+      try {
+        return await loadDistrictProjectCards(districtId);
+      } catch {
+        return [];
+      }
+    }),
+  );
+
+  return districtPages.flat();
+}
 
 
 export function MapDemoPage() {
   const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") ?? "");
   const [results, setResults] = useState<DemoGeocodeResult[]>([]);
-  const [markers, setMarkers] = useState<DemoMapMarker[]>(demoMapMarkers);
+  const [boundaries, setBoundaries] = useState<DistrictBoundaryCollection | null>(null);
+  const [projectCards, setProjectCards] = useState<DistrictProjectCard[]>([]);
+  const [projectMarkers, setProjectMarkers] = useState<DemoMapMarker[]>([]);
+  const [searchMarker, setSearchMarker] = useState<DemoMapMarker | null>(null);
   const [activeMarker, setActiveMarker] = useState<DemoMapMarker | null>(null);
   const [activeProject, setActiveProject] = useState<ProjectDetail | null>(null);
   const [detailsError, setDetailsError] = useState<string | null>(null);
   const [isDetailsLoading, setIsDetailsLoading] = useState(false);
+
+  useEffect(() => {
+    let ignore = false;
+
+    Promise.all([loadDistrictBoundaries(), loadAllProjectCards()])
+      .then(([loadedBoundaries, loadedProjectCards]) => {
+        if (ignore) {
+          return;
+        }
+
+        setBoundaries(loadedBoundaries);
+        setProjectCards(loadedProjectCards);
+        setProjectMarkers(buildProjectMarkers(loadedBoundaries, loadedProjectCards));
+      })
+      .catch(() => {
+        if (!ignore) {
+          setBoundaries(null);
+          setProjectCards([]);
+          setProjectMarkers([]);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   useEffect(() => {
     const incomingQuery = searchParams.get("q") ?? "";
@@ -36,7 +96,9 @@ export function MapDemoPage() {
     const nextResults = await searchDemoAddresses(query);
     setResults(nextResults);
     if (nextResults[0]) {
-      setMarkers([...demoMapMarkers, buildDemoMarkerFromSearch(nextResults[0], query)]);
+      setSearchMarker(buildDemoMarkerFromSearch(nextResults[0], query));
+    } else {
+      setSearchMarker(null);
     }
   }
 
@@ -55,7 +117,7 @@ export function MapDemoPage() {
     }
 
     setSearchQuery(label);
-    setMarkers([...demoMapMarkers, buildDemoMarkerFromSearch(selected, label)]);
+    setSearchMarker(buildDemoMarkerFromSearch(selected, label));
   }
 
   async function handleMarkerSelect(marker: DemoMapMarker) {
@@ -65,13 +127,18 @@ export function MapDemoPage() {
     setIsDetailsLoading(true);
 
     try {
-      const listing = await getDistrictProjects(DEMO_PROJECT_SOURCE_DISTRICT_ID, 1, DEMO_PROJECT_SOURCE_PAGE_SIZE);
-      if (listing.items.length === 0) {
+      if (marker.kind === "project" && marker.projectId) {
+        const detail = await getProjectDetail(marker.projectId);
+        setActiveProject(detail);
+        return;
+      }
+
+      if (projectCards.length === 0) {
         throw new Error("No demo projects were returned by the backend.");
       }
 
-      const randomIndex = Math.floor(Math.random() * listing.items.length);
-      const selectedProject = listing.items[randomIndex] ?? listing.items[0];
+      const randomIndex = Math.floor(Math.random() * projectCards.length);
+      const selectedProject = projectCards[randomIndex] ?? projectCards[0];
       const detail = await getProjectDetail(selectedProject.id);
       setActiveProject(detail);
     } catch {
@@ -85,7 +152,8 @@ export function MapDemoPage() {
     <AppShell className="map-demo-shell">
       <section className="map-demo-screen">
         <CityDemoMap
-          markers={markers}
+          boundaries={boundaries}
+          markers={searchMarker ? [...projectMarkers, searchMarker] : projectMarkers}
           activeMarkerId={activeMarker?.id ?? null}
           searchQuery={searchQuery}
           searchResults={results.map((result) => result.label)}

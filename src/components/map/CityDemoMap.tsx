@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import Map, { Layer, Marker, Source, type ViewState } from "react-map-gl/maplibre";
 
-import { loadDistrictBoundaries, type DistrictBoundaryCollection } from "../../lib/districtBoundaries";
-import { categoryAppearance, demoDistrict, demoMapMarkers, type DemoMapMarker } from "../../lib/mock/mapDemo";
+import type { DistrictBoundaryCollection } from "../../lib/districtBoundaries";
+import { categoryAppearance, demoDistrict, type DemoMapMarker } from "../../lib/mock/mapDemo";
 import { districtFillLayer, districtOutlineLayer } from "../../lib/map/districtLayers";
 
 
@@ -38,7 +38,8 @@ const DEFAULT_VIEW_STATE: ViewState = {
 };
 
 interface CityDemoMapProps {
-  markers?: DemoMapMarker[];
+  boundaries: DistrictBoundaryCollection | null;
+  markers: DemoMapMarker[];
   activeMarkerId?: string | null;
   searchQuery: string;
   searchResults: string[];
@@ -50,7 +51,8 @@ interface CityDemoMapProps {
 
 
 export function CityDemoMap({
-  markers = demoMapMarkers,
+  boundaries,
+  markers,
   activeMarkerId,
   searchQuery,
   searchResults,
@@ -60,27 +62,6 @@ export function CityDemoMap({
   onMarkerSelect,
 }: CityDemoMapProps) {
   const [viewState, setViewState] = useState(DEFAULT_VIEW_STATE);
-  const [boundaries, setBoundaries] = useState<DistrictBoundaryCollection | null>(null);
-
-  useEffect(() => {
-    let ignore = false;
-
-    loadDistrictBoundaries()
-      .then((loaded) => {
-        if (!ignore) {
-          setBoundaries(loaded);
-        }
-      })
-      .catch(() => {
-        if (!ignore) {
-          setBoundaries(null);
-        }
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
 
   useEffect(() => {
     const searchMarker = markers.find((marker) => marker.kind === "search");
@@ -122,7 +103,9 @@ export function CityDemoMap({
             >
               <span className="demo-marker-icon">{categoryAppearance[marker.category].icon}</span>
             </button>
-            <div className="demo-marker-label">{marker.label}</div>
+            {marker.kind === "search" || activeMarkerId === marker.id ? (
+              <div className="demo-marker-label">{marker.label}</div>
+            ) : null}
           </Marker>
         ))}
       </Map>

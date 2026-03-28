@@ -13,18 +13,19 @@
 
 ## Mock screen assumptions
 
-- the landing page and `/map` view use mock-only content and markers
-- the `/map` screen uses a general LA-focused mock map, not backend data
+- the landing page uses mock-only content
+- the `/map` screen uses a general LA-focused demo map with one pin per backend project that has a valid district
 - the `/map` screen overlays the frontend-local district GeoJSON with hard-coded district colors and a zoom-based fill fade so boundaries read clearly at city scale
 - the `/map` search uses a demo geocoding hack and drops a generated sample marker at the searched location so the map feels alive before the side panel exists
-- clicking a map marker opens a details panel that pulls one real project record from the backend and shows its title, voting record, and timeline
+- clicking a project pin opens a details panel for that same backend project record and shows its title, voting record, and timeline
 - the district overview route remains available for the backend-driven MVP slice
 
 ## Demo-only hacks
 
-- the map pins are still mock markers and are not spatially tied to the backend project being shown in the details panel
-- each marker click pairs the clicked pin with a random real backend project so the demo can visibly prove live data is flowing before the production interaction model exists
+- each backend project pin is placed by taking its district boundary center and applying a deterministic nudge, so the pins are district-aware but not geographically accurate
+- the map pin layout is a demo party trick: it scatters every valid-district project into its district polygon without any real project coordinates, clustering, or collision handling
 - the `/map` geocoding flow drops a generated sample marker at the searched location instead of creating a production-quality place or project record
+- clicking a geocoded search marker still uses a random real backend project to keep the demo feeling alive before a real search-to-record model exists
 
 ## Local Docker workflow
 

@@ -41,21 +41,125 @@ const boundariesResponse = {
         ]],
       },
     },
+    {
+      type: "Feature",
+      properties: {
+        District: 12,
+        District_Name: "Council District 12",
+        NAME: "District 12",
+        NLA_URL: "",
+        OBJECTID: 12,
+        TOOLTIP: "District 12",
+      },
+      geometry: {
+        type: "Polygon",
+        coordinates: [[
+          [-118.7, 34.2],
+          [-118.58, 34.2],
+          [-118.58, 34.3],
+          [-118.7, 34.3],
+          [-118.7, 34.2],
+        ]],
+      },
+    },
   ],
 };
+
+const districtProjectsResponseByDistrict = {
+  11: {
+    district_id: 11,
+    page: 1,
+    page_size: 100,
+    total: 2,
+    total_pages: 1,
+    items: [
+      {
+        id: "25-0358",
+        title: "Council File 25-0358",
+        summary: "Wildfire recovery motion.",
+        status: "planned",
+        district_id: 11,
+        last_changed_date: "2025-04-11",
+        start_date: "2025-04-04",
+        meeting_date: "2025-04-11",
+        primary_movers: ["TRACI PARK"],
+        secondary_movers: ["HEATHER HUTT"],
+        document_count: 2,
+      },
+      {
+        id: "25-0400",
+        title: "Council File 25-0400",
+        summary: "Transit corridor updates.",
+        status: "in progress",
+        district_id: 11,
+        last_changed_date: "2025-04-12",
+        start_date: "2025-04-08",
+        meeting_date: "2025-04-12",
+        primary_movers: ["TRACI PARK"],
+        secondary_movers: [],
+        document_count: 1,
+      },
+    ],
+  },
+  12: {
+    district_id: 12,
+    page: 1,
+    page_size: 100,
+    total: 1,
+    total_pages: 1,
+    items: [
+      {
+        id: "25-0501",
+        title: "Council File 25-0501",
+        summary: "Community park expansion.",
+        status: "planned",
+        district_id: 12,
+        last_changed_date: "2025-04-14",
+        start_date: "2025-04-10",
+        meeting_date: "2025-04-14",
+        primary_movers: ["JOHN LEE"],
+        secondary_movers: [],
+        document_count: 1,
+      },
+    ],
+  },
+} as const;
+
+function buildEmptyDistrictResponse(districtId: number) {
+  return {
+    district_id: districtId,
+    page: 1,
+    page_size: 100,
+    total: 0,
+    total_pages: 0,
+    items: [],
+  };
+}
+
+function defaultFetchMock(input: string | URL | Request) {
+  const url = String(input);
+
+  if (url.includes("/data/la-city-council-districts.geojson")) {
+    return Promise.resolve(new Response(JSON.stringify(boundariesResponse)));
+  }
+
+  const districtMatch = url.match(/\/districts\/(\d+)\/projects/);
+  if (districtMatch) {
+    const districtId = Number(districtMatch[1]);
+    const payload =
+      districtProjectsResponseByDistrict[districtId as keyof typeof districtProjectsResponseByDistrict] ??
+      buildEmptyDistrictResponse(districtId);
+    return Promise.resolve(new Response(JSON.stringify(payload)));
+  }
+
+  return Promise.reject(new Error(`Unhandled fetch for ${url}`));
+}
 
 
 describe("mock app routes", () => {
   beforeEach(() => {
     fetchMock.mockReset();
-    fetchMock.mockImplementation((input: string | URL | Request) => {
-      const url = String(input);
-      if (url.includes("/data/la-city-council-districts.geojson")) {
-        return Promise.resolve(new Response(JSON.stringify(boundariesResponse)));
-      }
-
-      return Promise.reject(new Error(`Unhandled fetch for ${url}`));
-    });
+    fetchMock.mockImplementation(defaultFetchMock);
   });
 
   afterEach(() => {
@@ -96,11 +200,7 @@ describe("mock app routes", () => {
         );
       }
 
-      if (url.includes("/data/la-city-council-districts.geojson")) {
-        return Promise.resolve(new Response(JSON.stringify(boundariesResponse)));
-      }
-
-      return Promise.reject(new Error(`Unhandled fetch for ${url}`));
+      return defaultFetchMock(input);
     });
 
     render(
@@ -118,9 +218,6 @@ describe("mock app routes", () => {
   it("renders the general map-only mock screen", async () => {
     fetchMock.mockImplementation((input: string | URL | Request) => {
       const url = String(input);
-      if (url.includes("/data/la-city-council-districts.geojson")) {
-        return Promise.resolve(new Response(JSON.stringify(boundariesResponse)));
-      }
 
       if (url.startsWith("https://nominatim.openstreetmap.org/search")) {
         return Promise.resolve(
@@ -137,7 +234,7 @@ describe("mock app routes", () => {
         );
       }
 
-      return Promise.reject(new Error(`Unhandled fetch for ${url}`));
+      return defaultFetchMock(input);
     });
 
     render(
@@ -157,9 +254,6 @@ describe("mock app routes", () => {
 
     fetchMock.mockImplementation((input: string | URL | Request) => {
       const url = String(input);
-      if (url.includes("/data/la-city-council-districts.geojson")) {
-        return Promise.resolve(new Response(JSON.stringify(boundariesResponse)));
-      }
 
       if (url.includes("q=200+N+Spring+St")) {
         return Promise.resolve(
@@ -191,7 +285,7 @@ describe("mock app routes", () => {
         );
       }
 
-      return Promise.reject(new Error(`Unhandled fetch for ${url}`));
+      return defaultFetchMock(input);
     });
 
     render(
@@ -218,51 +312,6 @@ describe("mock app routes", () => {
 
     fetchMock.mockImplementation((input: string | URL | Request) => {
       const url = String(input);
-      if (url.includes("/data/la-city-council-districts.geojson")) {
-        return Promise.resolve(new Response(JSON.stringify(boundariesResponse)));
-      }
-
-      if (url.includes("/districts/11/projects")) {
-        return Promise.resolve(
-          new Response(
-            JSON.stringify({
-              district_id: 11,
-              page: 1,
-              page_size: 12,
-              total: 2,
-              total_pages: 1,
-              items: [
-                {
-                  id: "25-0358",
-                  title: "Council File 25-0358",
-                  summary: "Wildfire recovery motion.",
-                  status: "planned",
-                  district_id: 11,
-                  last_changed_date: "2025-04-11",
-                  start_date: "2025-04-04",
-                  meeting_date: "2025-04-11",
-                  primary_movers: ["TRACI PARK"],
-                  secondary_movers: ["HEATHER HUTT"],
-                  document_count: 2,
-                },
-                {
-                  id: "25-0400",
-                  title: "Council File 25-0400",
-                  summary: "Transit corridor updates.",
-                  status: "in progress",
-                  district_id: 11,
-                  last_changed_date: "2025-04-12",
-                  start_date: "2025-04-08",
-                  meeting_date: "2025-04-12",
-                  primary_movers: ["TRACI PARK"],
-                  secondary_movers: [],
-                  document_count: 1,
-                },
-              ],
-            }),
-          ),
-        );
-      }
 
       if (url.includes("/projects/25-0358")) {
         return Promise.resolve(
@@ -317,7 +366,7 @@ describe("mock app routes", () => {
         );
       }
 
-      return Promise.reject(new Error(`Unhandled fetch for ${url}`));
+      return defaultFetchMock(input);
     });
 
     render(
@@ -326,10 +375,14 @@ describe("mock app routes", () => {
       </MemoryRouter>,
     );
 
-    await user.click(screen.getByLabelText("Porter Ranch Community Park"));
+    expect(await screen.findByLabelText("Council File 25-0358")).toBeInTheDocument();
+    expect(screen.getByLabelText("Council File 25-0400")).toBeInTheDocument();
+    expect(screen.getByLabelText("Council File 25-0501")).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText("Council File 25-0358"));
 
     expect(await screen.findByLabelText("Project details")).toBeInTheDocument();
-    expect(await screen.findByText("Council File 25-0358")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Council File 25-0358" })).toBeInTheDocument();
     expect(await screen.findByText("TRACI PARK")).toBeInTheDocument();
     expect(await screen.findByText("Motion introduced.")).toBeInTheDocument();
 

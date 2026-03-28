@@ -60,6 +60,8 @@ export function buildDemoMarkerFromSearch(result: DemoGeocodeResult, query: stri
     label: result.label.split(",")[0] || query,
     longitude: result.longitude,
     latitude: result.latitude,
+    districtId: null,
+    projectId: null,
     kind: "search",
   };
 }
