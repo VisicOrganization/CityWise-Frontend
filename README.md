@@ -4,10 +4,19 @@
 
 ## MVP slice
 
+- landing page entry route at `/`
+- general mock map route at `/map`
 - one district overview route at `/districts/:districtId`
 - project cards sourced from the backend `GET /districts/{district_id}/projects` endpoint
 - frontend-local curated district copy
 - frontend-local LA council district GeoJSON overlay rendered with `react-map-gl` and MapLibre
+
+## Mock screen assumptions
+
+- the landing page and `/map` view use mock-only content and markers
+- the `/map` screen uses a general LA-focused mock map, not backend data
+- the details side panel is intentionally not implemented yet
+- the district overview route remains available for the backend-driven MVP slice
 
 ## Local Docker workflow
 
@@ -36,6 +45,8 @@ docker compose -f compose.local.yml --env-file .env.local run --rm seed
 Then open:
 
 ```text
+http://localhost:15173/
+http://localhost:15173/map
 http://localhost:15173/districts/11
 ```
 

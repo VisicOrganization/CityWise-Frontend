@@ -19,7 +19,9 @@ Local development:
   - `cp .env.example .env.local`
   - `docker compose -f compose.local.yml --env-file .env.local up --build`
 - default demo route:
-  - `http://localhost:15173/districts/11`
+  - `http://localhost:15173/`
+  - map mock: `http://localhost:15173/map`
+  - district overview: `http://localhost:15173/districts/11`
 
 Validation commands:
 - run lint with `npm run lint`
