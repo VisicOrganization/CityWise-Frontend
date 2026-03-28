@@ -62,9 +62,9 @@ function buildBaseMapStyle(baseMapId: BaseMapId) {
 }
 
 const DEFAULT_VIEW_STATE: ViewState = {
-  longitude: -118.575,
-  latitude: 34.225,
-  zoom: 12.2,
+  longitude: -118.4118,
+  latitude: 34.021,
+  zoom: 8.8,
   bearing: 0,
   pitch: 0,
 };
