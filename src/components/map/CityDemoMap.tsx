@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Map, { Layer, Marker, Source, type MapLayerMouseEvent, type ViewState } from "react-map-gl/maplibre";
 import { useNavigate } from "react-router-dom";
 
@@ -80,7 +80,7 @@ interface CityDemoMapProps {
   onSearchSubmit: () => void;
   onSelectResult: (label: string) => void;
   onMarkerSelect: (marker: DemoMapMarker) => void;
-  onDistrictSelect: (districtId: number) => void;
+  onDistrictSelect: (districtId: number | null) => void;
 }
 
 
@@ -101,6 +101,7 @@ export function CityDemoMap({
   const [baseMapId, setBaseMapId] = useState<BaseMapId>("streets");
   const navigate = useNavigate();
   const activeDistrict = activeDistrictId ? getDemoDistrict(activeDistrictId) : null;
+  const mapStyle = useMemo(() => buildBaseMapStyle(baseMapId), [baseMapId]);
 
   useEffect(() => {
     const searchMarker = markers.find((marker) => marker.kind === "search");
@@ -123,12 +124,14 @@ export function CityDemoMap({
     });
 
     if (!clickedFeature) {
+      onDistrictSelect(null);
       return;
     }
 
     const districtValue = clickedFeature.properties?.District;
     const parsedDistrictId = Number(districtValue);
     if (Number.isNaN(parsedDistrictId)) {
+      onDistrictSelect(null);
       return;
     }
 
@@ -142,7 +145,7 @@ export function CityDemoMap({
         onMove={(event) => setViewState(event.viewState)}
         onClick={handleMapClick}
         interactiveLayerIds={["district-fill"]}
-        mapStyle={buildBaseMapStyle(baseMapId)}
+        mapStyle={mapStyle}
         attributionControl={false}
         style={{ width: "100%", height: "100%" }}
       >

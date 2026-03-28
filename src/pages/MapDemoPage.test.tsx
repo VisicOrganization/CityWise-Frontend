@@ -27,6 +27,17 @@ vi.mock("react-map-gl/maplibre", () => ({
       >
         mock boundary click
       </button>
+      <button
+        type="button"
+        data-testid="mock-empty-map-click"
+        onClick={() =>
+          onClick?.({
+            features: [],
+          })
+        }
+      >
+        mock empty click
+      </button>
       {children}
     </div>
   ),
@@ -298,6 +309,23 @@ describe("mock app routes", () => {
     expect(screen.queryByLabelText(/Open District .* overview/)).not.toBeInTheDocument();
     await user.click(screen.getByTestId("mock-boundary-click"));
     expect(await screen.findByText("Jordan Alvarez • District 11")).toBeInTheDocument();
+  });
+
+  it("hides the district pill when the map is clicked outside district boundaries", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={["/map"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    await user.click(await screen.findByLabelText("Council File 25-0358"));
+    expect(await screen.findByText("Jordan Alvarez • District 11")).toBeInTheDocument();
+
+    await user.click(screen.getByTestId("mock-empty-map-click"));
+
+    expect(screen.queryByLabelText(/Open District .* overview/)).not.toBeInTheDocument();
   });
 
   it("opens the selected district overview from the pill", async () => {
