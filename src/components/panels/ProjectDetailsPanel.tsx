@@ -41,7 +41,6 @@ export function ProjectDetailsPanel({
     <aside className="project-details-panel" aria-label="Project details">
       <div className="project-details-header">
         <div>
-          <p className="project-details-eyebrow">Live backend project snapshot</p>
           <h2>{title}</h2>
         </div>
         <button type="button" className="project-details-close" aria-label="Close project details" onClick={onClose}>
@@ -119,8 +118,16 @@ export function ProjectDetailsPanel({
                     <div>
                       <p className="project-timeline-date">{formatPanelDate(entry.date)}</p>
                       <p className="project-timeline-text">{entry.text ?? "Activity recorded"}</p>
-                      {entry.documents[0]?.title ? (
-                        <p className="project-timeline-doc">Document: {entry.documents[0].title}</p>
+                      {entry.documents[0]?.title && entry.documents[0]?.url ? (
+                        <a
+                          className="project-timeline-doc"
+                          href={entry.documents[0].url}
+                          target="_blank"
+                          rel="noreferrer"
+                          download
+                        >
+                          Download document: {entry.documents[0].title}
+                        </a>
                       ) : null}
                     </div>
                   </li>
