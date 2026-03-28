@@ -39,6 +39,34 @@ describe("mock app routes", () => {
     expect(input).toHaveValue("123 Main St");
   });
 
+  it("submits the landing search on Enter", async () => {
+    const user = userEvent.setup();
+
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify([
+          {
+            place_id: 3,
+            display_name: "456 Sunset Blvd, Los Angeles, California, United States",
+            lat: "34.0983",
+            lon: "-118.3267",
+          },
+        ]),
+      ),
+    );
+
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    const input = screen.getByLabelText("Search address");
+    await user.type(input, "456 Sunset Blvd{Enter}");
+
+    expect(await screen.findByLabelText("Search query")).toHaveValue("456 Sunset Blvd");
+  });
+
   it("renders the general map-only mock screen", async () => {
     fetchMock.mockResolvedValueOnce(
       new Response(
@@ -63,6 +91,53 @@ describe("mock app routes", () => {
     expect(screen.getByText("John Lee • District 12")).toBeInTheDocument();
     expect(await screen.findByLabelText("Search query")).toHaveValue("123 Main St");
     expect(await screen.findByText("123 Main St, Los Angeles, California, United States")).toBeInTheDocument();
+  });
+
+  it("submits the map search from the icon and Enter key", async () => {
+    const user = userEvent.setup();
+
+    fetchMock
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify([
+            {
+              place_id: 1,
+              display_name: "200 N Spring St, Los Angeles, California, United States",
+              lat: "34.0537",
+              lon: "-118.2428",
+            },
+          ]),
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify([
+            {
+              place_id: 2,
+              display_name: "City Hall, Los Angeles, California, United States",
+              lat: "34.0536",
+              lon: "-118.2427",
+            },
+          ]),
+        ),
+      );
+
+    render(
+      <MemoryRouter initialEntries={["/map"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    const input = screen.getByLabelText("Search query");
+    await user.type(input, "200 N Spring St");
+    await user.click(screen.getByLabelText("Search map"));
+
+    expect(await screen.findByText("200 N Spring St, Los Angeles, California, United States")).toBeInTheDocument();
+
+    await user.clear(input);
+    await user.type(input, "City Hall{Enter}");
+
+    expect(await screen.findByText("City Hall, Los Angeles, California, United States")).toBeInTheDocument();
   });
 
   it("opens the details panel with backend project data when a marker is clicked", async () => {

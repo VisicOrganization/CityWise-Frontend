@@ -104,8 +104,14 @@ export function CityDemoMap({
         </span>
       </div>
 
-      <div className="map-search-dock">
-        <button type="button" className="map-search-icon" aria-label="Search map" onClick={onSearchSubmit}>
+      <form
+        className="map-search-dock"
+        onSubmit={(event) => {
+          event.preventDefault();
+          onSearchSubmit();
+        }}
+      >
+        <button type="submit" className="map-search-icon" aria-label="Search map">
           ⌕
         </button>
         <div className="map-search-panel">
@@ -124,7 +130,7 @@ export function CityDemoMap({
             ))}
           </div>
         </div>
-      </div>
+      </form>
 
       <div className="map-control-stack" aria-label="Map controls">
         <button type="button">☰</button>

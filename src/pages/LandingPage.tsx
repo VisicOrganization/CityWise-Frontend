@@ -32,7 +32,13 @@ export function LandingPage() {
             CityWise simplifies confusing government data and projects to guide informed decisions.
           </p>
 
-          <div className="landing-search">
+          <form
+            className="landing-search"
+            onSubmit={(event) => {
+              event.preventDefault();
+              handleSearch();
+            }}
+          >
             <span className="landing-search-icon">⌕</span>
             <input
               type="text"
@@ -41,10 +47,10 @@ export function LandingPage() {
               aria-label="Search address"
               placeholder="Enter your address to search..."
             />
-            <button type="button" className="landing-search-button" onClick={handleSearch}>
+            <button type="submit" className="landing-search-button">
               Search
             </button>
-          </div>
+          </form>
 
           <div className="landing-links">
             <Link to="/map">Search by district</Link>
