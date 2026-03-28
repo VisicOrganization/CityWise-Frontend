@@ -54,7 +54,7 @@ export function MapDemoPage() {
   const [projectMarkers, setProjectMarkers] = useState<DemoMapMarker[]>([]);
   const [searchMarker, setSearchMarker] = useState<DemoMapMarker | null>(null);
   const [activeMarker, setActiveMarker] = useState<DemoMapMarker | null>(null);
-  const [activeDistrictId, setActiveDistrictId] = useState(12);
+  const [activeDistrictId, setActiveDistrictId] = useState<number | null>(null);
   const [activeProject, setActiveProject] = useState<ProjectDetail | null>(null);
   const [detailsError, setDetailsError] = useState<string | null>(null);
   const [isDetailsLoading, setIsDetailsLoading] = useState(false);
@@ -123,9 +123,7 @@ export function MapDemoPage() {
 
   async function handleMarkerSelect(marker: DemoMapMarker) {
     setActiveMarker(marker);
-    if (marker.districtId) {
-      setActiveDistrictId(marker.districtId);
-    }
+    setActiveDistrictId(marker.districtId);
     setActiveProject(null);
     setDetailsError(null);
     setIsDetailsLoading(true);

@@ -266,7 +266,8 @@ describe("mock app routes", () => {
     );
 
     expect(screen.getByTestId("demo-map")).toBeInTheDocument();
-    expect(screen.getByText("John Lee • District 12")).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Open District .* overview/)).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Basemap style")).toBeInTheDocument();
     expect(await screen.findByLabelText("Search query")).toHaveValue("123 Main St");
     expect(await screen.findByText("123 Main St, Los Angeles, California, United States")).toBeInTheDocument();
   });
@@ -280,8 +281,8 @@ describe("mock app routes", () => {
       </MemoryRouter>,
     );
 
-    expect(await screen.findByText("John Lee • District 12")).toBeInTheDocument();
-    await user.click(screen.getByLabelText("Council File 25-0358"));
+    expect(screen.queryByLabelText(/Open District .* overview/)).not.toBeInTheDocument();
+    await user.click(await screen.findByLabelText("Council File 25-0358"));
     expect(await screen.findByText("Jordan Alvarez • District 11")).toBeInTheDocument();
   });
 
@@ -294,7 +295,7 @@ describe("mock app routes", () => {
       </MemoryRouter>,
     );
 
-    expect(await screen.findByText("John Lee • District 12")).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Open District .* overview/)).not.toBeInTheDocument();
     await user.click(screen.getByTestId("mock-boundary-click"));
     expect(await screen.findByText("Jordan Alvarez • District 11")).toBeInTheDocument();
   });

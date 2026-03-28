@@ -20,7 +20,7 @@ export function AppShell({ children, className, overlay }: AppShellProps) {
         <nav className="top-nav-links" aria-label="Primary navigation">
           <NavLink to="/">Home</NavLink>
           <NavLink to="/map">Map</NavLink>
-          <NavLink to="/districts/11">About</NavLink>
+          <NavLink to="/about">About</NavLink>
         </nav>
       </header>
 
