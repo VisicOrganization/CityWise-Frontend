@@ -11,6 +11,7 @@ export interface DemoMapMarker {
   label: string;
   longitude: number;
   latitude: number;
+  kind?: "base" | "search";
 }
 
 
@@ -33,6 +34,7 @@ export const demoMapMarkers: DemoMapMarker[] = [
     label: "Porter Ranch Community Park",
     longitude: -118.565,
     latitude: 34.277,
+    kind: "base",
   },
   {
     id: "metrolink",
@@ -40,6 +42,7 @@ export const demoMapMarkers: DemoMapMarker[] = [
     label: "Chatsworth Metrolink Station",
     longitude: -118.6005,
     latitude: 34.2535,
+    kind: "base",
   },
   {
     id: "mar-vista",
@@ -47,6 +50,7 @@ export const demoMapMarkers: DemoMapMarker[] = [
     label: "Mar Vista Green Streets",
     longitude: -118.611,
     latitude: 34.242,
+    kind: "base",
   },
   {
     id: "library",
@@ -54,6 +58,7 @@ export const demoMapMarkers: DemoMapMarker[] = [
     label: "Pacific Palisades Library Addition",
     longitude: -118.585,
     latitude: 34.183,
+    kind: "base",
   },
   {
     id: "arts-gateway",
@@ -61,6 +66,7 @@ export const demoMapMarkers: DemoMapMarker[] = [
     label: "Boyle Heights Arts District Gateway",
     longitude: -118.554,
     latitude: 34.205,
+    kind: "base",
   },
   {
     id: "watts-center",
@@ -68,6 +74,7 @@ export const demoMapMarkers: DemoMapMarker[] = [
     label: "Watts Community Center Expansion",
     longitude: -118.539,
     latitude: 34.191,
+    kind: "base",
   },
   {
     id: "cesar-chavez",
@@ -75,6 +82,7 @@ export const demoMapMarkers: DemoMapMarker[] = [
     label: "Cesar Chavez Avenue",
     longitude: -118.589,
     latitude: 34.201,
+    kind: "base",
   },
 ];
 

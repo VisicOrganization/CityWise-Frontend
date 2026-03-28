@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Map, { Marker, type ViewState } from "react-map-gl/maplibre";
 
 import { categoryAppearance, demoDistrict, demoMapMarkers, type DemoMapMarker } from "../../lib/mock/mapDemo";
@@ -41,7 +41,11 @@ function DemoMarker({ marker }: { marker: DemoMapMarker }) {
 
   return (
     <Marker longitude={marker.longitude} latitude={marker.latitude} anchor="bottom">
-      <button type="button" className={`demo-marker ${appearance.className}`} aria-label={marker.label}>
+      <button
+        type="button"
+        className={`demo-marker ${appearance.className} ${marker.kind === "search" ? "marker-search-hit" : ""}`}
+        aria-label={marker.label}
+      >
         <span className="demo-marker-icon">{appearance.icon}</span>
       </button>
       <div className="demo-marker-label">{marker.label}</div>
@@ -50,8 +54,39 @@ function DemoMarker({ marker }: { marker: DemoMapMarker }) {
 }
 
 
-export function CityDemoMap() {
+interface CityDemoMapProps {
+  markers?: DemoMapMarker[];
+  searchQuery: string;
+  searchResults: string[];
+  onSearchChange: (value: string) => void;
+  onSearchSubmit: () => void;
+  onSelectResult: (label: string) => void;
+}
+
+
+export function CityDemoMap({
+  markers = demoMapMarkers,
+  searchQuery,
+  searchResults,
+  onSearchChange,
+  onSearchSubmit,
+  onSelectResult,
+}: CityDemoMapProps) {
   const [viewState, setViewState] = useState(DEFAULT_VIEW_STATE);
+
+  useEffect(() => {
+    const searchMarker = markers.find((marker) => marker.kind === "search");
+    if (!searchMarker) {
+      return;
+    }
+
+    setViewState((current) => ({
+      ...current,
+      longitude: searchMarker.longitude,
+      latitude: searchMarker.latitude,
+      zoom: Math.max(current.zoom, 13.2),
+    }));
+  }, [markers]);
 
   return (
     <div className="city-demo-map">
@@ -62,7 +97,7 @@ export function CityDemoMap() {
         attributionControl={false}
         style={{ width: "100%", height: "100%" }}
       >
-        {demoMapMarkers.map((marker) => (
+        {markers.map((marker) => (
           <DemoMarker key={marker.id} marker={marker} />
         ))}
       </Map>
@@ -75,16 +110,23 @@ export function CityDemoMap() {
       </div>
 
       <div className="map-search-dock">
-        <button type="button" className="map-search-icon" aria-label="Search map">
+        <button type="button" className="map-search-icon" aria-label="Search map" onClick={onSearchSubmit}>
           ⌕
         </button>
         <div className="map-search-panel">
-          <input type="text" value="3096" readOnly aria-label="Search query" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(event) => onSearchChange(event.target.value)}
+            aria-label="Search query"
+            placeholder="Search an address or place"
+          />
           <div className="map-search-results">
-            <button type="button">3096 McClintock Ave</button>
-            <button type="button">3096 Lake Hollywood Dr</button>
-            <button type="button">3096 N Clybourn Ave</button>
-            <button type="button">3096 W Temple Ave</button>
+            {searchResults.map((result) => (
+              <button key={result} type="button" onClick={() => onSelectResult(result)}>
+                {result}
+              </button>
+            ))}
           </div>
         </div>
       </div>

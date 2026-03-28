@@ -1,10 +1,24 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 import { AppShell } from "../components/shell/AppShell";
 import { landingPrompts } from "../lib/mock/mapDemo";
 
 
 export function LandingPage() {
+  const navigate = useNavigate();
+  const [query, setQuery] = useState("");
+
+  function handleSearch() {
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery) {
+      navigate("/map");
+      return;
+    }
+
+    navigate(`/map?q=${encodeURIComponent(trimmedQuery)}`);
+  }
+
   return (
     <AppShell className="landing-shell">
       <section className="landing-hero">
@@ -20,10 +34,16 @@ export function LandingPage() {
 
           <div className="landing-search">
             <span className="landing-search-icon">⌕</span>
-            <input type="text" readOnly value="Enter your address to search..." aria-label="Search address" />
-            <Link to="/map" className="landing-search-button">
+            <input
+              type="text"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              aria-label="Search address"
+              placeholder="Enter your address to search..."
+            />
+            <button type="button" className="landing-search-button" onClick={handleSearch}>
               Search
-            </Link>
+            </button>
           </div>
 
           <div className="landing-links">

@@ -15,6 +15,7 @@
 
 - the landing page and `/map` view use mock-only content and markers
 - the `/map` screen uses a general LA-focused mock map, not backend data
+- the `/map` search uses a demo geocoding hack and drops a generated sample marker at the searched location so the map feels alive before the side panel exists
 - the details side panel is intentionally not implemented yet
 - the district overview route remains available for the backend-driven MVP slice
 
