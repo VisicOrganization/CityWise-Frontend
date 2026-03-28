@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import Map, { Marker, type ViewState } from "react-map-gl/maplibre";
+import Map, { Layer, Marker, Source, type ViewState } from "react-map-gl/maplibre";
 
+import { loadDistrictBoundaries, type DistrictBoundaryCollection } from "../../lib/districtBoundaries";
 import { categoryAppearance, demoDistrict, demoMapMarkers, type DemoMapMarker } from "../../lib/mock/mapDemo";
+import { districtFillLayer, districtOutlineLayer } from "../../lib/map/districtLayers";
 
 
 const DEMO_MAP_STYLE = {
@@ -58,6 +60,27 @@ export function CityDemoMap({
   onMarkerSelect,
 }: CityDemoMapProps) {
   const [viewState, setViewState] = useState(DEFAULT_VIEW_STATE);
+  const [boundaries, setBoundaries] = useState<DistrictBoundaryCollection | null>(null);
+
+  useEffect(() => {
+    let ignore = false;
+
+    loadDistrictBoundaries()
+      .then((loaded) => {
+        if (!ignore) {
+          setBoundaries(loaded);
+        }
+      })
+      .catch(() => {
+        if (!ignore) {
+          setBoundaries(null);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   useEffect(() => {
     const searchMarker = markers.find((marker) => marker.kind === "search");
@@ -82,6 +105,13 @@ export function CityDemoMap({
         attributionControl={false}
         style={{ width: "100%", height: "100%" }}
       >
+        {boundaries ? (
+          <Source id="demo-district-boundaries" type="geojson" data={boundaries}>
+            <Layer {...districtFillLayer} />
+            <Layer {...districtOutlineLayer} />
+          </Source>
+        ) : null}
+
         {markers.map((marker) => (
           <Marker key={marker.id} longitude={marker.longitude} latitude={marker.latitude} anchor="bottom">
             <button

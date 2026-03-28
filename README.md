@@ -15,6 +15,7 @@
 
 - the landing page and `/map` view use mock-only content and markers
 - the `/map` screen uses a general LA-focused mock map, not backend data
+- the `/map` screen overlays the frontend-local district GeoJSON with hard-coded district colors and a zoom-based fill fade so boundaries read clearly at city scale
 - the `/map` search uses a demo geocoding hack and drops a generated sample marker at the searched location so the map feels alive before the side panel exists
 - clicking a map marker opens a details panel that pulls one real project record from the backend and shows its title, voting record, and timeline
 - the district overview route remains available for the backend-driven MVP slice
