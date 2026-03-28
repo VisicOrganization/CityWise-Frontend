@@ -99,9 +99,17 @@ export function CityDemoMap({
 }: CityDemoMapProps) {
   const [viewState, setViewState] = useState(DEFAULT_VIEW_STATE);
   const [baseMapId, setBaseMapId] = useState<BaseMapId>("streets");
+  const [lastVisibleDistrictId, setLastVisibleDistrictId] = useState<number | null>(null);
   const navigate = useNavigate();
   const activeDistrict = activeDistrictId ? getDemoDistrict(activeDistrictId) : null;
+  const displayedDistrict = getDemoDistrict(activeDistrictId ?? lastVisibleDistrictId ?? undefined);
   const mapStyle = useMemo(() => buildBaseMapStyle(baseMapId), [baseMapId]);
+
+  useEffect(() => {
+    if (activeDistrictId) {
+      setLastVisibleDistrictId(activeDistrictId);
+    }
+  }, [activeDistrictId]);
 
   useEffect(() => {
     const searchMarker = markers.find((marker) => marker.kind === "search");
@@ -162,7 +170,10 @@ export function CityDemoMap({
               type="button"
               className={`demo-marker ${categoryAppearance[marker.category].className} ${marker.kind === "search" ? "marker-search-hit" : ""} ${activeMarkerId === marker.id ? "marker-active" : ""}`}
               aria-label={marker.label}
-              onClick={() => onMarkerSelect(marker)}
+              onClick={(event) => {
+                event.stopPropagation();
+                onMarkerSelect(marker);
+              }}
             >
               <span className="demo-marker-icon">{categoryAppearance[marker.category].icon}</span>
             </button>
@@ -182,15 +193,15 @@ export function CityDemoMap({
               navigate(`/districts/${activeDistrict.id}`);
             }
           }}
-          aria-label={activeDistrict ? `Open ${activeDistrict.label} overview` : "No district selected"}
+          aria-label={activeDistrict ? `Open ${activeDistrict.label} overview` : "District overview hidden"}
           aria-hidden={activeDistrict ? undefined : true}
           tabIndex={activeDistrict ? 0 : -1}
         >
           <span className="map-district-avatar">
-            {activeDistrict ? activeDistrict.representative.split(" ").map((part) => part[0]).join("") : "?"}
+            {displayedDistrict.representative.split(" ").map((part) => part[0]).join("")}
           </span>
           <span>
-            {activeDistrict ? `${activeDistrict.representative} • ${activeDistrict.label}` : "Select a district"}
+            {`${displayedDistrict.representative} • ${displayedDistrict.label}`}
           </span>
         </button>
       </div>

@@ -294,6 +294,7 @@ describe("mock app routes", () => {
 
     expect(screen.queryByLabelText(/Open District .* overview/)).not.toBeInTheDocument();
     await user.click(await screen.findByLabelText("Council File 25-0358"));
+    expect(screen.getByLabelText("Open District 11 overview")).toBeInTheDocument();
     expect(await screen.findByText("Jordan Alvarez • District 11")).toBeInTheDocument();
   });
 
@@ -326,6 +327,7 @@ describe("mock app routes", () => {
     await user.click(screen.getByTestId("mock-empty-map-click"));
 
     expect(screen.queryByLabelText(/Open District .* overview/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Select a district")).not.toBeInTheDocument();
   });
 
   it("opens the selected district overview from the pill", async () => {
