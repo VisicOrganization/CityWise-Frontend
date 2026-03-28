@@ -16,6 +16,12 @@ Local development:
 - configure frontend ports and API base URL in `.env.local`
 - configure published frontend port mapping in `compose.local.yml`
 
+Validation commands:
+- run lint with `npm run lint`
+- run tests with `npm run test`
+- run a type check with `npm run typecheck`
+- run a production build with `npm run build`
+
 Map work:
 - start with [react-map-gl docs/examples](/home/codex/workspace/VISIC/maplibre/react-map-gl/docs/README.md)
 - then verify lower-level behavior in [maplibre-gl-js](/home/codex/workspace/VISIC/maplibre/maplibre-gl-js/README.md)
