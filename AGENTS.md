@@ -19,6 +19,8 @@ Git workflow requirements:
 - Use pull requests to merge frontend changes into `main`.
 - Once the implementation approach is settled with the user, make logical commits on the working branch as work is completed.
 - Pushing to the active frontend working branch, including `codex/*`, is allowed.
+- After creating a frontend commit on the working branch, push it by default so the branch and any open PR stay current.
+- Only keep a frontend commit local if the user explicitly asks not to push yet or both sides have clearly agreed to hold pushes.
 - When publishing frontend work, prefer opening a draft PR first.
 - If the GitHub integration cannot create the PR, fall back to authenticated `gh pr create`.
 
