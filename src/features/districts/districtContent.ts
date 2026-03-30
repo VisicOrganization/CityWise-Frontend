@@ -1,4 +1,4 @@
-import { demoDistricts } from "./mock/mapDemo";
+import { demoDistricts } from "../../shared/mock/mapDemo";
 
 
 export interface DistrictImpactItem {

@@ -1,12 +1,12 @@
 import { Route, Routes } from "react-router-dom";
 
-import { DistrictOverviewPage } from "./pages/DistrictOverviewPage";
-import { LandingPage } from "./pages/LandingPage";
-import { MapDemoPage } from "./pages/MapDemoPage";
-import { AboutPage } from "./pages/AboutPage";
+import { AboutPage } from "../features/about/AboutPage";
+import { DistrictOverviewPage } from "../features/districts/DistrictOverviewPage";
+import { LandingPage } from "../features/landing/LandingPage";
+import { MapDemoPage } from "../features/map-demo/MapDemoPage";
 
 
-export default function App() {
+export function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />

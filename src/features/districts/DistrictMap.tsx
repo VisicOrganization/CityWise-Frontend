@@ -6,13 +6,13 @@ import {
   getFeatureBounds,
   loadDistrictBoundaries,
   type DistrictBoundaryCollection,
-} from "../../lib/districtBoundaries";
+} from "../../shared/map/districtBoundaries";
 import {
   citywiseBaseStyle,
   districtFillLayer,
   districtHighlightLayer,
   districtOutlineLayer,
-} from "../../lib/map/districtLayers";
+} from "../../shared/map/districtLayers";
 
 
 const DEFAULT_VIEW_STATE: ViewState = {

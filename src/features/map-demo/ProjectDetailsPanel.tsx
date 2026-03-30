@@ -1,5 +1,5 @@
-import type { ProjectDetail } from "../../lib/contracts";
-import type { DemoMapMarker } from "../../lib/mock/mapDemo";
+import type { ProjectDetail } from "../../shared/api/contracts";
+import type { DemoMapMarker } from "../../shared/mock/mapDemo";
 
 
 function formatPanelDate(value: string | null) {

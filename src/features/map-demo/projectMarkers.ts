@@ -1,10 +1,10 @@
-import type { DistrictProjectCard } from "../contracts";
+import type { DistrictProjectCard } from "../../shared/api/contracts";
 import {
   findDistrictFeature,
   getFeatureBounds,
   type DistrictBoundaryCollection,
-} from "../districtBoundaries";
-import type { DemoMapMarker } from "../mock/mapDemo";
+} from "../../shared/map/districtBoundaries";
+import type { DemoMapMarker } from "../../shared/mock/mapDemo";
 
 
 function categoryFromProject(project: DistrictProjectCard): DemoMapMarker["category"] {

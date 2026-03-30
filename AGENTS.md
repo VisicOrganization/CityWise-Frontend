@@ -7,6 +7,16 @@ Important context:
 - keep curated district copy and district GeoJSON local to the frontend for MVP
 - do not add fake markers, inferred anchors, or geocoding work unless explicitly requested
 
+Git workflow requirements:
+- Before making frontend changes, check the current branch inside `CityWise-Frontend`.
+- If the branch is `main`, do not work from it. Create or switch to a task branch such as `codex/<task-slug>`.
+- If the branch is already non-`main`, confirm it is the correct branch for the requested frontend work before proceeding.
+- Never commit to `main`.
+- Never push directly to `main`.
+- Use pull requests to merge frontend changes into `main`.
+- Once the implementation approach is settled with the user, make logical commits on the working branch as work is completed.
+- Pushing to the active frontend working branch, including `codex/*`, is allowed.
+
 Local development:
 - prefer the Docker-based workflow in `compose.local.yml`
 - choose host ports that do not clash with an existing local developer environment

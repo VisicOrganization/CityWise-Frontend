@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import Map, { Layer, Marker, Source, type MapLayerMouseEvent, type ViewState } from "react-map-gl/maplibre";
 import { useNavigate } from "react-router-dom";
 
-import type { DistrictBoundaryCollection } from "../../lib/districtBoundaries";
-import { categoryAppearance, getDemoDistrict, type DemoMapMarker } from "../../lib/mock/mapDemo";
-import { districtFillLayer, districtOutlineLayer } from "../../lib/map/districtLayers";
+import type { DistrictBoundaryCollection } from "../../shared/map/districtBoundaries";
+import { districtFillLayer, districtOutlineLayer } from "../../shared/map/districtLayers";
+import { categoryAppearance, getDemoDistrict, type DemoMapMarker } from "../../shared/mock/mapDemo";
 
 
 const baseMaps = {
