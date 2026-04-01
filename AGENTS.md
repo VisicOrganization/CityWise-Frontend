@@ -9,6 +9,8 @@ Important context:
 
 Git workflow requirements:
 - Before making frontend changes, check the current branch inside `CityWise-Frontend`.
+- Before starting new frontend work, check whether the current branch is associated with a pull request and whether that pull request has already merged.
+- If the current frontend branch's pull request is already merged, switch back to `main`, update from `origin/main`, and create a fresh `codex/<task-slug>` branch before editing.
 - Fetch `origin/main` before creating a new frontend working branch, and treat `origin/main` as the latest source of truth.
 - If the branch is `main`, do not work from it. Create or switch to a task branch such as `codex/<task-slug>` from the latest `origin/main`.
 - If the branch is already non-`main`, confirm it is the correct branch for the requested frontend work before proceeding.
@@ -45,6 +47,8 @@ Validation commands:
 - run tests with `npm run test`
 - run a type check with `npm run typecheck`
 - run a production build with `npm run build`
+
+If frontend work is part of a cross-repo change, validate the frontend repo with the commands above and confirm any affected backend API or payload assumptions in `CityWise-Backend` before finishing.
 
 Map work:
 - start with [react-map-gl docs/examples](/home/codex/workspace/VISIC/maplibre/react-map-gl/docs/README.md)
