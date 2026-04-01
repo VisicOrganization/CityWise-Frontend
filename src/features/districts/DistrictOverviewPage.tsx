@@ -1,11 +1,9 @@
-import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
-import { DistrictMap } from "../components/map/DistrictMap";
-import { AppShell } from "../components/shell/AppShell";
-import { getDistrictProjects } from "../lib/api";
-import type { DistrictProjectsResponse } from "../lib/contracts";
-import { getDeterministicProjectBudget, getDistrictContent } from "../lib/districtContent";
+import { AppShell } from "../../shared/ui/AppShell";
+import { DistrictMap } from "./DistrictMap";
+import { getDeterministicProjectBudget, getDistrictContent } from "./districtContent";
+import { useDistrictProjects } from "./useDistrictProjects";
 
 
 const PAGE_SIZE = 3;
@@ -42,38 +40,7 @@ export function DistrictOverviewPage() {
   const params = useParams<{ districtId: string }>();
   const districtId = Number(params.districtId);
   const districtContent = getDistrictContent(districtId);
-
-  const [response, setResponse] = useState<DistrictProjectsResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    let ignore = false;
-    setIsLoading(true);
-    setError(null);
-
-    getDistrictProjects(districtId, 1, PAGE_SIZE)
-      .then((nextResponse) => {
-        if (!ignore) {
-          setResponse(nextResponse);
-        }
-      })
-      .catch((nextError: Error) => {
-        if (!ignore) {
-          setError(nextError.message);
-          setResponse(null);
-        }
-      })
-      .finally(() => {
-        if (!ignore) {
-          setIsLoading(false);
-        }
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [districtId]);
+  const { response, error, isLoading } = useDistrictProjects(districtId, 1, PAGE_SIZE);
 
   return (
     <AppShell className="district-page-shell">

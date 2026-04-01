@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { AppShell } from "../components/shell/AppShell";
-import { landingPrompts } from "../lib/mock/mapDemo";
+import { landingPrompts } from "../../shared/mock/mapDemo";
+import { AppShell } from "../../shared/ui/AppShell";
 
 
 export function LandingPage() {

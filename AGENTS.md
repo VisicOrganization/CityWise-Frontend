@@ -7,6 +7,23 @@ Important context:
 - keep curated district copy and district GeoJSON local to the frontend for MVP
 - do not add fake markers, inferred anchors, or geocoding work unless explicitly requested
 
+Git workflow requirements:
+- Before making frontend changes, check the current branch inside `CityWise-Frontend`.
+- Fetch `origin/main` before creating a new frontend working branch, and treat `origin/main` as the latest source of truth.
+- If the branch is `main`, do not work from it. Create or switch to a task branch such as `codex/<task-slug>` from the latest `origin/main`.
+- If the branch is already non-`main`, confirm it is the correct branch for the requested frontend work before proceeding.
+- If the frontend working branch was created from the wrong base branch, rebase it onto the latest `origin/main` before opening a PR. Prefer a targeted rewrite such as `git rebase --onto origin/main <old-base-branch> <working-branch>`.
+- If a rebased frontend branch has already been pushed, update the remote with `git push --force-with-lease`.
+- Never commit to `main`.
+- Never push directly to `main`.
+- Use pull requests to merge frontend changes into `main`.
+- Once the implementation approach is settled with the user, make logical commits on the working branch as work is completed.
+- Pushing to the active frontend working branch, including `codex/*`, is allowed.
+- After creating a frontend commit on the working branch, push it by default so the branch and any open PR stay current.
+- Only keep a frontend commit local if the user explicitly asks not to push yet or both sides have clearly agreed to hold pushes.
+- When publishing frontend work, prefer opening a draft PR first.
+- If the GitHub integration cannot create the PR, fall back to authenticated `gh pr create`.
+
 Local development:
 - prefer the Docker-based workflow in `compose.local.yml`
 - choose host ports that do not clash with an existing local developer environment

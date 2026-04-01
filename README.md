@@ -2,6 +2,18 @@
 
 `CityWise-Frontend` is the React + TypeScript + Vite frontend for the CityWise MVP.
 
+## Structure
+
+```text
+src/
+  app/           app bootstrap and route composition
+  features/      route-facing product areas (landing, districts, map demo)
+  shared/api/    backend client and contracts
+  shared/map/    reusable map helpers and district boundary utilities
+  shared/mock/   demo-only fixtures and geocoding helpers
+  shared/ui/     shared shell-level UI
+```
+
 ## MVP slice
 
 - landing page entry route at `/`
