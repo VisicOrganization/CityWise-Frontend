@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Map, {
   Layer,
   Marker,
@@ -21,27 +21,6 @@ import {
   TransitIcon,
 } from "../../shared/ui/visicIcons";
 
-
-const baseMaps = {
-  streets: {
-    label: "Streets",
-    background: "#f5f0e8",
-    tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-  },
-  light: {
-    label: "Light",
-    background: "#eef2f5",
-    tiles: ["https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"],
-  },
-  dark: {
-    label: "Dark",
-    background: "#0f172a",
-    tiles: ["https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"],
-  },
-} as const;
-
-type BaseMapId = keyof typeof baseMaps;
-
 type MarkerCategory = DemoMapMarker["category"];
 
 const categoryLabels: Record<MarkerCategory, string> = {
@@ -50,15 +29,13 @@ const categoryLabels: Record<MarkerCategory, string> = {
   parks: "Infrastructure",
 };
 
-function buildBaseMapStyle(baseMapId: BaseMapId) {
-  const baseMap = baseMaps[baseMapId];
-
+function buildBaseMapStyle() {
   return {
     version: 8,
     sources: {
       raster: {
         type: "raster",
-        tiles: baseMap.tiles,
+        tiles: ["https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"],
         tileSize: 256,
         attribution: "© OpenStreetMap contributors © CARTO",
       },
@@ -68,7 +45,7 @@ function buildBaseMapStyle(baseMapId: BaseMapId) {
         id: "background",
         type: "background",
         paint: {
-          "background-color": baseMap.background,
+          "background-color": "#eef2f5",
         },
       },
       {
@@ -76,8 +53,8 @@ function buildBaseMapStyle(baseMapId: BaseMapId) {
         type: "raster",
         source: "raster",
         paint: {
-          "raster-opacity": baseMapId === "dark" ? 0.94 : 0.97,
-          "raster-saturation": baseMapId === "streets" ? -0.35 : -0.18,
+          "raster-opacity": 0.97,
+          "raster-saturation": -0.18,
         },
       },
     ],
@@ -137,7 +114,6 @@ export function CityDemoMap({
   onDistrictSelect,
 }: CityDemoMapProps) {
   const [viewState, setViewState] = useState(DEFAULT_VIEW_STATE);
-  const [baseMapId, setBaseMapId] = useState<BaseMapId>("streets");
   const [lastVisibleDistrictId, setLastVisibleDistrictId] = useState<number | null>(null);
   const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -150,7 +126,7 @@ export function CityDemoMap({
   const navigate = useNavigate();
   const activeDistrict = activeDistrictId ? getDemoDistrict(activeDistrictId) : null;
   const displayedDistrict = getDemoDistrict(activeDistrictId ?? lastVisibleDistrictId ?? undefined);
-  const mapStyle = useMemo(() => buildBaseMapStyle(baseMapId), [baseMapId]);
+  const mapStyle = buildBaseMapStyle();
 
   useEffect(() => {
     if (activeDistrictId) {
@@ -307,21 +283,6 @@ export function CityDemoMap({
       </form>
 
       <div className="map-control-stack" aria-label="Map controls">
-        <div className="map-basemap-select">
-          <span>Basemap</span>
-          <select
-            aria-label="Basemap style"
-            value={baseMapId}
-            onChange={(event) => setBaseMapId(event.target.value as BaseMapId)}
-          >
-            {Object.entries(baseMaps).map(([id, option]) => (
-              <option key={id} value={id}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
         <div className="map-menu-shell">
           <button
             type="button"

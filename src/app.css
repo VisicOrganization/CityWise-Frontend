@@ -470,7 +470,6 @@ a {
   gap: 0.7rem;
 }
 
-.map-basemap-select,
 .map-utility-panel {
   min-width: 13rem;
   padding: 0.95rem 1rem;
@@ -479,12 +478,6 @@ a {
   box-shadow: 0 18px 40px rgba(23, 50, 77, 0.12);
 }
 
-.map-basemap-select {
-  display: grid;
-  gap: 0.45rem;
-}
-
-.map-basemap-select span,
 .map-utility-header span,
 .project-details-kicker span,
 .district-section-label,
@@ -494,19 +487,11 @@ a {
   font-size: 0.8rem;
 }
 
-.map-basemap-select span,
 .map-utility-header strong,
 .project-details-kicker,
 .district-section-label {
   letter-spacing: 0.06em;
   text-transform: uppercase;
-}
-
-.map-basemap-select select {
-  border: 0;
-  background: transparent;
-  color: #17324d;
-  outline: none;
 }
 
 .map-menu-shell {

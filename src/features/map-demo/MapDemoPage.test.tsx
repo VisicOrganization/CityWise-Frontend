@@ -300,7 +300,6 @@ describe("mock app routes", () => {
 
     expect(screen.getByTestId("demo-map")).toBeInTheDocument();
     expect(screen.queryByLabelText(/Open District .* overview/)).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Basemap style")).toBeInTheDocument();
     expect(await screen.findByLabelText("Search query")).toHaveValue("123 Main St");
     expect(await screen.findByText("123 Main St, Los Angeles, California, United States")).toBeInTheDocument();
   });
