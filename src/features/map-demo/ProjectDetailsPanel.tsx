@@ -55,7 +55,6 @@ interface ProjectDetailsPanelProps {
   detail: ProjectDetail | null;
   isLoading: boolean;
   errorMessage: string | null;
-  onClose: () => void;
 }
 
 
@@ -64,7 +63,6 @@ export function ProjectDetailsPanel({
   detail,
   isLoading,
   errorMessage,
-  onClose,
 }: ProjectDetailsPanelProps) {
   const [activeView, setActiveView] = useState<"overview" | "timeline">("overview");
   const [isVotingPopoverOpen, setIsVotingPopoverOpen] = useState(false);
@@ -99,9 +97,6 @@ export function ProjectDetailsPanel({
                 {detail?.project.summary || detail?.project.about || "Project summary content will be expanded as more source detail lands in the MVP."}
               </p>
             </div>
-            <button type="button" className="project-details-close" aria-label="Close project details" onClick={onClose}>
-              ×
-            </button>
           </div>
         </div>
       </div>

@@ -99,6 +99,11 @@ export function MapDemoPage() {
     await loadProjectForMarker(marker, projectCards);
   }
 
+  function handleMapBackgroundClick() {
+    setActiveMarker(null);
+    resetProjectDetail();
+  }
+
   return (
     <AppShell className="map-demo-shell">
       <section className="map-demo-screen">
@@ -117,6 +122,7 @@ export function MapDemoPage() {
           onMarkerSelect={(marker) => {
             void handleMarkerSelect(marker);
           }}
+          onMapBackgroundClick={handleMapBackgroundClick}
           onDistrictSelect={(districtId) => {
             setActiveDistrictId(districtId);
           }}
@@ -127,10 +133,6 @@ export function MapDemoPage() {
             detail={activeProject}
             isLoading={isDetailsLoading}
             errorMessage={detailsError}
-            onClose={() => {
-              setActiveMarker(null);
-              resetProjectDetail();
-            }}
           />
         ) : null}
       </section>

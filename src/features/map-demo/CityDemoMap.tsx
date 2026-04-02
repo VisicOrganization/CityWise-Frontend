@@ -117,6 +117,7 @@ interface CityDemoMapProps {
   onSearchSubmit: () => void;
   onSelectResult: (label: string) => void;
   onMarkerSelect: (marker: DemoMapMarker) => void;
+  onMapBackgroundClick: () => void;
   onDistrictSelect: (districtId: number | null) => void;
 }
 
@@ -132,6 +133,7 @@ export function CityDemoMap({
   onSearchSubmit,
   onSelectResult,
   onMarkerSelect,
+  onMapBackgroundClick,
   onDistrictSelect,
 }: CityDemoMapProps) {
   const [viewState, setViewState] = useState(DEFAULT_VIEW_STATE);
@@ -177,6 +179,7 @@ export function CityDemoMap({
     });
 
     if (!clickedFeature) {
+      onMapBackgroundClick();
       onDistrictSelect(null);
       return;
     }
@@ -184,6 +187,7 @@ export function CityDemoMap({
     const districtValue = clickedFeature.properties?.District;
     const parsedDistrictId = Number(districtValue);
     if (Number.isNaN(parsedDistrictId)) {
+      onMapBackgroundClick();
       onDistrictSelect(null);
       return;
     }
