@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
+import { DistrictOverviewSheet } from "../districts/DistrictOverviewSheet";
 import type { DemoGeocodeResult } from "../../shared/mock/demoGeocoding";
 import { buildDemoMarkerFromSearch, searchDemoAddresses } from "../../shared/mock/demoGeocoding";
 import type { DemoMapMarker } from "../../shared/mock/mapDemo";
@@ -12,12 +13,21 @@ import { useProjectDetail } from "./useProjectDetail";
 
 
 export function MapDemoPage() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") ?? "");
   const [results, setResults] = useState<DemoGeocodeResult[]>([]);
   const [searchMarker, setSearchMarker] = useState<DemoMapMarker | null>(null);
   const [activeMarker, setActiveMarker] = useState<DemoMapMarker | null>(null);
   const [activeDistrictId, setActiveDistrictId] = useState<number | null>(null);
+  const districtFocusId = useMemo(() => {
+    const districtFocusValue = searchParams.get("districtFocus");
+    if (!districtFocusValue) {
+      return null;
+    }
+
+    const parsed = Number(districtFocusValue);
+    return Number.isNaN(parsed) ? null : parsed;
+  }, [searchParams]);
   const { boundaries, projectCards, projectMarkers } = useMapDemoData();
   const {
     activeProject,
@@ -31,6 +41,12 @@ export function MapDemoPage() {
     const incomingQuery = searchParams.get("q") ?? "";
     setSearchQuery(incomingQuery);
   }, [searchParams]);
+
+  useEffect(() => {
+    if (districtFocusId) {
+      setActiveDistrictId(districtFocusId);
+    }
+  }, [districtFocusId]);
 
   useEffect(() => {
     let ignore = false;
@@ -104,6 +120,23 @@ export function MapDemoPage() {
     resetProjectDetail();
   }
 
+  function setDistrictFocus(districtId: number | null) {
+    const nextParams = new URLSearchParams(searchParams);
+    if (districtId === null) {
+      nextParams.delete("districtFocus");
+    } else {
+      nextParams.set("districtFocus", String(districtId));
+    }
+
+    setSearchParams(nextParams, { replace: true });
+  }
+
+  function openDistrictOverview(districtId: number) {
+    setActiveMarker(null);
+    resetProjectDetail();
+    setDistrictFocus(districtId);
+  }
+
   return (
     <AppShell className="map-demo-shell">
       <section className="map-demo-screen">
@@ -123,6 +156,9 @@ export function MapDemoPage() {
             void handleMarkerSelect(marker);
           }}
           onMapBackgroundClick={handleMapBackgroundClick}
+          onOpenDistrictOverview={(districtId) => {
+            openDistrictOverview(districtId);
+          }}
           onDistrictSelect={(districtId) => {
             setActiveDistrictId(districtId);
           }}
@@ -134,6 +170,17 @@ export function MapDemoPage() {
             isLoading={isDetailsLoading}
             errorMessage={detailsError}
           />
+        ) : null}
+        {districtFocusId ? (
+          <>
+            <button
+              type="button"
+              className="district-sheet-dismiss-layer"
+              aria-label="Close district overview"
+              onClick={() => setDistrictFocus(null)}
+            />
+            <DistrictOverviewSheet districtId={districtFocusId} />
+          </>
         ) : null}
       </section>
     </AppShell>

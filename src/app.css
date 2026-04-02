@@ -951,17 +951,26 @@ a {
 
 .district-bottom-sheet {
   position: absolute;
-  left: 50%;
-  bottom: 1rem;
-  z-index: 8;
-  width: min(71rem, calc(100% - 2rem));
-  max-height: calc(100vh - 9rem);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9;
+  width: 100%;
+  max-height: calc(100vh - 10.5rem);
   padding: 1rem 1rem 1.2rem;
-  border-radius: 28px;
+  border-radius: 28px 28px 0 0;
   background: rgba(252, 250, 246, 0.96);
   box-shadow: 0 26px 70px rgba(23, 50, 77, 0.18);
-  transform: translateX(-50%);
   overflow: auto;
+}
+
+.district-sheet-dismiss-layer {
+  position: absolute;
+  inset: 0;
+  top: 0;
+  z-index: 8;
+  border: 0;
+  background: transparent;
 }
 
 .district-sheet-handle {
@@ -1318,10 +1327,10 @@ a {
   }
 
   .district-bottom-sheet {
-    width: calc(100% - 1.5rem);
-    bottom: 0.75rem;
+    width: 100%;
+    bottom: 0;
     padding: 0.9rem;
-    max-height: calc(100vh - 8rem);
+    max-height: calc(100vh - 8.5rem);
   }
 
   .details-toggle-group {

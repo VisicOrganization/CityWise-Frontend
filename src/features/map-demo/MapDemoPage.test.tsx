@@ -484,8 +484,23 @@ describe("mock app routes", () => {
     await user.click(await screen.findByLabelText("Council File 25-0358"));
     await user.click(screen.getByLabelText("Open District 11 overview"));
 
-    expect(await screen.findByText("Jordan Alvarez • District 11")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Jordan Alvarez • District 11" })).toBeInTheDocument();
     expect(await screen.findByText("councilmember.jordan.alvarez@lacity.org")).toBeInTheDocument();
+    expect(screen.queryByTestId("demo-map")).toBeInTheDocument();
+  });
+
+  it("closes the district overview when clicking outside the sheet", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={["/map?districtFocus=11"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByLabelText("District overview")).toBeInTheDocument();
+    await user.click(screen.getByLabelText("Close district overview"));
+    expect(screen.queryByLabelText("District overview")).not.toBeInTheDocument();
   });
 
   it("submits the map search from the icon and Enter key", async () => {

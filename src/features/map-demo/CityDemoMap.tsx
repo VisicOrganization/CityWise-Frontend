@@ -7,7 +7,6 @@ import Map, {
   type MapLayerMouseEvent,
   type ViewState,
 } from "react-map-gl/maplibre";
-import { useNavigate } from "react-router-dom";
 
 import type { DistrictBoundaryCollection } from "../../shared/map/districtBoundaries";
 import { districtFillLayer, districtOutlineLayer } from "../../shared/map/districtLayers";
@@ -93,6 +92,7 @@ interface CityDemoMapProps {
   onSelectResult: (label: string) => void;
   onMarkerSelect: (marker: DemoMapMarker) => void;
   onMapBackgroundClick: () => void;
+  onOpenDistrictOverview: (districtId: number) => void;
   onDistrictSelect: (districtId: number | null) => void;
 }
 
@@ -109,6 +109,7 @@ export function CityDemoMap({
   onSelectResult,
   onMarkerSelect,
   onMapBackgroundClick,
+  onOpenDistrictOverview,
   onDistrictSelect,
 }: CityDemoMapProps) {
   const [viewState, setViewState] = useState(DEFAULT_VIEW_STATE);
@@ -121,7 +122,6 @@ export function CityDemoMap({
     transit: true,
     parks: true,
   });
-  const navigate = useNavigate();
   const activeDistrict = activeDistrictId ? getDemoDistrict(activeDistrictId) : null;
   const displayedDistrict = getDemoDistrict(activeDistrictId ?? lastVisibleDistrictId ?? undefined);
 
@@ -233,7 +233,7 @@ export function CityDemoMap({
           className="map-district-pill"
           onClick={() => {
             if (activeDistrict) {
-              navigate(`/districts/${activeDistrict.id}`);
+              onOpenDistrictOverview(activeDistrict.id);
             }
           }}
           aria-label={activeDistrict ? `Open District ${activeDistrict.id} overview` : "District overview hidden"}
