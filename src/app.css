@@ -964,6 +964,12 @@ a {
   overflow: auto;
 }
 
+.district-bottom-sheet > * {
+  width: min(1120px, 100%);
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .district-sheet-dismiss-layer {
   position: absolute;
   inset: 0;
@@ -1038,8 +1044,13 @@ a {
   padding: 0.9rem 1rem;
 }
 
+.district-contact-grid dd {
+  overflow-wrap: anywhere;
+}
+
 .district-contact-grid a {
   color: #1d9467;
+  overflow-wrap: anywhere;
   word-break: break-word;
 }
 
