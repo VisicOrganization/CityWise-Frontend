@@ -1298,7 +1298,7 @@ a {
   }
 
   .map-search-dock {
-    top: 5.5rem;
+    top: 1rem;
     left: 50%;
     width: calc(100vw - 1.5rem);
     transform: translateX(-50%);
