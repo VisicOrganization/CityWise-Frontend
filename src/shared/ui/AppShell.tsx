@@ -1,6 +1,8 @@
 import type { PropsWithChildren, ReactNode } from "react";
 import { Link, NavLink } from "react-router-dom";
 
+import { VisicLogoIcon } from "./visicIcons";
+
 
 interface AppShellProps extends PropsWithChildren {
   className?: string;
@@ -13,7 +15,9 @@ export function AppShell({ children, className, overlay }: AppShellProps) {
     <div className={`app-shell ${className ?? ""}`.trim()}>
       <header className="top-nav">
         <Link to="/" className="brand-mark" aria-label="CityWise home">
-          <span className="brand-pin">◈</span>
+          <span className="brand-pin">
+            <VisicLogoIcon />
+          </span>
           <span className="brand-copy">CityWise</span>
         </Link>
 

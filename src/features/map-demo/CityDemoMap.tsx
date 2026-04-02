@@ -1,10 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
-import Map, { Layer, Marker, Source, type MapLayerMouseEvent, type ViewState } from "react-map-gl/maplibre";
+import Map, {
+  Layer,
+  Marker,
+  NavigationControl,
+  Source,
+  type MapLayerMouseEvent,
+  type ViewState,
+} from "react-map-gl/maplibre";
 import { useNavigate } from "react-router-dom";
 
 import type { DistrictBoundaryCollection } from "../../shared/map/districtBoundaries";
 import { districtFillLayer, districtOutlineLayer } from "../../shared/map/districtLayers";
 import { categoryAppearance, getDemoDistrict, type DemoMapMarker } from "../../shared/mock/mapDemo";
+import {
+  FilterIcon,
+  HousingIcon,
+  InfoIcon,
+  InfrastructureIcon,
+  SearchIcon,
+  TransitIcon,
+} from "../../shared/ui/visicIcons";
 
 
 const baseMaps = {
@@ -26,6 +41,14 @@ const baseMaps = {
 } as const;
 
 type BaseMapId = keyof typeof baseMaps;
+
+type MarkerCategory = DemoMapMarker["category"];
+
+const categoryLabels: Record<MarkerCategory, string> = {
+  housing: "Housing",
+  transit: "Transportation",
+  parks: "Infrastructure",
+};
 
 function buildBaseMapStyle(baseMapId: BaseMapId) {
   const baseMap = baseMaps[baseMapId];
@@ -59,6 +82,20 @@ function buildBaseMapStyle(baseMapId: BaseMapId) {
       },
     ],
   } as const;
+}
+
+function CategoryMarkerIcon({ category }: { category: MarkerCategory }) {
+  const props = { className: "demo-marker-icon", width: 20, height: 20 };
+
+  if (category === "housing") {
+    return <HousingIcon {...props} />;
+  }
+
+  if (category === "transit") {
+    return <TransitIcon {...props} />;
+  }
+
+  return <InfrastructureIcon {...props} />;
 }
 
 const DEFAULT_VIEW_STATE: ViewState = {
@@ -100,6 +137,14 @@ export function CityDemoMap({
   const [viewState, setViewState] = useState(DEFAULT_VIEW_STATE);
   const [baseMapId, setBaseMapId] = useState<BaseMapId>("streets");
   const [lastVisibleDistrictId, setLastVisibleDistrictId] = useState<number | null>(null);
+  const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [filterState, setFilterState] = useState<Record<MarkerCategory, boolean>>({
+    housing: true,
+    transit: true,
+    parks: true,
+  });
   const navigate = useNavigate();
   const activeDistrict = activeDistrictId ? getDemoDistrict(activeDistrictId) : null;
   const displayedDistrict = getDemoDistrict(activeDistrictId ?? lastVisibleDistrictId ?? undefined);
@@ -157,6 +202,7 @@ export function CityDemoMap({
         attributionControl={false}
         style={{ width: "100%", height: "100%" }}
       >
+        <NavigationControl position="top-right" />
         {boundaries ? (
           <Source id="demo-district-boundaries" type="geojson" data={boundaries}>
             <Layer {...districtFillLayer} />
@@ -164,24 +210,37 @@ export function CityDemoMap({
           </Source>
         ) : null}
 
-        {markers.map((marker) => (
-          <Marker key={marker.id} longitude={marker.longitude} latitude={marker.latitude} anchor="bottom">
-            <button
-              type="button"
-              className={`demo-marker ${categoryAppearance[marker.category].className} ${marker.kind === "search" ? "marker-search-hit" : ""} ${activeMarkerId === marker.id ? "marker-active" : ""}`}
-              aria-label={marker.label}
-              onClick={(event) => {
-                event.stopPropagation();
-                onMarkerSelect(marker);
-              }}
-            >
-              <span className="demo-marker-icon">{categoryAppearance[marker.category].icon}</span>
-            </button>
-            {marker.kind === "search" || activeMarkerId === marker.id ? (
-              <div className="demo-marker-label">{marker.label}</div>
-            ) : null}
-          </Marker>
-        ))}
+        {markers.map((marker) => {
+          const showLabel = marker.kind === "search" || activeMarkerId === marker.id || hoveredMarkerId === marker.id;
+          const isMuted = !filterState[marker.category];
+
+          return (
+            <Marker key={marker.id} longitude={marker.longitude} latitude={marker.latitude} anchor="bottom">
+              <div className="marker-stack">
+                <button
+                  type="button"
+                  className={`demo-marker ${categoryAppearance[marker.category].className} ${marker.kind === "search" ? "marker-search-hit" : ""} ${activeMarkerId === marker.id ? "marker-active" : ""} ${isMuted ? "marker-muted" : ""}`}
+                  aria-label={marker.label}
+                  onMouseEnter={() => setHoveredMarkerId(marker.id)}
+                  onMouseLeave={() => setHoveredMarkerId((current) => (current === marker.id ? null : current))}
+                  onFocus={() => setHoveredMarkerId(marker.id)}
+                  onBlur={() => setHoveredMarkerId((current) => (current === marker.id ? null : current))}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onMarkerSelect(marker);
+                  }}
+                >
+                  <CategoryMarkerIcon category={marker.category} />
+                </button>
+                {showLabel ? (
+                  <div className="demo-marker-label">
+                    <span>{marker.label}</span>
+                  </div>
+                ) : null}
+              </div>
+            </Marker>
+          );
+        })}
       </Map>
 
       <div className={`map-district-pill-shell ${activeDistrict ? "is-visible" : "is-hidden"}`}>
@@ -193,7 +252,7 @@ export function CityDemoMap({
               navigate(`/districts/${activeDistrict.id}`);
             }
           }}
-          aria-label={activeDistrict ? `Open ${activeDistrict.label} overview` : "District overview hidden"}
+          aria-label={activeDistrict ? `Open District ${activeDistrict.id} overview` : "District overview hidden"}
           aria-hidden={activeDistrict ? undefined : true}
           tabIndex={activeDistrict ? 0 : -1}
         >
@@ -214,7 +273,7 @@ export function CityDemoMap({
         }}
       >
         <button type="submit" className="map-search-icon" aria-label="Search map">
-          ⌕
+          <SearchIcon />
         </button>
         <div className="map-search-panel">
           <input
@@ -224,18 +283,20 @@ export function CityDemoMap({
             aria-label="Search query"
             placeholder="Search an address or place"
           />
-          <div className="map-search-results">
-            {searchResults.map((result) => (
-              <button key={result} type="button" onClick={() => onSelectResult(result)}>
-                {result}
-              </button>
-            ))}
-          </div>
+          {searchResults.length > 0 ? (
+            <div className="map-search-results">
+              {searchResults.map((result) => (
+                <button key={result} type="button" onClick={() => onSelectResult(result)}>
+                  {result}
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
       </form>
 
       <div className="map-control-stack" aria-label="Map controls">
-        <label className="map-basemap-select">
+        <div className="map-basemap-select">
           <span>Basemap</span>
           <select
             aria-label="Basemap style"
@@ -248,11 +309,74 @@ export function CityDemoMap({
               </option>
             ))}
           </select>
-        </label>
-        <button type="button">☰</button>
-        <button type="button">ⓘ</button>
-        <button type="button">＋</button>
-        <button type="button">－</button>
+        </div>
+
+        <div className="map-menu-shell">
+          <button
+            type="button"
+            className={`map-utility-button ${isFilterOpen ? "is-active" : ""}`}
+            aria-label="Toggle filters"
+            aria-expanded={isFilterOpen}
+            onClick={() => {
+              setIsFilterOpen((current) => !current);
+              setIsInfoOpen(false);
+            }}
+          >
+            <FilterIcon />
+          </button>
+          {isFilterOpen ? (
+            <div className="map-utility-panel" aria-label="Filter menu">
+              <div className="map-utility-header">
+                <strong>Project categories</strong>
+                <span>Preview only</span>
+              </div>
+              {Object.entries(categoryLabels).map(([category, label]) => (
+                <label key={category} className="map-filter-row">
+                  <input
+                    type="checkbox"
+                    checked={filterState[category as MarkerCategory]}
+                    onChange={() =>
+                      setFilterState((current) => ({
+                        ...current,
+                        [category]: !current[category as MarkerCategory],
+                      }))
+                    }
+                  />
+                  <span>{label}</span>
+                </label>
+              ))}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="map-menu-shell">
+          <button
+            type="button"
+            className={`map-utility-button ${isInfoOpen ? "is-active" : ""}`}
+            aria-label="Toggle accessibility information"
+            aria-expanded={isInfoOpen}
+            onClick={() => {
+              setIsInfoOpen((current) => !current);
+              setIsFilterOpen(false);
+            }}
+          >
+            <InfoIcon />
+          </button>
+          {isInfoOpen ? (
+            <div className="map-utility-panel" aria-label="Accessibility information">
+              <div className="map-utility-header">
+                <strong>Map guidance</strong>
+                <span>Informational</span>
+              </div>
+              <p>Use the district overlays for geographic context and the project markers for quick detail checks.</p>
+              <ul className="map-utility-list">
+                <li>Hover markers to preview project names.</li>
+                <li>Click markers to open project details.</li>
+                <li>Click a district boundary to update the district overview pill.</li>
+              </ul>
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );

@@ -201,6 +201,27 @@ describe("mock app routes", () => {
 
   it("renders the landing page as the entry point", async () => {
     const user = userEvent.setup();
+    fetchMock.mockImplementation((input: string | URL | Request) => {
+      const url = String(input);
+
+      if (url.startsWith("https://nominatim.openstreetmap.org/search")) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify([
+              {
+                place_id: 3,
+                display_name: "123 Main St, Los Angeles, California, United States",
+                lat: "34.0500",
+                lon: "-118.2500",
+              },
+            ]),
+          ),
+        );
+      }
+
+      return defaultFetchMock(input);
+    });
+
     render(
       <MemoryRouter initialEntries={["/"]}>
         <App />
@@ -211,6 +232,7 @@ describe("mock app routes", () => {
     const input = screen.getByLabelText("Search address");
     await user.type(input, "123 Main St");
     expect(input).toHaveValue("123 Main St");
+    expect(await screen.findByText("123 Main St, Los Angeles, California, United States")).toBeInTheDocument();
   });
 
   it("submits the landing search on Enter", async () => {
@@ -403,6 +425,24 @@ describe("mock app routes", () => {
     expect(await screen.findByText("City Hall, Los Angeles, California, United States")).toBeInTheDocument();
   });
 
+  it("opens the filter and accessibility menus", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={["/map"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByLabelText("Toggle filters"));
+    expect(screen.getByLabelText("Filter menu")).toBeInTheDocument();
+    expect(screen.getByText("Project categories")).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText("Toggle accessibility information"));
+    expect(screen.getByLabelText("Accessibility information")).toBeInTheDocument();
+    expect(screen.getByText("Map guidance")).toBeInTheDocument();
+  });
+
   it("opens the details panel with backend project data when a marker is clicked", async () => {
     const user = userEvent.setup();
     const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
@@ -481,7 +521,13 @@ describe("mock app routes", () => {
     expect(await screen.findByLabelText("Project details")).toBeInTheDocument();
     expect(await screen.findByRole("heading", { name: "Council File 25-0358" })).toBeInTheDocument();
     expect(await screen.findByText("TRACI PARK")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: /Timeline/i }));
     expect(await screen.findByText("Motion introduced.")).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText("Toggle voting record"));
+    expect(await screen.findByLabelText("Voting record popover")).toBeInTheDocument();
+    expect(await screen.findByText("Yes")).toBeInTheDocument();
 
     randomSpy.mockRestore();
   });

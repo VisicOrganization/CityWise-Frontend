@@ -30,10 +30,40 @@ export function MapDemoPage() {
   useEffect(() => {
     const incomingQuery = searchParams.get("q") ?? "";
     setSearchQuery(incomingQuery);
-    if (incomingQuery) {
-      void runSearch(incomingQuery);
-    }
   }, [searchParams]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    if (!searchQuery.trim()) {
+      setResults([]);
+      setSearchMarker(null);
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      void searchDemoAddresses(searchQuery)
+        .then((nextResults) => {
+          if (ignore) {
+            return;
+          }
+
+          setResults(nextResults);
+          setSearchMarker(nextResults[0] ? buildDemoMarkerFromSearch(nextResults[0], searchQuery) : null);
+        })
+        .catch(() => {
+          if (!ignore) {
+            setResults([]);
+            setSearchMarker(null);
+          }
+        });
+    }, 180);
+
+    return () => {
+      ignore = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [searchQuery]);
 
   async function runSearch(query: string) {
     const nextResults = await searchDemoAddresses(query);
