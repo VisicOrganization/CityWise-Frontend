@@ -14,7 +14,7 @@ export interface DistrictBoundaryProperties {
 export type DistrictBoundaryFeature = Feature<Polygon | MultiPolygon, DistrictBoundaryProperties>;
 export type DistrictBoundaryCollection = FeatureCollection<Polygon | MultiPolygon, DistrictBoundaryProperties>;
 
-const DISTRICT_BOUNDARIES_PATH = "/data/la-city-council-districts.geojson";
+const DISTRICT_BOUNDARIES_PATH = new URL("data/la-city-council-districts.geojson", window.location.origin + import.meta.env.BASE_URL).toString();
 
 
 export async function loadDistrictBoundaries(): Promise<DistrictBoundaryCollection> {
