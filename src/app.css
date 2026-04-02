@@ -560,6 +560,7 @@ a {
 }
 
 .marker-stack {
+  position: relative;
   display: grid;
   justify-items: center;
 }
@@ -606,7 +607,11 @@ a {
 }
 
 .demo-marker-label {
-  margin-top: 0.42rem;
+  position: absolute;
+  top: calc(100% + 0.42rem);
+  left: 50%;
+  z-index: 1;
+  transform: translateX(-50%);
   padding: 0.3rem 0.65rem;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.94);
@@ -615,6 +620,7 @@ a {
   font-weight: 600;
   white-space: nowrap;
   box-shadow: 0 12px 24px rgba(23, 50, 77, 0.14);
+  pointer-events: none;
 }
 
 .project-details-panel {
