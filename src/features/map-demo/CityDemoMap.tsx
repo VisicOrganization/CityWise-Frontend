@@ -217,9 +217,16 @@ export function CityDemoMap({
         {markers.map((marker) => {
           const showLabel = marker.kind === "search" || activeMarkerId === marker.id || hoveredMarkerId === marker.id;
           const isMuted = !filterState[marker.category];
+          const markerZIndex = activeMarkerId === marker.id ? 30 : showLabel ? 20 : 1;
 
           return (
-            <Marker key={marker.id} longitude={marker.longitude} latitude={marker.latitude} anchor="bottom">
+            <Marker
+              key={marker.id}
+              longitude={marker.longitude}
+              latitude={marker.latitude}
+              anchor="bottom"
+              style={{ zIndex: markerZIndex }}
+            >
               <div className="marker-stack">
                 <button
                   type="button"
