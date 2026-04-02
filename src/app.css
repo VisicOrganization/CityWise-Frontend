@@ -636,6 +636,40 @@ a {
   border-right: 1px solid rgba(23, 50, 77, 0.08);
   box-shadow: 20px 0 48px rgba(23, 50, 77, 0.12);
   backdrop-filter: blur(18px);
+  scrollbar-width: none;
+  scrollbar-color: rgba(23, 50, 77, 0.32) transparent;
+  scrollbar-gutter: stable;
+}
+
+.project-details-panel::-webkit-scrollbar {
+  width: 0;
+}
+
+.project-details-panel:hover,
+.project-details-panel:focus-within {
+  scrollbar-width: thin;
+}
+
+.project-details-panel:hover::-webkit-scrollbar,
+.project-details-panel:focus-within::-webkit-scrollbar {
+  width: 0.7rem;
+}
+
+.project-details-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.project-details-panel::-webkit-scrollbar-thumb {
+  background: rgba(23, 50, 77, 0.18);
+  border: 0.18rem solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+
+.project-details-panel:hover::-webkit-scrollbar-thumb,
+.project-details-panel:focus-within::-webkit-scrollbar-thumb {
+  background: rgba(23, 50, 77, 0.32);
+  background-clip: padding-box;
 }
 
 .project-details-hero {
