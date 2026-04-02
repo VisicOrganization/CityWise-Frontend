@@ -412,6 +412,67 @@ describe("mock app routes", () => {
     randomSpy.mockRestore();
   });
 
+  it("closes the project details panel when a district boundary is clicked", async () => {
+    const user = userEvent.setup();
+    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
+
+    fetchMock.mockImplementation((input: string | URL | Request) => {
+      const url = String(input);
+
+      if (url.includes("/projects/25-0358")) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              project: {
+                id: "25-0358",
+                source_council_file_id: "25-0358",
+                title: "Council File 25-0358",
+                summary: "Wildfire recovery motion.",
+                status: "planned",
+                district_id: 11,
+                about: null,
+                start_date: "2025-04-04",
+                last_changed_date: "2025-04-11",
+                end_date: null,
+                meeting_date: "2025-04-11",
+                meeting_type: "Regular",
+                vote_action: "Adopted Forthwith",
+                vote_given: "(15 - 0 - 0)",
+                reference_numbers: null,
+                mover_seconder_comment: "Wildfire recovery motion.",
+              },
+              movers: {
+                primary: [{ id: 7, name: "TRACI PARK", district_id: 11 }],
+                secondary: [],
+                other: [],
+              },
+              votes: [],
+              timeline: [],
+              documents: [],
+            }),
+          ),
+        );
+      }
+
+      return defaultFetchMock(input);
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/map"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    await user.click(await screen.findByLabelText("Council File 25-0358"));
+    expect(await screen.findByLabelText("Project details")).toBeInTheDocument();
+
+    await user.click(screen.getByTestId("mock-boundary-click"));
+
+    expect(screen.queryByLabelText("Project details")).not.toBeInTheDocument();
+    expect(await screen.findByText("Jordan Alvarez • District 11")).toBeInTheDocument();
+    randomSpy.mockRestore();
+  });
+
   it("opens the selected district overview from the pill", async () => {
     const user = userEvent.setup();
 

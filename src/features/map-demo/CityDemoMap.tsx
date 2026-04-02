@@ -173,13 +173,14 @@ export function CityDemoMap({
   }, [markers]);
 
   function handleMapClick(event: MapLayerMouseEvent) {
+    onMapBackgroundClick();
+
     const clickedFeature = event.features?.find((feature) => {
       const districtValue = feature.properties?.District;
       return typeof districtValue === "number" || typeof districtValue === "string";
     });
 
     if (!clickedFeature) {
-      onMapBackgroundClick();
       onDistrictSelect(null);
       return;
     }
@@ -187,7 +188,6 @@ export function CityDemoMap({
     const districtValue = clickedFeature.properties?.District;
     const parsedDistrictId = Number(districtValue);
     if (Number.isNaN(parsedDistrictId)) {
-      onMapBackgroundClick();
       onDistrictSelect(null);
       return;
     }
