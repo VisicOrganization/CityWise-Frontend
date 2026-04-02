@@ -548,7 +548,7 @@ a {
 
 .maplibregl-ctrl-top-right,
 .mapboxgl-ctrl-top-right {
-  top: 11.4rem;
+  top: 14.5rem;
   right: 1rem;
 }
 
@@ -1279,7 +1279,7 @@ a {
   .mapboxgl-ctrl-top-right {
     top: auto;
     right: 1rem;
-    bottom: 12.5rem;
+    bottom: 15rem;
   }
 
   .district-bottom-sheet {
