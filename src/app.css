@@ -636,22 +636,12 @@ a {
   border-right: 1px solid rgba(23, 50, 77, 0.08);
   box-shadow: 20px 0 48px rgba(23, 50, 77, 0.12);
   backdrop-filter: blur(18px);
-  scrollbar-width: none;
-  scrollbar-color: rgba(23, 50, 77, 0.32) transparent;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
   scrollbar-gutter: stable;
 }
 
 .project-details-panel::-webkit-scrollbar {
-  width: 0;
-}
-
-.project-details-panel:hover,
-.project-details-panel:focus-within {
-  scrollbar-width: thin;
-}
-
-.project-details-panel:hover::-webkit-scrollbar,
-.project-details-panel:focus-within::-webkit-scrollbar {
   width: 0.7rem;
 }
 
@@ -660,10 +650,15 @@ a {
 }
 
 .project-details-panel::-webkit-scrollbar-thumb {
-  background: rgba(23, 50, 77, 0.18);
+  background: transparent;
   border: 0.18rem solid transparent;
   border-radius: 999px;
   background-clip: padding-box;
+}
+
+.project-details-panel:hover,
+.project-details-panel:focus-within {
+  scrollbar-color: rgba(23, 50, 77, 0.32) transparent;
 }
 
 .project-details-panel:hover::-webkit-scrollbar-thumb,
