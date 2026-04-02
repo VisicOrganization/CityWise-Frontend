@@ -29,37 +29,35 @@ const categoryLabels: Record<MarkerCategory, string> = {
   parks: "Infrastructure",
 };
 
-function buildBaseMapStyle() {
-  return {
-    version: 8,
-    sources: {
-      raster: {
-        type: "raster",
-        tiles: ["https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"],
-        tileSize: 256,
-        attribution: "© OpenStreetMap contributors © CARTO",
+const LIGHT_BASE_MAP_STYLE = {
+  version: 8,
+  sources: {
+    raster: {
+      type: "raster",
+      tiles: ["https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"],
+      tileSize: 256,
+      attribution: "© OpenStreetMap contributors © CARTO",
+    },
+  },
+  layers: [
+    {
+      id: "background",
+      type: "background",
+      paint: {
+        "background-color": "#eef2f5",
       },
     },
-    layers: [
-      {
-        id: "background",
-        type: "background",
-        paint: {
-          "background-color": "#eef2f5",
-        },
+    {
+      id: "raster-base",
+      type: "raster",
+      source: "raster",
+      paint: {
+        "raster-opacity": 0.97,
+        "raster-saturation": -0.18,
       },
-      {
-        id: "raster-base",
-        type: "raster",
-        source: "raster",
-        paint: {
-          "raster-opacity": 0.97,
-          "raster-saturation": -0.18,
-        },
-      },
-    ],
-  } as const;
-}
+    },
+  ],
+} as const;
 
 function CategoryMarkerIcon({ category }: { category: MarkerCategory }) {
   const props = { className: "demo-marker-icon", width: 20, height: 20 };
@@ -126,7 +124,6 @@ export function CityDemoMap({
   const navigate = useNavigate();
   const activeDistrict = activeDistrictId ? getDemoDistrict(activeDistrictId) : null;
   const displayedDistrict = getDemoDistrict(activeDistrictId ?? lastVisibleDistrictId ?? undefined);
-  const mapStyle = buildBaseMapStyle();
 
   useEffect(() => {
     if (activeDistrictId) {
@@ -178,7 +175,7 @@ export function CityDemoMap({
         onMove={(event) => setViewState(event.viewState)}
         onClick={handleMapClick}
         interactiveLayerIds={["district-fill"]}
-        mapStyle={mapStyle}
+        mapStyle={LIGHT_BASE_MAP_STYLE}
         attributionControl={false}
         style={{ width: "100%", height: "100%" }}
       >
