@@ -259,10 +259,10 @@ export function CityDemoMap({
           onSearchSubmit();
         }}
       >
-        <button type="submit" className="map-search-icon" aria-label="Search map">
-          <SearchIcon />
-        </button>
         <div className="map-search-panel">
+          <button type="submit" className="map-search-inline-icon" aria-label="Search map">
+            <SearchIcon />
+          </button>
           <input
             type="text"
             value={searchQuery}

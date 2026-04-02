@@ -413,12 +413,10 @@ a {
   top: 1rem;
   left: 1rem;
   z-index: 6;
-  display: flex;
-  align-items: start;
-  gap: 0.75rem;
+  width: min(21rem, calc(100vw - 2rem));
 }
 
-.map-search-icon,
+.map-search-inline-icon,
 .map-utility-button {
   display: inline-flex;
   align-items: center;
@@ -432,7 +430,7 @@ a {
   box-shadow: 0 14px 30px rgba(23, 50, 77, 0.12);
 }
 
-.map-search-icon svg,
+.map-search-inline-icon svg,
 .map-utility-button svg {
   width: 1.15rem;
   height: 1.15rem;
@@ -444,11 +442,21 @@ a {
 }
 
 .map-search-panel {
-  width: min(21rem, calc(100vw - 7rem));
-  padding: 0.3rem;
+  position: relative;
+  width: 100%;
+  padding: 0.3rem 0.3rem 0.3rem 3.45rem;
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 18px 42px rgba(23, 50, 77, 0.14);
+}
+
+.map-search-inline-icon {
+  position: absolute;
+  top: 0.3rem;
+  left: 0.3rem;
+  z-index: 1;
+  background: transparent;
+  box-shadow: none;
 }
 
 .map-search-panel input {
@@ -458,6 +466,18 @@ a {
   background: transparent;
   outline: none;
   color: #17324d;
+}
+
+@media (max-width: 920px) {
+  .map-search-dock {
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(26rem, calc(100vw - 2rem));
+  }
+
+  .map-district-pill-shell {
+    top: 5.25rem;
+  }
 }
 
 .map-control-stack {
@@ -1268,24 +1288,20 @@ a {
 
   .map-district-pill-shell,
   .district-route-pill {
-    left: auto;
-    right: 1rem;
-    transform: none;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
   }
 
   .map-district-pill-shell.is-hidden {
-    transform: translateY(-10px);
+    transform: translateX(-50%) translateY(-10px);
   }
 
   .map-search-dock {
-    right: 1rem;
-    left: 1rem;
     top: 5.5rem;
-    flex-direction: column;
-  }
-
-  .map-search-panel {
-    width: 100%;
+    left: 50%;
+    width: calc(100vw - 1.5rem);
+    transform: translateX(-50%);
   }
 
   .map-control-stack {
