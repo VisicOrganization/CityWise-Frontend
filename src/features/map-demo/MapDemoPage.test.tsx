@@ -201,6 +201,27 @@ describe("mock app routes", () => {
 
   it("renders the landing page as the entry point", async () => {
     const user = userEvent.setup();
+    fetchMock.mockImplementation((input: string | URL | Request) => {
+      const url = String(input);
+
+      if (url.startsWith("https://nominatim.openstreetmap.org/search")) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify([
+              {
+                place_id: 3,
+                display_name: "123 Main St, Los Angeles, California, United States",
+                lat: "34.0500",
+                lon: "-118.2500",
+              },
+            ]),
+          ),
+        );
+      }
+
+      return defaultFetchMock(input);
+    });
+
     render(
       <MemoryRouter initialEntries={["/"]}>
         <App />
@@ -211,6 +232,7 @@ describe("mock app routes", () => {
     const input = screen.getByLabelText("Search address");
     await user.type(input, "123 Main St");
     expect(input).toHaveValue("123 Main St");
+    expect(await screen.findByText("123 Main St, Los Angeles, California, United States")).toBeInTheDocument();
   });
 
   it("submits the landing search on Enter", async () => {
@@ -278,7 +300,6 @@ describe("mock app routes", () => {
 
     expect(screen.getByTestId("demo-map")).toBeInTheDocument();
     expect(screen.queryByLabelText(/Open District .* overview/)).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Basemap style")).toBeInTheDocument();
     expect(await screen.findByLabelText("Search query")).toHaveValue("123 Main St");
     expect(await screen.findByText("123 Main St, Los Angeles, California, United States")).toBeInTheDocument();
   });
@@ -330,6 +351,127 @@ describe("mock app routes", () => {
     expect(screen.queryByText("Select a district")).not.toBeInTheDocument();
   });
 
+  it("closes the project details panel when the map background is clicked", async () => {
+    const user = userEvent.setup();
+    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
+
+    fetchMock.mockImplementation((input: string | URL | Request) => {
+      const url = String(input);
+
+      if (url.includes("/projects/25-0358")) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              project: {
+                id: "25-0358",
+                source_council_file_id: "25-0358",
+                title: "Council File 25-0358",
+                summary: "Wildfire recovery motion.",
+                status: "planned",
+                district_id: 11,
+                about: null,
+                start_date: "2025-04-04",
+                last_changed_date: "2025-04-11",
+                end_date: null,
+                meeting_date: "2025-04-11",
+                meeting_type: "Regular",
+                vote_action: "Adopted Forthwith",
+                vote_given: "(15 - 0 - 0)",
+                reference_numbers: null,
+                mover_seconder_comment: "Wildfire recovery motion.",
+              },
+              movers: {
+                primary: [{ id: 7, name: "TRACI PARK", district_id: 11 }],
+                secondary: [],
+                other: [],
+              },
+              votes: [],
+              timeline: [],
+              documents: [],
+            }),
+          ),
+        );
+      }
+
+      return defaultFetchMock(input);
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/map"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    await user.click(await screen.findByLabelText("Council File 25-0358"));
+    expect(await screen.findByLabelText("Project details")).toBeInTheDocument();
+
+    await user.click(screen.getByTestId("mock-empty-map-click"));
+
+    expect(screen.queryByLabelText("Project details")).not.toBeInTheDocument();
+    randomSpy.mockRestore();
+  });
+
+  it("closes the project details panel when a district boundary is clicked", async () => {
+    const user = userEvent.setup();
+    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
+
+    fetchMock.mockImplementation((input: string | URL | Request) => {
+      const url = String(input);
+
+      if (url.includes("/projects/25-0358")) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              project: {
+                id: "25-0358",
+                source_council_file_id: "25-0358",
+                title: "Council File 25-0358",
+                summary: "Wildfire recovery motion.",
+                status: "planned",
+                district_id: 11,
+                about: null,
+                start_date: "2025-04-04",
+                last_changed_date: "2025-04-11",
+                end_date: null,
+                meeting_date: "2025-04-11",
+                meeting_type: "Regular",
+                vote_action: "Adopted Forthwith",
+                vote_given: "(15 - 0 - 0)",
+                reference_numbers: null,
+                mover_seconder_comment: "Wildfire recovery motion.",
+              },
+              movers: {
+                primary: [{ id: 7, name: "TRACI PARK", district_id: 11 }],
+                secondary: [],
+                other: [],
+              },
+              votes: [],
+              timeline: [],
+              documents: [],
+            }),
+          ),
+        );
+      }
+
+      return defaultFetchMock(input);
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/map"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    await user.click(await screen.findByLabelText("Council File 25-0358"));
+    expect(await screen.findByLabelText("Project details")).toBeInTheDocument();
+
+    await user.click(screen.getByTestId("mock-boundary-click"));
+
+    expect(screen.queryByLabelText("Project details")).not.toBeInTheDocument();
+    expect(await screen.findByText("Jordan Alvarez • District 11")).toBeInTheDocument();
+    randomSpy.mockRestore();
+  });
+
   it("opens the selected district overview from the pill", async () => {
     const user = userEvent.setup();
 
@@ -342,8 +484,23 @@ describe("mock app routes", () => {
     await user.click(await screen.findByLabelText("Council File 25-0358"));
     await user.click(screen.getByLabelText("Open District 11 overview"));
 
-    expect(await screen.findByText("Jordan Alvarez • District 11")).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Jordan Alvarez • District 11" })).toBeInTheDocument();
     expect(await screen.findByText("councilmember.jordan.alvarez@lacity.org")).toBeInTheDocument();
+    expect(screen.queryByTestId("demo-map")).toBeInTheDocument();
+  });
+
+  it("closes the district overview when clicking outside the sheet", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={["/map?districtFocus=11"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByLabelText("District overview")).toBeInTheDocument();
+    await user.click(screen.getByLabelText("Close district overview"));
+    expect(screen.queryByLabelText("District overview")).not.toBeInTheDocument();
   });
 
   it("submits the map search from the icon and Enter key", async () => {
@@ -401,6 +558,24 @@ describe("mock app routes", () => {
     await user.type(input, "City Hall{Enter}");
 
     expect(await screen.findByText("City Hall, Los Angeles, California, United States")).toBeInTheDocument();
+  });
+
+  it("opens the filter and accessibility menus", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={["/map"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByLabelText("Toggle filters"));
+    expect(screen.getByLabelText("Filter menu")).toBeInTheDocument();
+    expect(screen.getByText("Project categories")).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText("Toggle accessibility information"));
+    expect(screen.getByLabelText("Accessibility information")).toBeInTheDocument();
+    expect(screen.getByText("Map guidance")).toBeInTheDocument();
   });
 
   it("opens the details panel with backend project data when a marker is clicked", async () => {
@@ -481,7 +656,13 @@ describe("mock app routes", () => {
     expect(await screen.findByLabelText("Project details")).toBeInTheDocument();
     expect(await screen.findByRole("heading", { name: "Council File 25-0358" })).toBeInTheDocument();
     expect(await screen.findByText("TRACI PARK")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: /Timeline/i }));
     expect(await screen.findByText("Motion introduced.")).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText("Toggle voting record"));
+    expect(await screen.findByLabelText("Voting record popover")).toBeInTheDocument();
+    expect(await screen.findByText("Yes")).toBeInTheDocument();
 
     randomSpy.mockRestore();
   });

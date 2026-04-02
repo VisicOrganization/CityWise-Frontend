@@ -1,13 +1,44 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+import { searchDemoAddresses, type DemoGeocodeResult } from "../../shared/mock/demoGeocoding";
 import { landingPrompts } from "../../shared/mock/mapDemo";
 import { AppShell } from "../../shared/ui/AppShell";
+import { SearchIcon } from "../../shared/ui/visicIcons";
 
 
 export function LandingPage() {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
+  const [results, setResults] = useState<DemoGeocodeResult[]>([]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    if (!query.trim()) {
+      setResults([]);
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      void searchDemoAddresses(query)
+        .then((nextResults) => {
+          if (!ignore) {
+            setResults(nextResults);
+          }
+        })
+        .catch(() => {
+          if (!ignore) {
+            setResults([]);
+          }
+        });
+    }, 180);
+
+    return () => {
+      ignore = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [query]);
 
   function handleSearch() {
     const trimmedQuery = query.trim();
@@ -39,7 +70,9 @@ export function LandingPage() {
               handleSearch();
             }}
           >
-            <span className="landing-search-icon">⌕</span>
+            <span className="landing-search-icon">
+              <SearchIcon />
+            </span>
             <input
               type="text"
               value={query}
@@ -50,6 +83,22 @@ export function LandingPage() {
             <button type="submit" className="landing-search-button">
               Search
             </button>
+            {results.length > 0 ? (
+              <div className="landing-search-results" role="listbox" aria-label="Landing search results">
+                {results.map((result) => (
+                  <button
+                    key={result.id}
+                    type="button"
+                    onClick={() => {
+                      setQuery(result.label);
+                      navigate(`/map?q=${encodeURIComponent(result.label)}`);
+                    }}
+                  >
+                    {result.label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </form>
 
           <div className="landing-links">
