@@ -619,17 +619,17 @@ a {
 
 .project-details-panel {
   position: absolute;
-  top: 7rem;
-  left: 1.4rem;
+  top: 5.25rem;
+  left: 0;
+  bottom: 0;
   z-index: 10;
-  width: min(24rem, calc(100vw - 2.8rem));
-  max-height: calc(100vh - 8.2rem);
+  width: min(26rem, 34vw);
+  max-height: none;
   overflow: auto;
-  padding: 1.1rem;
-  border-radius: 28px;
+  padding: 1rem;
   background: rgba(251, 249, 244, 0.95);
-  border: 1px solid rgba(23, 50, 77, 0.08);
-  box-shadow: 0 28px 70px rgba(23, 50, 77, 0.18);
+  border-right: 1px solid rgba(23, 50, 77, 0.08);
+  box-shadow: 20px 0 48px rgba(23, 50, 77, 0.12);
   backdrop-filter: blur(18px);
 }
 
@@ -1196,6 +1196,10 @@ a {
     bottom: 1rem;
     width: auto;
     max-height: 56vh;
+    border: 1px solid rgba(23, 50, 77, 0.08);
+    border-right: 1px solid rgba(23, 50, 77, 0.08);
+    border-radius: 28px;
+    box-shadow: 0 28px 70px rgba(23, 50, 77, 0.18);
   }
 
   .district-profile-panel {
