@@ -52,15 +52,15 @@ npm install
 For the preferred local Docker workflow:
 
 ```bash
-cp .env.example .env.local
-docker compose -f compose.local.yml --env-file .env.local up --build
+cp .env.example .env
+docker compose up --build -d
 ```
 
 ## Configuration
 
-Environment variables are read from `.env.local` for the local Docker workflow.
+Environment variables are read from `.env` for the local Docker workflow.
 
-Expected settings in `.env.local`:
+Expected settings in `.env`:
 
 - `FRONTEND_HOST_PORT`
 - `VITE_PORT`
@@ -71,6 +71,8 @@ Recommended non-clashing defaults:
 - `FRONTEND_HOST_PORT=15173`
 - `VITE_PORT=5173`
 - `VITE_API_BASE_URL=http://localhost:18100`
+
+For local Docker work, copy `.env.example` to `.env`. The local `docker compose` workflow is intentionally unsupported without that file.
 
 The frontend container always serves the Vite dev server on `VITE_PORT` internally. `FRONTEND_HOST_PORT` only controls the host-side published port.
 
@@ -83,11 +85,15 @@ The frontend container always serves the Vite dev server on `VITE_PORT` internal
 If you want the frontend running locally with the least setup:
 
 ```bash
-cp .env.example .env.local
-docker compose -f compose.local.yml --env-file .env.local up --build
+cp .env.example .env
+docker compose up --build -d
 ```
 
-Published host ports come from `.env.local`:
+This starts the local stack from [`compose.yml`](./compose.yml):
+
+- `frontend`
+
+Published host ports come from `.env`:
 
 - `FRONTEND_HOST_PORT` for the browser entrypoint
 - `VITE_PORT` for the container-side Vite port
@@ -118,8 +124,8 @@ If you do that, make sure `VITE_API_BASE_URL` points at a running backend.
 Docker:
 
 ```bash
-cp .env.example .env.local
-docker compose -f compose.local.yml --env-file .env.local up --build
+cp .env.example .env
+docker compose up --build -d
 ```
 
 Without Docker:
