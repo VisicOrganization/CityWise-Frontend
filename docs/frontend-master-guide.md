@@ -399,7 +399,7 @@ The tests are practical and UI-focused, which is appropriate for the current app
 
 ## 10. Local Environment
 
-Frontend-local environment settings live in `.env.local`.
+Frontend-local environment settings live in `.env`.
 
 Important ones:
 
@@ -410,8 +410,8 @@ Important ones:
 Preferred local Docker flow:
 
 ```bash
-cp .env.example .env.local
-docker compose -f compose.local.yml --env-file .env.local up --build
+cp .env.example .env
+docker compose up --build -d
 ```
 
 Default useful URLs:

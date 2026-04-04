@@ -27,16 +27,16 @@ Git workflow requirements:
 - If the GitHub integration cannot create the PR, fall back to authenticated `gh pr create`.
 
 Local development:
-- prefer the Docker-based workflow in `compose.local.yml`
+- prefer the Docker-based workflow in `compose.yml`
 - choose host ports that do not clash with an existing local developer environment
 - agent-friendly default ports are:
   - frontend host port `15173`
   - backend host port `18100`
-- configure frontend ports and API base URL in `.env.local`
-- configure published frontend port mapping in `compose.local.yml`
+- configure frontend ports and API base URL in `.env`
+- configure published frontend port mapping in `compose.yml`
 - exact local startup commands:
-  - `cp .env.example .env.local`
-  - `docker compose -f compose.local.yml --env-file .env.local up --build`
+  - `cp .env.example .env`
+  - `docker compose up --build -d`
 - default demo route:
   - `http://localhost:15173/`
   - map mock: `http://localhost:15173/map`
