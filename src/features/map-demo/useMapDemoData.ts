@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { getDistrictProjects } from "../../shared/api/client";
 import type { DistrictProjectCard } from "../../shared/api/contracts";
@@ -9,6 +9,9 @@ import { buildProjectMarkers } from "./projectMarkers";
 
 const DISTRICT_IDS = Array.from({ length: 15 }, (_, index) => index + 1);
 const DEMO_PROJECT_PAGE_SIZE = 100;
+
+let cachedBoundariesPromise: Promise<DistrictBoundaryCollection> | null = null;
+let cachedProjectCardsPromise: Promise<DistrictProjectCard[]> | null = null;
 
 
 async function loadDistrictProjectCards(districtId: number): Promise<DistrictProjectCard[]> {
@@ -41,6 +44,33 @@ async function loadAllProjectCards(): Promise<DistrictProjectCard[]> {
   return districtPages.flat();
 }
 
+function loadCachedDistrictBoundaries() {
+  if (!cachedBoundariesPromise) {
+    cachedBoundariesPromise = loadDistrictBoundaries().catch((error) => {
+      cachedBoundariesPromise = null;
+      throw error;
+    });
+  }
+
+  return cachedBoundariesPromise;
+}
+
+function loadCachedProjectCards() {
+  if (!cachedProjectCardsPromise) {
+    cachedProjectCardsPromise = loadAllProjectCards().catch((error) => {
+      cachedProjectCardsPromise = null;
+      throw error;
+    });
+  }
+
+  return cachedProjectCardsPromise;
+}
+
+export function resetMapDemoDataCacheForTests() {
+  cachedBoundariesPromise = null;
+  cachedProjectCardsPromise = null;
+}
+
 
 interface UseMapDemoDataState {
   boundaries: DistrictBoundaryCollection | null;
@@ -52,26 +82,21 @@ interface UseMapDemoDataState {
 export function useMapDemoData(): UseMapDemoDataState {
   const [boundaries, setBoundaries] = useState<DistrictBoundaryCollection | null>(null);
   const [projectCards, setProjectCards] = useState<DistrictProjectCard[]>([]);
-  const [projectMarkers, setProjectMarkers] = useState<DemoMapMarker[]>([]);
 
   useEffect(() => {
     let ignore = false;
 
-    Promise.all([loadDistrictBoundaries(), loadAllProjectCards()])
-      .then(([loadedBoundaries, loadedProjectCards]) => {
+    void loadCachedDistrictBoundaries()
+      .then((loadedBoundaries) => {
         if (ignore) {
           return;
         }
 
         setBoundaries(loadedBoundaries);
-        setProjectCards(loadedProjectCards);
-        setProjectMarkers(buildProjectMarkers(loadedBoundaries, loadedProjectCards));
       })
       .catch(() => {
         if (!ignore) {
           setBoundaries(null);
-          setProjectCards([]);
-          setProjectMarkers([]);
         }
       });
 
@@ -79,6 +104,33 @@ export function useMapDemoData(): UseMapDemoDataState {
       ignore = true;
     };
   }, []);
+
+  useEffect(() => {
+    let ignore = false;
+
+    void loadCachedProjectCards()
+      .then((loadedProjectCards) => {
+        if (ignore) {
+          return;
+        }
+
+        setProjectCards(loadedProjectCards);
+      })
+      .catch(() => {
+        if (!ignore) {
+          setProjectCards([]);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const projectMarkers = useMemo(
+    () => (boundaries ? buildProjectMarkers(boundaries, projectCards) : []),
+    [boundaries, projectCards],
+  );
 
   return { boundaries, projectCards, projectMarkers };
 }

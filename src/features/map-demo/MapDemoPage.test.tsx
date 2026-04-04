@@ -5,6 +5,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import App from "../../app/App";
+import { resetMapDemoDataCacheForTests } from "./useMapDemoData";
 
 
 vi.mock("react-map-gl/maplibre", () => ({
@@ -44,7 +45,9 @@ vi.mock("react-map-gl/maplibre", () => ({
   Layer: () => null,
   Marker: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
   NavigationControl: () => null,
-  Source: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
+  Source: ({ children, id }: { children?: ReactNode; id?: string }) => (
+    <div data-testid={id === "demo-district-boundaries" ? "mock-boundary-source" : undefined}>{children}</div>
+  ),
 }));
 
 const fetchMock = vi.fn();
@@ -191,6 +194,7 @@ function defaultFetchMock(input: string | URL | Request) {
 
 describe("mock app routes", () => {
   beforeEach(() => {
+    resetMapDemoDataCacheForTests();
     fetchMock.mockReset();
     fetchMock.mockImplementation(defaultFetchMock);
   });
@@ -302,6 +306,31 @@ describe("mock app routes", () => {
     expect(screen.queryByLabelText(/Open District .* overview/)).not.toBeInTheDocument();
     expect(await screen.findByLabelText("Search query")).toHaveValue("123 Main St");
     expect(await screen.findByText("123 Main St, Los Angeles, California, United States")).toBeInTheDocument();
+  });
+
+  it("renders district boundaries before the district project preload finishes", async () => {
+    fetchMock.mockImplementation((input: string | URL | Request) => {
+      const url = String(input);
+
+      if (url.includes("/data/la-city-council-districts.geojson")) {
+        return Promise.resolve(new Response(JSON.stringify(boundariesResponse)));
+      }
+
+      if (url.match(/\/districts\/(\d+)\/projects/)) {
+        return new Promise(() => {});
+      }
+
+      return Promise.reject(new Error(`Unhandled fetch for ${url}`));
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/map"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByTestId("mock-boundary-source")).toBeInTheDocument();
+    expect(screen.getByTestId("demo-map")).toBeInTheDocument();
   });
 
   it("updates the district pill when a project pin is clicked", async () => {
