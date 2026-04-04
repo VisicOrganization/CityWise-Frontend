@@ -2,74 +2,97 @@
 
 `CityWise-Frontend` is the React + TypeScript + Vite frontend for the CityWise MVP.
 
+## Table Of Contents
+
+- [Structure](#structure)
+- [Requirements](#requirements)
+- [Setup](#setup)
+- [Configuration](#configuration)
+- [Quick Start](#quick-start)
+- [Common Workflows](#common-workflows)
+- [Testing And Validation](#testing-and-validation)
+- [Deployment Notes](#deployment-notes)
+- [Current Boundaries](#current-boundaries)
+
 ## Structure
 
 ```text
-src/
-  app/           app bootstrap and route composition
-  features/      route-facing product areas (landing, districts, map demo)
-  shared/api/    backend client and contracts
-  shared/map/    reusable map helpers and district boundary utilities
-  shared/mock/   demo-only fixtures and geocoding helpers
-  shared/ui/     shared shell-level UI
+CityWise-Frontend/
+  public/            static frontend assets
+  src/app/           app bootstrap and route composition
+  src/features/      route-facing product areas
+  src/shared/api/    backend client and contracts
+  src/shared/map/    reusable map helpers and district boundary utilities
+  src/shared/mock/   demo-only fixtures and geocoding helpers
+  src/shared/ui/     shared shell-level UI
+  src/test/          frontend test setup
 ```
 
-## MVP slice
+## Requirements
 
-- landing page entry route at `/`
-- general mock map route at `/map`
-- one district overview route at `/districts/:districtId`
-- project cards sourced from the backend `GET /districts/{district_id}/projects` endpoint
-- frontend-local curated district copy
-- frontend-local LA council district GeoJSON overlay rendered with `react-map-gl` and MapLibre
+- Node.js 20+
+- npm
+- optional local Docker for the preferred frontend workflow
 
-## Mock screen assumptions
+The project tracks dependencies in:
 
-- the landing page uses mock-only content
-- the `/map` screen uses a general LA-focused demo map with one pin per backend project that has a valid district
-- the `/map` screen overlays the frontend-local district GeoJSON with hard-coded district colors and a zoom-based fill fade so boundaries read clearly at city scale
-- the `/map` screen includes a frontend-local basemap selector with a few standard demo options
-- the district pill at the top of `/map` updates when you click either a project pin or a district boundary so the demo visibly reacts to map exploration
-- the district pill is clickable and opens the district overview route for the currently selected district
-- the `/map` search uses a demo geocoding hack and drops a generated sample marker at the searched location so the map feels alive before the side panel exists
-- clicking a project pin opens a details panel for that same backend project record and shows its title, voting record, and timeline
-- the district overview route remains available for the backend-driven MVP slice
+- `package.json` for runtime and scripts
+- `package-lock.json` for reproducible installs
 
-## Demo-only hacks
+The frontend expects the backend API to be available separately. For the MVP, the main read-path assumptions come from `CityWise-Backend`.
 
-- each backend project pin is placed by taking its district boundary center and applying a deterministic nudge, so the pins are district-aware but not geographically accurate
-- the map pin layout is a demo party trick: it scatters every valid-district project into its district polygon without any real project coordinates, clustering, or collision handling
-- the district representative names in the top pill are a frontend-local demo roster rather than a backend-backed source of truth
-- the district overview page uses frontend-local demo contact and biography content, plus deterministic fake budgets derived from district id and project id
-- the `/map` geocoding flow drops a generated sample marker at the searched location instead of creating a production-quality place or project record
-- clicking a geocoded search marker still uses a random real backend project to keep the demo feeling alive before a real search-to-record model exists
-- the `/about` route is intentionally a throwaway animated joke page for the demo and should be removed once real about-page content exists
+## Setup
 
-## Local Docker workflow
+From `CityWise-Frontend/`:
 
-Create `.env.local` from `.env.example` and choose host ports that do not clash with your local environment.
+```bash
+npm install
+```
 
-Recommended non-clashing defaults:
-
-- frontend host port: `15173`
-- backend host port: `18100`
-
-Run:
+For the preferred local Docker workflow:
 
 ```bash
 cp .env.example .env.local
 docker compose -f compose.local.yml --env-file .env.local up --build
 ```
 
-Run the backend alongside it from [CityWise-Backend](/home/codex/workspace/VISIC/CityWise-Backend):
+## Configuration
+
+Environment variables are read from `.env.local` for the local Docker workflow.
+
+Expected settings in `.env.local`:
+
+- `FRONTEND_HOST_PORT`
+- `VITE_PORT`
+- `VITE_API_BASE_URL`
+
+Recommended non-clashing defaults:
+
+- `FRONTEND_HOST_PORT=15173`
+- `VITE_PORT=5173`
+- `VITE_API_BASE_URL=http://localhost:18100`
+
+The frontend container always serves the Vite dev server on `VITE_PORT` internally. `FRONTEND_HOST_PORT` only controls the host-side published port.
+
+`VITE_API_BASE_URL` should point at the backend API. For the documented local MVP flow, that is the backend Docker host port `18100`.
+
+## Quick Start
+
+### Docker-first
+
+If you want the frontend running locally with the least setup:
 
 ```bash
 cp .env.example .env.local
-docker compose -f compose.local.yml --env-file .env.local up --build -d db api
-docker compose -f compose.local.yml --env-file .env.local run --rm seed
+docker compose -f compose.local.yml --env-file .env.local up --build
 ```
 
-Then open:
+Published host ports come from `.env.local`:
+
+- `FRONTEND_HOST_PORT` for the browser entrypoint
+- `VITE_PORT` for the container-side Vite port
+
+Open:
 
 ```text
 http://localhost:15173/
@@ -77,19 +100,123 @@ http://localhost:15173/map
 http://localhost:15173/districts/11
 ```
 
-Key settings:
+### Without Docker
 
-- `FRONTEND_HOST_PORT` controls the published frontend port
-- `VITE_PORT` controls the port inside the container/dev server
-- `VITE_API_BASE_URL` points the frontend at the backend API
-- change them in `.env.local`
-
-## Validation
+You can also run the frontend directly:
 
 ```bash
 npm install
+npm run dev -- --host 0.0.0.0 --port 5173
+```
+
+If you do that, make sure `VITE_API_BASE_URL` points at a running backend.
+
+## Common Workflows
+
+### Run The Frontend
+
+Docker:
+
+```bash
+cp .env.example .env.local
+docker compose -f compose.local.yml --env-file .env.local up --build
+```
+
+Without Docker:
+
+```bash
+npm install
+npm run dev
+```
+
+Current routes:
+
+- `GET /` landing page
+- `GET /about` throwaway demo page
+- `GET /map` citywide demo map
+- `GET /districts/{district_id}` district overview route
+
+### Run With The Backend
+
+The frontend is intended to run alongside `CityWise-Backend`.
+
+From [`CityWise-Backend`](/home/codex/workspace/VISIC/CityWise-Backend):
+
+```bash
+cp .env.example .env
+docker compose up --build -d db api
+docker compose run --rm scrape
+```
+
+Then point the frontend at:
+
+```text
+VITE_API_BASE_URL=http://localhost:18100
+```
+
+Manual backend checks:
+
+```bash
+curl -i http://127.0.0.1:18100/health
+curl -i "http://127.0.0.1:18100/districts/11/projects?page=1&page_size=3"
+curl -i http://127.0.0.1:18100/projects/25-0358
+```
+
+### Map And District MVP Assumptions
+
+- project cards come from backend `GET /districts/{district_id}/projects`
+- project details come from backend `GET /projects/{project_id}`
+- district copy remains frontend-local for MVP
+- LA city council district GeoJSON remains frontend-local for MVP
+- the React map implementation uses `react-map-gl` over direct MapLibre integration
+- the district overview route is still part of the MVP slice and must remain routable
+
+### Demo-only Behavior
+
+- the landing page uses mock-only content
+- the `/map` screen uses a general LA-focused demo map with one pin per backend project that has a valid district
+- project pins are district-aware but not geographically accurate; they are deterministically nudged within district shapes
+- the top district pill reacts to project-pin or district-boundary clicks and opens the district overview
+- the map search uses a demo geocoding flow and drops a generated sample marker at the searched location
+- clicking a geocoded search marker still uses a real backend project detail payload to keep the demo interactive
+- the district overview screen uses frontend-local representative/contact/about copy and deterministic fake budgets
+- the `/about` route is intentionally throwaway demo content
+
+## Testing And Validation
+
+Preferred validation entry points:
+
+```bash
 npm run lint
-npm run typecheck
 npm run test
+npm run typecheck
 npm run build
 ```
+
+`lint` and `typecheck` both run `tsc --noEmit`.
+
+The test suite uses Vitest with a jsdom environment and focuses on:
+
+- route rendering behavior
+- map demo interactions
+- district page routing behavior
+- shared map-layer and marker utilities
+
+## Deployment Notes
+
+The repo currently includes GitHub Pages deployment wiring:
+
+- `.github/workflows/deploy-gh-pages.yml`
+- `CNAME`
+
+`vite.config.ts` switches its base path only when `DEPLOY_TARGET=github-pages`. For all other builds, the app uses `/`.
+
+If deployment hosting changes, update both the deployment workflow/config and any repository-level custom-domain setup so frontend deployment docs do not drift from reality.
+
+## Current Boundaries
+
+- `project` is the frontend-facing product concept, even when the backend persistence model still reflects council files
+- MVP scope stays tight around the landing page, citywide map demo, district overview route, and project detail support
+- district search/filter UI, auth, admin tooling, backend-managed editorial content, and real geocoding are intentionally out of scope
+- district GeoJSON and curated district copy remain frontend-local for MVP
+- the frontend assumes backend district/project responses are read-only data sources and does not perform write flows
