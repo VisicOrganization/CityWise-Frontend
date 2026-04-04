@@ -59,7 +59,7 @@ const LIGHT_BASE_MAP_STYLE = {
 } as const;
 
 function CategoryMarkerIcon({ category }: { category: MarkerCategory }) {
-  const props = { className: "demo-marker-icon", width: 20, height: 20 };
+  const props = { className: "demo-marker-icon", width: 24, height: 24 };
 
   if (category === "housing") {
     return <HousingIcon {...props} />;
@@ -190,7 +190,7 @@ export function CityDemoMap({
         {markers.map((marker) => {
           const showLabel = marker.kind === "search" || activeMarkerId === marker.id || hoveredMarkerId === marker.id;
           const isMuted = !filterState[marker.category];
-          const markerZIndex = activeMarkerId === marker.id ? 30 : showLabel ? 20 : 1;
+          const markerZIndex = activeMarkerId === marker.id ? 4 : showLabel ? 3 : 1;
 
           return (
             <Marker
