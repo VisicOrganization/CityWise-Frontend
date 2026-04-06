@@ -1,22 +1,16 @@
-import type { DemoMapMarker } from "./mapDemo";
+import type { MapMarker } from "./mapTypes";
 
 
-export interface DemoGeocodeResult {
+export interface GeocodeSearchResult {
   id: string;
   label: string;
   longitude: number;
   latitude: number;
 }
 
+const SEARCH_MARKER_CATEGORY: MapMarker["category"] = "housing";
 
-function categoryFromQuery(query: string): DemoMapMarker["category"] {
-  const categories: DemoMapMarker["category"][] = ["housing", "transit", "parks"];
-  const score = Array.from(query).reduce((total, char) => total + char.charCodeAt(0), 0);
-  return categories[score % categories.length];
-}
-
-
-export async function searchDemoAddresses(query: string): Promise<DemoGeocodeResult[]> {
+export async function searchAddresses(query: string): Promise<GeocodeSearchResult[]> {
   const trimmedQuery = query.trim();
   if (!trimmedQuery) {
     return [];
@@ -52,11 +46,10 @@ export async function searchDemoAddresses(query: string): Promise<DemoGeocodeRes
   }));
 }
 
-
-export function buildDemoMarkerFromSearch(result: DemoGeocodeResult, query: string): DemoMapMarker {
+export function buildSearchMarker(result: GeocodeSearchResult, query: string): MapMarker {
   return {
     id: `search-${result.id}`,
-    category: categoryFromQuery(query),
+    category: SEARCH_MARKER_CATEGORY,
     label: result.label.split(",")[0] || query,
     longitude: result.longitude,
     latitude: result.latitude,

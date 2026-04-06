@@ -8,9 +8,10 @@ import Map, {
   type ViewState,
 } from "react-map-gl/maplibre";
 
+import { useDistrictProfile } from "../districts/useDistrictProfile";
 import type { DistrictBoundaryCollection } from "../../shared/map/districtBoundaries";
 import { districtFillLayer, districtOutlineLayer } from "../../shared/map/districtLayers";
-import { categoryAppearance, getDemoDistrict, type DemoMapMarker } from "../../shared/mock/mapDemo";
+import { categoryAppearance, type MapMarker, type MarkerCategory } from "../../shared/map/mapTypes";
 import {
   FilterIcon,
   HousingIcon,
@@ -19,8 +20,6 @@ import {
   SearchIcon,
   TransitIcon,
 } from "../../shared/ui/visicIcons";
-
-type MarkerCategory = DemoMapMarker["category"];
 
 const categoryLabels: Record<MarkerCategory, string> = {
   housing: "Housing",
@@ -80,9 +79,9 @@ const DEFAULT_VIEW_STATE: ViewState = {
   pitch: 0,
 };
 
-interface CityDemoMapProps {
+interface CityMapProps {
   boundaries: DistrictBoundaryCollection | null;
-  markers: DemoMapMarker[];
+  markers: MapMarker[];
   activeMarkerId?: string | null;
   activeDistrictId: number | null;
   searchQuery: string;
@@ -90,14 +89,13 @@ interface CityDemoMapProps {
   onSearchChange: (value: string) => void;
   onSearchSubmit: () => void;
   onSelectResult: (label: string) => void;
-  onMarkerSelect: (marker: DemoMapMarker) => void;
+  onMarkerSelect: (marker: MapMarker) => void;
   onMapBackgroundClick: () => void;
   onOpenDistrictOverview: (districtId: number) => void;
   onDistrictSelect: (districtId: number | null) => void;
 }
 
-
-export function CityDemoMap({
+export function CityMap({
   boundaries,
   markers,
   activeMarkerId,
@@ -111,7 +109,7 @@ export function CityDemoMap({
   onMapBackgroundClick,
   onOpenDistrictOverview,
   onDistrictSelect,
-}: CityDemoMapProps) {
+}: CityMapProps) {
   const [viewState, setViewState] = useState(DEFAULT_VIEW_STATE);
   const [lastVisibleDistrictId, setLastVisibleDistrictId] = useState<number | null>(null);
   const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null);
@@ -122,8 +120,15 @@ export function CityDemoMap({
     transit: true,
     parks: true,
   });
-  const activeDistrict = activeDistrictId ? getDemoDistrict(activeDistrictId) : null;
-  const displayedDistrict = getDemoDistrict(activeDistrictId ?? lastVisibleDistrictId ?? undefined);
+
+  const { profile: districtProfile } = useDistrictProfile(activeDistrictId);
+  const activeDistrict = activeDistrictId != null;
+  const displayedDistrictId = activeDistrictId ?? lastVisibleDistrictId;
+  const displayedName =
+    districtProfile?.name ??
+    (displayedDistrictId != null ? `District ${displayedDistrictId}` : "District");
+  const displayedLabel =
+    displayedDistrictId != null ? `District ${displayedDistrictId}` : "";
 
   useEffect(() => {
     if (activeDistrictId) {
@@ -181,7 +186,7 @@ export function CityDemoMap({
       >
         <NavigationControl position="top-right" />
         {boundaries ? (
-          <Source id="demo-district-boundaries" type="geojson" data={boundaries}>
+          <Source id="district-boundaries" type="geojson" data={boundaries}>
             <Layer {...districtFillLayer} />
             <Layer {...districtOutlineLayer} />
           </Source>
@@ -232,19 +237,19 @@ export function CityDemoMap({
           type="button"
           className="map-district-pill"
           onClick={() => {
-            if (activeDistrict) {
-              onOpenDistrictOverview(activeDistrict.id);
+            if (activeDistrictId != null) {
+              onOpenDistrictOverview(activeDistrictId);
             }
           }}
-          aria-label={activeDistrict ? `Open District ${activeDistrict.id} overview` : "District overview hidden"}
+          aria-label={activeDistrictId != null ? `Open District ${activeDistrictId} overview` : "District overview hidden"}
           aria-hidden={activeDistrict ? undefined : true}
           tabIndex={activeDistrict ? 0 : -1}
         >
           <span className="map-district-avatar">
-            {displayedDistrict.representative.split(" ").map((part) => part[0]).join("")}
+            {displayedName.split(" ").map((part) => part[0]).join("")}
           </span>
           <span>
-            {`${displayedDistrict.representative} • ${displayedDistrict.label}`}
+            {`${displayedName} • ${displayedLabel}`}
           </span>
         </button>
       </div>

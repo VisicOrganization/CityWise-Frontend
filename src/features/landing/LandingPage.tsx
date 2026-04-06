@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { searchDemoAddresses, type DemoGeocodeResult } from "../../shared/mock/demoGeocoding";
-import { landingPrompts } from "../../shared/mock/mapDemo";
+import { landingPrompts } from "../../shared/content/landingPrompts";
+import { searchAddresses, type GeocodeSearchResult } from "../../shared/map/geocodeSearch";
 import { AppShell } from "../../shared/ui/AppShell";
 import { SearchIcon } from "../../shared/ui/visicIcons";
 
@@ -10,7 +10,7 @@ import { SearchIcon } from "../../shared/ui/visicIcons";
 export function LandingPage() {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<DemoGeocodeResult[]>([]);
+  const [results, setResults] = useState<GeocodeSearchResult[]>([]);
 
   useEffect(() => {
     let ignore = false;
@@ -21,7 +21,7 @@ export function LandingPage() {
     }
 
     const timeoutId = window.setTimeout(() => {
-      void searchDemoAddresses(query)
+      void searchAddresses(query)
         .then((nextResults) => {
           if (!ignore) {
             setResults(nextResults);

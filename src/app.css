@@ -1044,6 +1044,10 @@ a {
   margin: 1rem 0 0;
 }
 
+.district-project-facts-two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .district-contact-grid div,
 .district-project-facts div {
   padding: 0.9rem 1rem;
@@ -1063,6 +1067,12 @@ a {
 .district-recent-panel {
   margin-top: 1rem;
   padding: 1.2rem;
+}
+
+.district-impact-summary-text {
+  margin: 0.6rem 0 0;
+  line-height: 1.5;
+  color: #162f49;
 }
 
 .district-impact-grid {

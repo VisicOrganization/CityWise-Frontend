@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 
 import type { ProjectDetail } from "../../shared/api/contracts";
-import type { DemoMapMarker } from "../../shared/mock/mapDemo";
+import type { MapMarker } from "../../shared/map/mapTypes";
 import { BallotIcon, HousingIcon, InfrastructureIcon, TimelineIcon, TransitIcon } from "../../shared/ui/visicIcons";
 
 
@@ -36,7 +36,7 @@ function normalizeVoteGroup(vote: string | null) {
   return "Absent";
 }
 
-function ProjectCategoryIcon({ marker }: { marker: DemoMapMarker | null }) {
+function ProjectCategoryIcon({ marker }: { marker: MapMarker | null }) {
   const props = { width: 28, height: 28, className: "project-category-icon" };
 
   if (marker?.category === "housing") {
@@ -51,7 +51,7 @@ function ProjectCategoryIcon({ marker }: { marker: DemoMapMarker | null }) {
 }
 
 interface ProjectDetailsPanelProps {
-  marker: DemoMapMarker | null;
+  marker: MapMarker | null;
   detail: ProjectDetail | null;
   isLoading: boolean;
   errorMessage: string | null;

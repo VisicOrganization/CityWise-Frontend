@@ -2,22 +2,22 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { DistrictOverviewSheet } from "../districts/DistrictOverviewSheet";
-import type { DemoGeocodeResult } from "../../shared/mock/demoGeocoding";
-import { buildDemoMarkerFromSearch, searchDemoAddresses } from "../../shared/mock/demoGeocoding";
-import type { DemoMapMarker } from "../../shared/mock/mapDemo";
+import type { GeocodeSearchResult } from "../../shared/map/geocodeSearch";
+import { buildSearchMarker, searchAddresses } from "../../shared/map/geocodeSearch";
+import type { MapMarker } from "../../shared/map/mapTypes";
 import { AppShell } from "../../shared/ui/AppShell";
-import { CityDemoMap } from "./CityDemoMap";
+import { CityMap } from "./CityMap";
 import { ProjectDetailsPanel } from "./ProjectDetailsPanel";
-import { useMapDemoData } from "./useMapDemoData";
+import { useMapData } from "./useMapData";
 import { useProjectDetail } from "./useProjectDetail";
 
 
-export function MapDemoPage() {
+export function MapPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") ?? "");
-  const [results, setResults] = useState<DemoGeocodeResult[]>([]);
-  const [searchMarker, setSearchMarker] = useState<DemoMapMarker | null>(null);
-  const [activeMarker, setActiveMarker] = useState<DemoMapMarker | null>(null);
+  const [results, setResults] = useState<GeocodeSearchResult[]>([]);
+  const [searchMarker, setSearchMarker] = useState<MapMarker | null>(null);
+  const [activeMarker, setActiveMarker] = useState<MapMarker | null>(null);
   const [activeDistrictId, setActiveDistrictId] = useState<number | null>(null);
   const districtFocusId = useMemo(() => {
     const districtFocusValue = searchParams.get("districtFocus");
@@ -28,7 +28,7 @@ export function MapDemoPage() {
     const parsed = Number(districtFocusValue);
     return Number.isNaN(parsed) ? null : parsed;
   }, [searchParams]);
-  const { boundaries, projectCards, projectMarkers } = useMapDemoData();
+  const { boundaries, projectCards, projectMarkers } = useMapData();
   const {
     activeProject,
     detailsError,
@@ -58,14 +58,14 @@ export function MapDemoPage() {
     }
 
     const timeoutId = window.setTimeout(() => {
-      void searchDemoAddresses(searchQuery)
+      void searchAddresses(searchQuery)
         .then((nextResults) => {
           if (ignore) {
             return;
           }
 
           setResults(nextResults);
-          setSearchMarker(nextResults[0] ? buildDemoMarkerFromSearch(nextResults[0], searchQuery) : null);
+          setSearchMarker(nextResults[0] ? buildSearchMarker(nextResults[0], searchQuery) : null);
         })
         .catch(() => {
           if (!ignore) {
@@ -82,10 +82,10 @@ export function MapDemoPage() {
   }, [searchQuery]);
 
   async function runSearch(query: string) {
-    const nextResults = await searchDemoAddresses(query);
+    const nextResults = await searchAddresses(query);
     setResults(nextResults);
     if (nextResults[0]) {
-      setSearchMarker(buildDemoMarkerFromSearch(nextResults[0], query));
+      setSearchMarker(buildSearchMarker(nextResults[0], query));
     } else {
       setSearchMarker(null);
     }
@@ -106,10 +106,10 @@ export function MapDemoPage() {
     }
 
     setSearchQuery(label);
-    setSearchMarker(buildDemoMarkerFromSearch(selected, label));
+    setSearchMarker(buildSearchMarker(selected, label));
   }
 
-  async function handleMarkerSelect(marker: DemoMapMarker) {
+  async function handleMarkerSelect(marker: MapMarker) {
     setActiveMarker(marker);
     setActiveDistrictId(marker.districtId);
     await loadProjectForMarker(marker, projectCards);
@@ -140,7 +140,7 @@ export function MapDemoPage() {
   return (
     <AppShell className="map-demo-shell">
       <section className="map-demo-screen">
-        <CityDemoMap
+        <CityMap
           boundaries={boundaries}
           markers={searchMarker ? [...projectMarkers, searchMarker] : projectMarkers}
           activeMarkerId={activeMarker?.id ?? null}

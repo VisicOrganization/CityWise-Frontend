@@ -1,3 +1,13 @@
+export interface ProjectAddressInfo {
+  project_title: string;
+  primary_address: string | null;
+  addresses: string[];
+  places: string[];
+  topics: string[];
+  segments: string[];
+}
+
+/** Populated on district list when backend includes full parsed title (same shape as project detail). */
 export interface DistrictProjectCard {
   id: string;
   title: string;
@@ -10,6 +20,8 @@ export interface DistrictProjectCard {
   primary_movers: string[];
   secondary_movers: string[];
   document_count: number;
+  primary_address: string | null;
+  address_info?: ProjectAddressInfo | null;
 }
 
 export interface DistrictProjectsResponse {
@@ -19,6 +31,20 @@ export interface DistrictProjectsResponse {
   total: number;
   total_pages: number;
   items: DistrictProjectCard[];
+}
+
+export interface DistrictListResponse {
+  district_ids: number[];
+}
+
+export interface DistrictProfile {
+  district_id: number;
+  name: string;
+  website: string | null;
+  phone_number: string | null;
+  about: string | null;
+  impact_summary: string | null;
+  profile_pic: string | null;
 }
 
 export interface ProjectMember {
@@ -77,4 +103,5 @@ export interface ProjectDetail {
     date: string | null;
     source: string;
   }>;
+  address_info: ProjectAddressInfo | null;
 }
