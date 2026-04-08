@@ -1,8 +1,33 @@
-import type { DistrictProjectsResponse, ProjectDetail } from "./contracts";
+import type {
+  DistrictListResponse,
+  DistrictProfile,
+  DistrictProjectsResponse,
+  ProjectDetail,
+} from "./contracts";
 
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:18100";
 
+
+export async function getDistricts(): Promise<DistrictListResponse> {
+  const url = new URL("/districts", API_BASE_URL);
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error("Failed to load districts");
+  }
+
+  return response.json() as Promise<DistrictListResponse>;
+}
+
+export async function getDistrictProfile(districtId: number): Promise<DistrictProfile> {
+  const url = new URL(`/districts/${districtId}`, API_BASE_URL);
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to load district ${districtId} profile`);
+  }
+
+  return response.json() as Promise<DistrictProfile>;
+}
 
 export async function getDistrictProjects(
   districtId: number,

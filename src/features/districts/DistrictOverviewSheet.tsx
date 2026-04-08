@@ -1,4 +1,4 @@
-import { getDeterministicProjectBudget, getDistrictContent } from "./districtContent";
+import { useDistrictProfile } from "./useDistrictProfile";
 import { useDistrictProjects } from "./useDistrictProjects";
 
 
@@ -16,14 +16,6 @@ function formatDate(value: string | null): string {
   });
 }
 
-function formatBudget(value: number): string {
-  return value.toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  });
-}
-
 function formatCompletion(status: string, lastChangedDate: string | null): string {
   if (status === "completed" && lastChangedDate) {
     return formatDate(lastChangedDate);
@@ -36,10 +28,12 @@ interface DistrictOverviewSheetProps {
   districtId: number;
 }
 
-
 export function DistrictOverviewSheet({ districtId }: DistrictOverviewSheetProps) {
-  const districtContent = getDistrictContent(districtId);
+  const { profile, error: profileError, isLoading: profileLoading } = useDistrictProfile(districtId);
   const { response, error, isLoading } = useDistrictProjects(districtId, 1, PAGE_SIZE);
+
+  const representative = profile?.name ?? `District ${districtId}`;
+  const title = `District ${districtId}`;
 
   return (
     <section
@@ -51,58 +45,57 @@ export function DistrictOverviewSheet({ districtId }: DistrictOverviewSheetProps
 
       <section className="district-profile-panel">
         <div className="district-portrait" aria-hidden="true">
-          <span>{districtContent.representative.split(" ").map((part) => part[0]).join("")}</span>
+          <span>{representative.split(" ").map((part) => part[0]).join("")}</span>
         </div>
 
         <div className="district-profile-copy">
           <h1>
-            {districtContent.representative} • {districtContent.title}
+            {representative} • {title}
           </h1>
 
+          {profileLoading ? <p className="status-message">Loading profile…</p> : null}
+          {profileError ? <p className="status-message error-message">{profileError}</p> : null}
+
           <dl className="district-contact-grid">
-            <div>
-              <dt>Website</dt>
-              <dd>
-                <a href={districtContent.website} target="_blank" rel="noreferrer">
-                  {districtContent.website}
-                </a>
-              </dd>
-            </div>
-            <div>
-              <dt>Phone</dt>
-              <dd>{districtContent.phone}</dd>
-            </div>
-            <div>
-              <dt>Email</dt>
-              <dd>{districtContent.email}</dd>
-            </div>
+            {profile?.website ? (
+              <div>
+                <dt>Website</dt>
+                <dd>
+                  <a href={profile.website} target="_blank" rel="noreferrer">
+                    {profile.website}
+                  </a>
+                </dd>
+              </div>
+            ) : null}
+            {profile?.phone_number ? (
+              <div>
+                <dt>Phone</dt>
+                <dd>{profile.phone_number}</dd>
+              </div>
+            ) : null}
           </dl>
 
-          <div className="district-about-block">
-            <h2>About</h2>
-            <p>{districtContent.about}</p>
-          </div>
+          {profile?.about ? (
+            <div className="district-about-block">
+              <h2>About</h2>
+              <p>{profile.about}</p>
+            </div>
+          ) : null}
         </div>
       </section>
 
-      <section className="district-impact-panel">
-        <p className="district-section-label">Impact Summary</p>
-        <div className="district-impact-grid">
-          {districtContent.impactSummary.map((item) => (
-            <article key={item.id} className="district-impact-card">
-              <h3>{item.label}</h3>
-              <strong>{item.stat}</strong>
-              <p>{item.description}</p>
-            </article>
-          ))}
-        </div>
-      </section>
+      {profile?.impact_summary ? (
+        <section className="district-impact-panel">
+          <p className="district-section-label">Impact Summary</p>
+          <p className="district-impact-summary-text">{profile.impact_summary}</p>
+        </section>
+      ) : null}
 
       <section className="district-recent-panel">
         <div className="district-recent-header">
           <div>
             <p className="district-section-label">Recent Projects</p>
-            <h2>{districtContent.summary}</h2>
+            <h2>Project activity in this district</h2>
           </div>
           {response ? (
             <p className="result-meta">
@@ -126,11 +119,7 @@ export function DistrictOverviewSheet({ districtId }: DistrictOverviewSheetProps
                   <span className="status-pill">{project.status}</span>
                 </div>
 
-                <dl className="district-project-facts">
-                  <div>
-                    <dt>Budget</dt>
-                    <dd>{formatBudget(getDeterministicProjectBudget(districtId, project.id))}</dd>
-                  </div>
+                <dl className="district-project-facts district-project-facts-two">
                   <div>
                     <dt>Started</dt>
                     <dd>{formatDate(project.start_date)}</dd>

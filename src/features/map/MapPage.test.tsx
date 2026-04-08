@@ -5,7 +5,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import App from "../../app/App";
-import { resetMapDemoDataCacheForTests } from "./useMapDemoData";
+import { resetMapDataCacheForTests } from "./useMapData";
 
 
 vi.mock("react-map-gl/maplibre", () => ({
@@ -46,7 +46,7 @@ vi.mock("react-map-gl/maplibre", () => ({
   Marker: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
   NavigationControl: () => null,
   Source: ({ children, id }: { children?: ReactNode; id?: string }) => (
-    <div data-testid={id === "demo-district-boundaries" ? "mock-boundary-source" : undefined}>{children}</div>
+    <div data-testid={id === "district-boundaries" ? "mock-boundary-source" : undefined}>{children}</div>
   ),
 }));
 
@@ -121,6 +121,15 @@ const districtProjectsResponseByDistrict = {
         primary_movers: ["TRACI PARK"],
         secondary_movers: ["HEATHER HUTT"],
         document_count: 2,
+        primary_address: null,
+        address_info: {
+          project_title: "Council File 25-0358",
+          primary_address: "100 First St",
+          addresses: ["100 First St"],
+          places: [],
+          topics: [],
+          segments: [],
+        },
       },
       {
         id: "25-0400",
@@ -134,6 +143,15 @@ const districtProjectsResponseByDistrict = {
         primary_movers: ["TRACI PARK"],
         secondary_movers: [],
         document_count: 1,
+        primary_address: "200 Second St",
+        address_info: {
+          project_title: "Council File 25-0400",
+          primary_address: "200 Second St",
+          addresses: ["200 Second St"],
+          places: [],
+          topics: [],
+          segments: [],
+        },
       },
     ],
   },
@@ -156,6 +174,15 @@ const districtProjectsResponseByDistrict = {
         primary_movers: ["JOHN LEE"],
         secondary_movers: [],
         document_count: 1,
+        primary_address: "300 Third St",
+        address_info: {
+          project_title: "Council File 25-0501",
+          primary_address: "300 Third St",
+          addresses: ["300 Third St"],
+          places: [],
+          topics: [],
+          segments: [],
+        },
       },
     ],
   },
@@ -174,9 +201,47 @@ function buildEmptyDistrictResponse(districtId: number) {
 
 function defaultFetchMock(input: string | URL | Request) {
   const url = String(input);
+  const pathname = new URL(url, "http://localhost").pathname;
+
+  if (url.startsWith("https://nominatim.openstreetmap.org/search")) {
+    return Promise.resolve(
+      new Response(
+        JSON.stringify([
+          {
+            place_id: 1,
+            display_name: "Mock, Los Angeles, California, United States",
+            lat: "34.0500",
+            lon: "-118.2500",
+          },
+        ]),
+      ),
+    );
+  }
 
   if (url.includes("/data/la-city-council-districts.geojson")) {
     return Promise.resolve(new Response(JSON.stringify(boundariesResponse)));
+  }
+
+  if (pathname === "/districts") {
+    return Promise.resolve(new Response(JSON.stringify({ district_ids: [11, 12] })));
+  }
+
+  const profileMatch = pathname.match(/^\/districts\/(\d+)$/);
+  if (profileMatch) {
+    const id = Number(profileMatch[1]);
+    return Promise.resolve(
+      new Response(
+        JSON.stringify({
+          district_id: id,
+          name: id === 11 ? "Jordan Alvarez" : `Council Member ${id}`,
+          website: `https://cd${id}.lacity.gov/`,
+          phone_number: "(213) 473-7011",
+          about: "About this district representative.",
+          impact_summary: "Housing and transportation priorities.",
+          profile_pic: null,
+        }),
+      ),
+    );
   }
 
   const districtMatch = url.match(/\/districts\/(\d+)\/projects/);
@@ -194,7 +259,7 @@ function defaultFetchMock(input: string | URL | Request) {
 
 describe("mock app routes", () => {
   beforeEach(() => {
-    resetMapDemoDataCacheForTests();
+    resetMapDataCacheForTests();
     fetchMock.mockReset();
     fetchMock.mockImplementation(defaultFetchMock);
   });
@@ -311,9 +376,31 @@ describe("mock app routes", () => {
   it("renders district boundaries before the district project preload finishes", async () => {
     fetchMock.mockImplementation((input: string | URL | Request) => {
       const url = String(input);
+      const pathname = new URL(url, "http://localhost").pathname;
 
       if (url.includes("/data/la-city-council-districts.geojson")) {
         return Promise.resolve(new Response(JSON.stringify(boundariesResponse)));
+      }
+
+      if (pathname === "/districts") {
+        return Promise.resolve(new Response(JSON.stringify({ district_ids: [11, 12] })));
+      }
+
+      if (pathname.match(/^\/districts\/(\d+)$/)) {
+        const id = Number(pathname.match(/^\/districts\/(\d+)$/)?.[1]);
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              district_id: id,
+              name: "Jordan Alvarez",
+              website: null,
+              phone_number: null,
+              about: null,
+              impact_summary: null,
+              profile_pic: null,
+            }),
+          ),
+        );
       }
 
       if (url.match(/\/districts\/(\d+)\/projects/)) {
@@ -417,6 +504,7 @@ describe("mock app routes", () => {
               votes: [],
               timeline: [],
               documents: [],
+              address_info: null,
             }),
           ),
         );
@@ -477,6 +565,7 @@ describe("mock app routes", () => {
               votes: [],
               timeline: [],
               documents: [],
+              address_info: null,
             }),
           ),
         );
@@ -514,7 +603,7 @@ describe("mock app routes", () => {
     await user.click(screen.getByLabelText("Open District 11 overview"));
 
     expect(await screen.findByRole("heading", { name: "Jordan Alvarez • District 11" })).toBeInTheDocument();
-    expect(await screen.findByText("councilmember.jordan.alvarez@lacity.org")).toBeInTheDocument();
+    expect(await screen.findByText("https://cd11.lacity.gov/")).toBeInTheDocument();
     expect(screen.queryByTestId("demo-map")).toBeInTheDocument();
   });
 
@@ -662,6 +751,7 @@ describe("mock app routes", () => {
                 },
               ],
               documents: [],
+              address_info: null,
             }),
           ),
         );

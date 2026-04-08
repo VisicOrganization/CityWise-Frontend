@@ -2,24 +2,22 @@ import { useState } from "react";
 
 import { getProjectDetail } from "../../shared/api/client";
 import type { DistrictProjectCard, ProjectDetail } from "../../shared/api/contracts";
-import type { DemoMapMarker } from "../../shared/mock/mapDemo";
-
+import type { MapMarker } from "../../shared/map/mapTypes";
 
 interface UseProjectDetailState {
   activeProject: ProjectDetail | null;
   detailsError: string | null;
   isDetailsLoading: boolean;
-  loadProjectForMarker: (marker: DemoMapMarker, projectCards: DistrictProjectCard[]) => Promise<void>;
+  loadProjectForMarker: (marker: MapMarker, projectCards: DistrictProjectCard[]) => Promise<void>;
   resetProjectDetail: () => void;
 }
-
 
 export function useProjectDetail(): UseProjectDetailState {
   const [activeProject, setActiveProject] = useState<ProjectDetail | null>(null);
   const [detailsError, setDetailsError] = useState<string | null>(null);
   const [isDetailsLoading, setIsDetailsLoading] = useState(false);
 
-  async function loadProjectForMarker(marker: DemoMapMarker, projectCards: DistrictProjectCard[]) {
+  async function loadProjectForMarker(marker: MapMarker, projectCards: DistrictProjectCard[]) {
     setActiveProject(null);
     setDetailsError(null);
     setIsDetailsLoading(true);
@@ -32,7 +30,7 @@ export function useProjectDetail(): UseProjectDetailState {
       }
 
       if (projectCards.length === 0) {
-        throw new Error("No demo projects were returned by the backend.");
+        throw new Error("No projects were returned by the backend.");
       }
 
       const randomIndex = Math.floor(Math.random() * projectCards.length);
