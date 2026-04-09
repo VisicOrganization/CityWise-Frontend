@@ -136,31 +136,148 @@ a {
   overflow: hidden;
 }
 
+@keyframes landing-fade-in-soft {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes landing-fade-in-opacity {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
 .landing-hero::before {
   content: "";
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(252, 250, 245, 0.88), rgba(250, 251, 248, 0.8)),
-    url("/images/citywise-splash-background.png")
-      center bottom / cover;
-  filter: saturate(0.42) brightness(1.05);
+    url("/images/map-bg.png");
+  background-blend-mode: normal, screen, normal;
+  filter: saturate(0.42) brightness(1.06);
+  animation: landing-fade-in-opacity 420ms ease-out 30ms both;
 }
 
 .landing-hero::after {
-  content: "";
+  content: none;
+}
+
+.landing-pins {
   position: absolute;
   inset: 0;
-  background-image:
-    linear-gradient(rgba(183, 205, 197, 0.28) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(183, 205, 197, 0.28) 1px, transparent 1px);
-  background-size: 44px 44px;
-  opacity: 0.72;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.landing-pin {
+  position: absolute;
+  top: var(--pin-top);
+  left: var(--pin-left);
+  width: var(--pin-size);
+  height: auto;
+  opacity: calc(var(--pin-opacity) * 0.38);
+  transform: translate(-50%, -50%) rotate(var(--pin-rotation));
+  filter: saturate(0.82);
+  user-select: none;
+  animation: landing-fade-in-opacity 520ms ease-out 90ms both;
+}
+
+.landing-pin-desktop {
+  display: block;
+}
+
+.landing-pin-mobile {
+  display: none;
+}
+
+.landing-comments {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.landing-comment {
+  position: absolute;
+  width: clamp(9.5rem, 18vw, 15.5rem);
+  display: grid;
+  place-items: center;
+  opacity: 0.9;
+  user-select: none;
+}
+
+.landing-comment img {
+  grid-area: 1 / 1;
+  display: block;
+  width: 100%;
+  height: auto;
+  animation: landing-fade-in-opacity 500ms ease-out 130ms both;
+}
+
+.landing-comment-text {
+  grid-area: 1 / 1;
+  align-self: center;
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80%;
+  min-height: 52%;
+  padding: 0 0.2rem;
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+  color: #ffffff;
+  text-align: center;
+  font-size: clamp(0.78rem, 0.98vw, 1.02rem);
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: 0;
+  text-wrap: balance;
+  text-shadow:
+    0 1px 1px rgba(0, 67, 150, 0.35),
+    0 0 2px rgba(0, 67, 150, 0.22);
+  animation: landing-fade-in-soft 460ms ease-out 170ms both;
+}
+
+.landing-comment-blue .landing-comment-text,
+.landing-comment-grey .landing-comment-text {
+  width: 78%;
+}
+
+.landing-comment-green .landing-comment-text {
+  width: 82%;
+  font-size: clamp(0.7rem, 0.86vw, 0.88rem);
+}
+
+.landing-comment-blue {
+  top: 8.4rem;
+  left: 27%;
+}
+
+.landing-comment-grey {
+  top: 13rem;
+  right: 10.5%;
+}
+
+.landing-comment-green {
+  left: 20%;
+  bottom: 3.6rem;
 }
 
 .landing-centerpiece {
   position: relative;
-  z-index: 2;
+  z-index: 3;
   width: min(54rem, 100%);
   text-align: center;
 }
@@ -168,18 +285,21 @@ a {
 .landing-centerpiece h1 {
   margin: 0;
   font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
-  font-size: clamp(3rem, 6vw, 5.5rem);
+  font-size: clamp(2.6rem, 5.2vw, 4.8rem);
   line-height: 0.92;
   letter-spacing: -0.05em;
   color: #1b8d66;
+  animation: landing-fade-in-soft 520ms ease-out 210ms both;
 }
 
 .landing-centerpiece p {
   max-width: 38rem;
   margin: 1rem auto 0;
-  font-size: 1.42rem;
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 1.32rem;
   line-height: 1.25;
   color: rgba(23, 50, 77, 0.7);
+  animation: landing-fade-in-soft 520ms ease-out 250ms both;
 }
 
 .landing-search {
@@ -195,6 +315,8 @@ a {
   background: rgba(255, 255, 255, 0.96);
   border: 1px solid rgba(23, 50, 77, 0.08);
   box-shadow: 0 20px 54px rgba(23, 50, 77, 0.12);
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+  animation: landing-fade-in-soft 520ms ease-out 290ms both;
 }
 
 .landing-search:focus-within {
@@ -220,6 +342,7 @@ a {
   border: 0;
   background: transparent;
   color: #17324d;
+  font-size: 0.98rem;
   outline: none;
 }
 
@@ -239,6 +362,8 @@ a {
   background: #1d9467;
   color: white;
   text-decoration: none;
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 0.95rem;
   font-weight: 700;
   box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.12);
 }
@@ -270,6 +395,7 @@ a {
   background: rgba(255, 255, 255, 0.98);
   color: #17324d;
   text-align: left;
+  animation: landing-fade-in-soft 320ms ease-out both;
 }
 
 .landing-search-results button + button,
@@ -289,35 +415,6 @@ a {
   text-decoration: none;
   font-size: 0.98rem;
   font-weight: 500;
-}
-
-.landing-prompt {
-  position: absolute;
-  z-index: 2;
-  padding: 0.8rem 1.15rem;
-  border-radius: 999px;
-  color: white;
-  font-size: 0.92rem;
-  font-weight: 600;
-  box-shadow: 0 14px 30px rgba(23, 50, 77, 0.14);
-}
-
-.landing-prompt-left {
-  top: 9rem;
-  left: 28%;
-  background: #4f93f7;
-}
-
-.landing-prompt-right {
-  top: 13rem;
-  right: 13%;
-  background: #697691;
-}
-
-.landing-prompt-bottom {
-  left: 21%;
-  bottom: 3.7rem;
-  background: #56ba77;
 }
 
 .map-demo-screen,
@@ -466,6 +563,44 @@ a {
   background: transparent;
   outline: none;
   color: #17324d;
+}
+
+@media (max-width: 1180px) {
+  .landing-comment {
+    width: clamp(8.8rem, 16vw, 12rem);
+    opacity: 0.86;
+  }
+
+  .landing-comment-blue {
+    top: 8.8rem;
+    left: 20%;
+  }
+
+  .landing-comment-grey {
+    top: 12rem;
+    right: 5%;
+  }
+
+  .landing-comment-green {
+    left: 12%;
+    bottom: 4rem;
+  }
+
+  .landing-comment-text {
+    width: 82%;
+    min-height: 50%;
+    font-size: clamp(0.7rem, 0.86vw, 0.84rem);
+  }
+
+  .landing-comment-blue .landing-comment-text,
+  .landing-comment-grey .landing-comment-text {
+    width: 80%;
+  }
+
+  .landing-comment-green .landing-comment-text {
+    width: 84%;
+    font-size: clamp(0.64rem, 0.8vw, 0.78rem);
+  }
 }
 
 @media (max-width: 920px) {
@@ -1246,9 +1381,7 @@ a {
 }
 
 @media (max-width: 960px) {
-  .landing-prompt-left,
-  .landing-prompt-right,
-  .landing-prompt-bottom {
+  .landing-comments {
     display: none;
   }
 
@@ -1279,6 +1412,18 @@ a {
   .district-recent-topline {
     flex-direction: column;
   }
+
+  .landing-pin {
+    filter: saturate(0.8);
+  }
+
+  .landing-pin-desktop {
+    display: none;
+  }
+
+  .landing-pin-mobile {
+    display: block;
+  }
 }
 
 @media (max-width: 640px) {
@@ -1303,7 +1448,7 @@ a {
   }
 
   .landing-centerpiece p {
-    font-size: 1.08rem;
+    font-size: 1.02rem;
   }
 
   .landing-search {
@@ -1362,5 +1507,42 @@ a {
   .details-toggle-group {
     flex-wrap: wrap;
     border-radius: 18px;
+  }
+
+  .landing-pin {
+    opacity: calc(var(--pin-opacity) * 0.22);
+  }
+
+  .landing-comment {
+    width: clamp(7.5rem, 22vw, 10.5rem);
+  }
+
+  .landing-comment-text {
+    width: 84%;
+    min-height: 48%;
+    font-size: 0.68rem;
+  }
+
+  .landing-comment-blue .landing-comment-text,
+  .landing-comment-grey .landing-comment-text {
+    width: 82%;
+  }
+
+  .landing-comment-green .landing-comment-text {
+    width: 86%;
+    font-size: 0.62rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-hero::before,
+  .landing-hero .landing-pin,
+  .landing-hero .landing-comment img,
+  .landing-hero .landing-comment-text,
+  .landing-hero .landing-centerpiece h1,
+  .landing-hero .landing-centerpiece p,
+  .landing-hero .landing-search,
+  .landing-hero .landing-search-results button {
+    animation: none !important;
   }
 }
