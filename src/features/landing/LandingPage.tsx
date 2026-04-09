@@ -2,6 +2,7 @@ import { useEffect, useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { searchAddresses, type GeocodeSearchResult } from "../../shared/map/geocodeSearch";
+import { findDistrictIdForPoint, loadDistrictBoundaries } from "../../shared/map/districtBoundaries";
 import { AppShell } from "../../shared/ui/AppShell";
 import { SearchIcon } from "../../shared/ui/visicIcons";
 
@@ -130,14 +131,50 @@ export function LandingPage() {
     };
   }, [query]);
 
-  function handleSearch() {
+  async function navigateToMapWithDistrict(queryLabel: string, selectedResult?: GeocodeSearchResult) {
+    const trimmedQuery = queryLabel.trim();
+    if (!trimmedQuery) {
+      navigate("/map");
+      return;
+    }
+
+    let primaryResult = selectedResult;
+    if (!primaryResult) {
+      const nextResults = await searchAddresses(trimmedQuery);
+      primaryResult = nextResults[0];
+    }
+
+    const nextParams = new URLSearchParams();
+    nextParams.set("q", trimmedQuery);
+
+    if (primaryResult) {
+      try {
+        const boundaries = await loadDistrictBoundaries();
+        const districtId = findDistrictIdForPoint(boundaries, primaryResult.longitude, primaryResult.latitude);
+        if (districtId !== null) {
+          nextParams.set("districtFocus", String(districtId));
+          nextParams.set("showDistrictProfile", "1");
+        }
+      } catch {
+        // Keep search flow resilient when boundaries lookup fails.
+      }
+    }
+
+    navigate(`/map?${nextParams.toString()}`);
+  }
+
+  async function handleSearch() {
     const trimmedQuery = query.trim();
     if (!trimmedQuery) {
       navigate("/map");
       return;
     }
 
-    navigate(`/map?q=${encodeURIComponent(trimmedQuery)}`);
+    try {
+      await navigateToMapWithDistrict(trimmedQuery);
+    } catch {
+      navigate(`/map?q=${encodeURIComponent(trimmedQuery)}`);
+    }
   }
 
   return (
@@ -210,7 +247,7 @@ export function LandingPage() {
             className="landing-search"
             onSubmit={(event) => {
               event.preventDefault();
-              handleSearch();
+              void handleSearch();
             }}
           >
             <span className="landing-search-icon">
@@ -234,7 +271,7 @@ export function LandingPage() {
                     type="button"
                     onClick={() => {
                       setQuery(result.label);
-                      navigate(`/map?q=${encodeURIComponent(result.label)}`);
+                      void navigateToMapWithDistrict(result.label, result);
                     }}
                   >
                     {result.label}

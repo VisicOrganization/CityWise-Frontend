@@ -358,7 +358,7 @@ a {
   min-height: 3rem;
   padding: 0.8rem 1.55rem;
   border: 0;
-  border-radius: 999px;
+  /* border-radius: 50%; */
   background: #1d9467;
   color: white;
   text-decoration: none;
@@ -1009,7 +1009,6 @@ a {
 }
 
 .project-detail-meta-grid div,
-.district-contact-grid div,
 .district-project-facts div,
 .project-mover-list div,
 .district-impact-card,
@@ -1018,6 +1017,13 @@ a {
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.82);
   border: 1px solid rgba(23, 50, 77, 0.06);
+}
+
+.district-bottom-sheet .district-contact-grid div {
+  min-width: 0;
+  border-radius: 0;
+  background: transparent;
+  border: none;
 }
 
 .project-detail-meta-grid div,
@@ -1097,17 +1103,54 @@ a {
   z-index: 25;
   width: 100%;
   max-height: calc(100vh - 10.5rem);
-  padding: 1rem 1rem 1.2rem;
+  padding: 0;
   border-radius: 28px 28px 0 0;
-  background: rgba(252, 250, 246, 0.96);
+  background: #ffffff;
   box-shadow: 0 26px 70px rgba(23, 50, 77, 0.18);
-  overflow: auto;
+  overflow: hidden;
+  font-size: 62.5%;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-.district-bottom-sheet > * {
+.district-bottom-sheet--scroll {
+  display: flex;
+  flex-direction: column;
+}
+
+.district-sheet-scroll-area {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   width: min(1120px, 100%);
   margin-left: auto;
   margin-right: auto;
+  padding: 1rem 1rem 1.5rem;
+  padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+.district-open-map-fixed {
+  position: fixed;
+  left: 50%;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  z-index: 30;
+  transform: translateX(-50%);
+  width: min(45vw, 495px);
+  max-width: 45%;
+  border: 0;
+  border-radius: 30px;
+  background: #2d7a5f;
+  color: #ffffff;
+  font-size: 1.05rem;
+  font-weight: 400;
+  line-height: 1.25;
+  padding: 0.85rem 1.25rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  transition: background-color 120ms ease;
+}
+
+.district-open-map-fixed:hover {
+  background: #256854;
 }
 
 .district-sheet-dismiss-layer {
@@ -1122,110 +1165,204 @@ a {
 .district-sheet-handle {
   width: 4rem;
   height: 0.38rem;
-  margin: 0 auto 1rem;
+  margin: 0 auto 0.5rem;
   border-radius: 999px;
-  background: rgba(23, 50, 77, 0.16);
+  background: rgba(23, 50, 77, 0.12);
 }
 
-.district-profile-panel,
-.district-impact-panel,
-.district-recent-panel {
-  border: 1px solid rgba(23, 50, 77, 0.08);
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.78);
+.district-sheet-action-row {
+  display: none;
+}
+
+.district-sheet-fixed-cta {
+  display: none;
+}
+
+.district-impact-panel {
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 18px;
+  background: #ffffff;
 }
 
 .district-profile-panel {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 1.5rem;
-  padding: 1.3rem;
+  align-items: start;
+  padding: 0.25rem 0 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
-.district-portrait {
-  width: 7.8rem;
-  height: 7.8rem;
-  box-shadow: inset 0 0 0 5px rgba(255, 255, 255, 0.7);
+.district-recent-panel {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
-.district-portrait span {
-  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
-  font-size: 2.5rem;
-  font-weight: 700;
+.district-bottom-sheet .district-portrait {
+  width: 12.5rem;
+  height: 12.5rem;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #e5e7eb;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
 }
 
-.district-profile-copy h1,
-.district-recent-header h2 {
+.district-bottom-sheet .district-portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.district-bottom-sheet .district-portrait span {
+  font-family: inherit;
+  font-size: 2rem;
+  font-weight: 400;
+  color: #334155;
+}
+
+.district-profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.district-profile-body {
+  margin-top: 0.75rem;
+}
+
+.district-bottom-sheet .district-about-block {
+  margin-top: 1.35rem;
+  text-align: left;
+}
+
+.district-bottom-sheet .district-about-block h2 {
   margin: 0;
-  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
-  color: #162f49;
-  line-height: 0.98;
-  letter-spacing: -0.04em;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #111827;
+}
+
+.district-bottom-sheet .district-about-block p {
+  margin: 0.5rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: #4b5563;
 }
 
 .district-profile-copy h1 {
-  font-size: clamp(2rem, 4vw, 3.4rem);
+  margin: 0;
+  color: #111827;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-size: clamp(2.25rem, 4.2vw, 2.5rem);
+  font-weight: 400;
 }
 
-.district-recent-header h2 {
-  font-size: clamp(1.8rem, 3.4vw, 3rem);
-}
-
-.district-contact-grid,
-.district-project-facts {
+.district-bottom-sheet .district-contact-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.9rem;
+  gap: 1rem 1.5rem;
   margin: 1rem 0 0;
 }
 
-.district-project-facts-two {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.district-project-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 0.65rem 0 0;
 }
 
 .district-contact-grid div,
 .district-project-facts div {
-  padding: 0.9rem 1rem;
+  padding: 0;
 }
 
-.district-contact-grid dd {
+.district-bottom-sheet .district-contact-grid dd {
   overflow-wrap: anywhere;
 }
 
-.district-contact-grid a {
-  color: #1d9467;
+.district-bottom-sheet .district-contact-grid a {
+  color: #1f2937;
   overflow-wrap: anywhere;
   word-break: break-word;
+  text-decoration: none;
 }
 
-.district-impact-panel,
+.district-bottom-sheet .district-contact-grid dt {
+  margin: 0;
+  color: #111827;
+  font-size: 0.875rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.district-bottom-sheet .district-contact-grid dd {
+  margin: 0.35rem 0 0;
+  color: #4b5563;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  font-weight: 400;
+}
+
+.district-impact-panel {
+  margin-top: 0.92rem;
+  padding: 1rem 1.05rem;
+}
+
 .district-recent-panel {
-  margin-top: 1rem;
-  padding: 1.2rem;
-}
-
-.district-impact-summary-text {
-  margin: 0.6rem 0 0;
-  line-height: 1.5;
-  color: #162f49;
+  margin-top: 2.75rem;
+  padding: 0;
 }
 
 .district-impact-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
-  margin-top: 0.9rem;
+  gap: 0;
+  margin-top: 0.62rem;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 16px;
+  background: #090b0d;
+  overflow: hidden;
 }
 
 .district-impact-card {
-  padding: 1rem;
+  padding: 0.9rem 0.8rem;
+  min-height: 3.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.36rem;
+  text-align: center;
 }
 
-.district-impact-card strong {
-  display: block;
-  margin-top: 0.55rem;
-  font-size: 1.12rem;
-  color: #17324d;
+.district-impact-card + .district-impact-card {
+  border-left: 1px solid rgba(255, 255, 255, 0.72);
+}
+
+.district-impact-icon {
+  width: 0.88rem;
+  height: 0.88rem;
+  color: #6b7280;
+  opacity: 0.95;
+  filter: grayscale(1) saturate(0);
+}
+
+.district-impact-card h3 {
+  margin: 0;
+  font-size: 0.65rem;
+  color: #6b7280;
+  font-weight: 600;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
 }
 
 .district-recent-header,
@@ -1239,24 +1376,95 @@ a {
 
 .district-recent-list {
   display: grid;
-  gap: 0.85rem;
-  margin-top: 1rem;
+  gap: 0.82rem;
+  margin-top: 0.72rem;
 }
 
 .district-recent-card {
-  padding: 1rem;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 18px;
+  background: #ffffff;
+  padding: 0.94rem 1.02rem 0.9rem;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.07);
+}
+
+.district-recent-card h3 {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.14;
+  color: #30343a;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  letter-spacing: -0.01em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.26rem;
+}
+
+.district-project-header-copy {
+  min-width: 0;
+}
+
+.district-project-link-mark {
+  color: #4b5563;
+  font-size: 0.7em;
+  line-height: 1;
+  transform: translateY(-0.04em);
+}
+
+.district-project-summary {
+  margin: 0.52rem 0 0;
+  color: #5b6169;
+  font-size: 0.5rem;
+  line-height: 1.34;
 }
 
 .status-pill {
   display: inline-flex;
   align-items: center;
-  padding: 0.38rem 0.8rem;
+  justify-content: center;
+  padding: 0.28rem 0.66rem;
   border-radius: 999px;
-  background: rgba(29, 148, 103, 0.12);
-  color: #1d9467;
-  font-size: 0.82rem;
-  font-weight: 700;
+  border: 1px solid rgba(34, 197, 94, 0.46);
+  background: rgba(34, 197, 94, 0.12);
+  color: #15803d;
+  font-size: 0.572rem;
+  font-weight: 600;
   text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.district-project-facts {
+  margin-top: 0.78rem;
+  padding-top: 0.62rem;
+  border-top: 1px solid rgba(15, 23, 42, 0.14);
+}
+
+.district-project-facts-inline {
+  display: grid;
+  grid-template-columns: auto 1fr auto 1fr;
+  align-items: center;
+  column-gap: 0.32rem;
+  row-gap: 0;
+}
+
+.district-project-facts-inline dt {
+  margin: 0;
+  color: #4b5563;
+  font-weight: 700;
+  font-size: 0.38rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.district-project-facts-inline dd {
+  margin: 0;
+  color: #374151;
+  font-size: 0.43rem;
+  font-weight: 500;
+}
+
+.district-project-facts-inline dd:nth-of-type(2) {
+  text-align: right;
 }
 
 .district-overview-footer {
@@ -1265,7 +1473,14 @@ a {
 }
 
 .status-message {
-  margin-top: 1rem;
+  margin-top: 0.7rem;
+}
+
+.district-section-label {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.72rem;
+  font-weight: 600;
 }
 
 .details-status-error,
@@ -1400,17 +1615,52 @@ a {
 
   .district-profile-panel {
     grid-template-columns: 1fr;
+    justify-items: start;
   }
 
-  .district-impact-grid,
-  .district-contact-grid,
+  .district-bottom-sheet .district-portrait {
+    width: min(12.5rem, 70vw);
+    height: min(12.5rem, 70vw);
+  }
+
+  .district-profile-header {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .district-sheet-fixed-cta {
+    width: min(20rem, calc(100vw - 2rem));
+  }
+
+  .district-bottom-sheet .district-contact-grid,
   .district-project-facts {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .district-recent-header,
   .district-recent-topline {
-    flex-direction: column;
+    flex-direction: row;
+    align-items: start;
+  }
+
+  .district-recent-card h3 {
+    font-size: 0.92rem;
+  }
+
+  .district-recent-list {
+    gap: 0.8rem;
+  }
+
+  .district-recent-card {
+    padding: 0.9rem 0.92rem;
+  }
+
+  .district-project-kind {
+    font-size: 0.5rem;
+  }
+
+  .district-project-summary {
+    font-size: 0.52rem;
   }
 
   .landing-pin {
@@ -1500,8 +1750,94 @@ a {
   .district-bottom-sheet {
     width: 100%;
     bottom: 0;
-    padding: 0.9rem;
     max-height: calc(100vh - 8.5rem);
+  }
+
+  .district-sheet-scroll-area {
+    padding: 0.9rem 0.9rem 1.25rem;
+    padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .district-open-map-fixed {
+    bottom: max(0.85rem, env(safe-area-inset-bottom));
+    width: min(45vw, calc((100vw - 1.5rem) / 2));
+    max-width: 45%;
+    font-size: 1.05rem;
+  }
+
+  .district-profile-panel {
+    padding: 0.15rem 0 0;
+  }
+
+  .district-bottom-sheet .district-portrait {
+    width: min(11rem, 72vw);
+    height: min(11rem, 72vw);
+  }
+
+  .district-bottom-sheet .district-portrait span {
+    font-size: 1.65rem;
+  }
+
+  .district-profile-copy h1 {
+    font-size: clamp(1.65rem, 6vw, 2.35rem);
+  }
+
+  .district-bottom-sheet .district-contact-grid,
+  .district-project-facts {
+    grid-template-columns: 1fr;
+  }
+
+  .district-impact-panel {
+    padding: 0.88rem;
+  }
+
+  .district-recent-panel {
+    padding: 0;
+  }
+
+  .district-impact-card {
+    min-height: 2.6rem;
+    padding: 0.72rem 0.42rem;
+    gap: 0.24rem;
+  }
+
+  .district-impact-icon {
+    width: 0.72rem;
+    height: 0.72rem;
+  }
+
+  .district-impact-card h3 {
+    font-size: 0.46rem;
+  }
+
+  .district-recent-card h3 {
+    font-size: 0.78rem;
+  }
+
+  .district-recent-topline {
+    gap: 0.5rem;
+  }
+
+  .district-recent-list {
+    gap: 0.72rem;
+  }
+
+  .district-recent-card {
+    padding: 0.84rem 0.82rem;
+  }
+
+  .district-project-facts-inline {
+    grid-template-columns: auto 1fr;
+    row-gap: 0.2rem;
+  }
+
+  .district-project-facts-inline dd:nth-of-type(2) {
+    text-align: left;
+  }
+
+  .status-pill {
+    padding: 0.26rem 0.55rem;
+    font-size: 0.42rem;
   }
 
   .details-toggle-group {

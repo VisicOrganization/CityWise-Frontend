@@ -5,6 +5,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import App from "../../app/App";
+import { resetCouncilMemberBiosCacheForTests } from "../districts/useCouncilMemberBios";
 import { resetMapDataCacheForTests } from "./useMapData";
 
 
@@ -199,6 +200,19 @@ function buildEmptyDistrictResponse(districtId: number) {
   };
 }
 
+/** Static bios used in tests; CD 11 aligns with district 11 scenarios. */
+const mockCouncilMemberBiosResponse = [
+  {
+    Name: "Jordan Alvarez",
+    Email: "jordan.alvarez.bios@lacity.org",
+    "Phone Number": "(213) 473-7011",
+    "Website Link": "https://cd11.lacity.gov/",
+    "About Me": "Council member bio from static data file.",
+    "Top 3 Impacts": "1. Example impact for tests.",
+    CD: 11,
+  },
+];
+
 function defaultFetchMock(input: string | URL | Request) {
   const url = String(input);
   const pathname = new URL(url, "http://localhost").pathname;
@@ -220,6 +234,10 @@ function defaultFetchMock(input: string | URL | Request) {
 
   if (url.includes("/data/la-city-council-districts.geojson")) {
     return Promise.resolve(new Response(JSON.stringify(boundariesResponse)));
+  }
+
+  if (url.includes("/data/cmem-bios.json")) {
+    return Promise.resolve(new Response(JSON.stringify(mockCouncilMemberBiosResponse)));
   }
 
   if (pathname === "/districts") {
@@ -260,6 +278,7 @@ function defaultFetchMock(input: string | URL | Request) {
 describe("mock app routes", () => {
   beforeEach(() => {
     resetMapDataCacheForTests();
+    resetCouncilMemberBiosCacheForTests();
     fetchMock.mockReset();
     fetchMock.mockImplementation(defaultFetchMock);
   });
@@ -316,8 +335,8 @@ describe("mock app routes", () => {
               {
                 place_id: 3,
                 display_name: "456 Sunset Blvd, Los Angeles, California, United States",
-                lat: "34.0983",
-                lon: "-118.3267",
+                lat: "34.1500",
+                lon: "-118.5500",
               },
             ]),
           ),
@@ -337,6 +356,8 @@ describe("mock app routes", () => {
     await user.type(input, "456 Sunset Blvd{Enter}");
 
     expect(await screen.findByLabelText("Search query")).toHaveValue("456 Sunset Blvd");
+    expect(await screen.findByLabelText("District overview")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Open Map" })).toBeInTheDocument();
   });
 
   it("renders the general map-only mock screen", async () => {
@@ -380,6 +401,10 @@ describe("mock app routes", () => {
 
       if (url.includes("/data/la-city-council-districts.geojson")) {
         return Promise.resolve(new Response(JSON.stringify(boundariesResponse)));
+      }
+
+      if (url.includes("/data/cmem-bios.json")) {
+        return Promise.resolve(new Response(JSON.stringify(mockCouncilMemberBiosResponse)));
       }
 
       if (pathname === "/districts") {
@@ -604,6 +629,11 @@ describe("mock app routes", () => {
 
     expect(await screen.findByRole("heading", { name: "Jordan Alvarez • District 11" })).toBeInTheDocument();
     expect(await screen.findByText("https://cd11.lacity.gov/")).toBeInTheDocument();
+    expect(await screen.findByText("Council member bio from static data file.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "jordan.alvarez.bios@lacity.org" })).toHaveAttribute(
+      "href",
+      "mailto:jordan.alvarez.bios@lacity.org",
+    );
     expect(screen.queryByTestId("demo-map")).toBeInTheDocument();
   });
 
@@ -619,6 +649,22 @@ describe("mock app routes", () => {
     expect(await screen.findByLabelText("District overview")).toBeInTheDocument();
     await user.click(screen.getByLabelText("Close district overview"));
     expect(screen.queryByLabelText("District overview")).not.toBeInTheDocument();
+  });
+
+  it("closes district profile via Open Map while keeping district context", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={["/map?districtFocus=11&showDistrictProfile=1"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByLabelText("District overview")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Open Map" }));
+    expect(screen.queryByLabelText("District overview")).not.toBeInTheDocument();
+    expect(await screen.findByLabelText("Open District 11 overview")).toBeInTheDocument();
+    expect(screen.getByText("Jordan Alvarez • District 11")).toBeInTheDocument();
   });
 
   it("submits the map search from the icon and Enter key", async () => {

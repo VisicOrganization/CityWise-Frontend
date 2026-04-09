@@ -1,5 +1,6 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 
 
 function getBasePath() {
@@ -13,7 +14,7 @@ function getBasePath() {
 
 export default defineConfig({
   base: getBasePath(),
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   test: {
     environment: "jsdom",
     setupFiles: "./src/test/setup.ts",

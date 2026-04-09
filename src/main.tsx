@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 
 import App from "./app/App";
 import "maplibre-gl/dist/maplibre-gl.css";
+import "./tailwind.css";
 import "./app.css";
 
 

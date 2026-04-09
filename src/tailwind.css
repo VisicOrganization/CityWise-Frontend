@@ -1,0 +1,26 @@
+@import url("https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400&family=Schibsted+Grotesk:wght@300;400&display=swap");
+
+@import "tailwindcss";
+
+/* Council name line only */
+.font-public-sans {
+  font-family: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 400;
+}
+
+/* Ensure council heading keeps Public Sans above sheet typography rules */
+.district-bottom-sheet .district-profile-copy h1.font-public-sans {
+  font-family: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 400;
+}
+
+/* All other district popup copy */
+.font-schibsted {
+  font-family: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 400;
+}
+
+.font-schibsted-light {
+  font-family: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 300;
+}

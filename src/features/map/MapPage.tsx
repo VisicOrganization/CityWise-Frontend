@@ -28,6 +28,8 @@ export function MapPage() {
     const parsed = Number(districtFocusValue);
     return Number.isNaN(parsed) ? null : parsed;
   }, [searchParams]);
+  const districtProfileIntent = searchParams.get("showDistrictProfile");
+  const shouldShowDistrictProfile = districtFocusId !== null && districtProfileIntent !== "0";
   const { boundaries, projectCards, projectMarkers } = useMapData();
   const {
     activeProject,
@@ -120,12 +122,14 @@ export function MapPage() {
     resetProjectDetail();
   }
 
-  function setDistrictFocus(districtId: number | null) {
+  function setDistrictFocus(districtId: number | null, shouldOpenProfile = districtId !== null) {
     const nextParams = new URLSearchParams(searchParams);
     if (districtId === null) {
       nextParams.delete("districtFocus");
+      nextParams.delete("showDistrictProfile");
     } else {
       nextParams.set("districtFocus", String(districtId));
+      nextParams.set("showDistrictProfile", shouldOpenProfile ? "1" : "0");
     }
 
     setSearchParams(nextParams, { replace: true });
@@ -171,15 +175,15 @@ export function MapPage() {
             errorMessage={detailsError}
           />
         ) : null}
-        {districtFocusId ? (
+        {(districtFocusId && shouldShowDistrictProfile) ? (
           <>
             <button
               type="button"
               className="district-sheet-dismiss-layer"
               aria-label="Close district overview"
-              onClick={() => setDistrictFocus(null)}
+              onClick={() => setDistrictFocus(districtFocusId, false)}
             />
-            <DistrictOverviewSheet districtId={districtFocusId} />
+            <DistrictOverviewSheet districtId={districtFocusId} onOpenMap={() => setDistrictFocus(districtFocusId, false)} />
           </>
         ) : null}
       </section>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Map, {
   Layer,
   Marker,
@@ -9,8 +9,8 @@ import Map, {
 } from "react-map-gl/maplibre";
 
 import { useDistrictProfile } from "../districts/useDistrictProfile";
-import type { DistrictBoundaryCollection } from "../../shared/map/districtBoundaries";
-import { districtFillLayer, districtOutlineLayer } from "../../shared/map/districtLayers";
+import { findDistrictFeature, getFeatureBounds, type DistrictBoundaryCollection } from "../../shared/map/districtBoundaries";
+import { districtFillLayer, districtHighlightLayer, districtOutlineLayer } from "../../shared/map/districtLayers";
 import { categoryAppearance, type MapMarker, type MarkerCategory } from "../../shared/map/mapTypes";
 import {
   FilterIcon,
@@ -79,6 +79,13 @@ const DEFAULT_VIEW_STATE: ViewState = {
   pitch: 0,
 };
 
+function buildHighlightLayer(activeDistrictId: number) {
+  return {
+    ...districtHighlightLayer,
+    filter: ["==", ["get", "District"], activeDistrictId] as ["==", ["get", string], number],
+  } satisfies typeof districtHighlightLayer;
+}
+
 interface CityMapProps {
   boundaries: DistrictBoundaryCollection | null;
   markers: MapMarker[];
@@ -111,6 +118,8 @@ export function CityMap({
   onDistrictSelect,
 }: CityMapProps) {
   const [viewState, setViewState] = useState(DEFAULT_VIEW_STATE);
+  /** Last district we auto-framed (zoom + center); used to avoid resetting zoom when switching districts or when boundaries refetch. */
+  const lastDistrictFocusRef = useRef<number | null>(null);
   const [lastVisibleDistrictId, setLastVisibleDistrictId] = useState<number | null>(null);
   const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -149,6 +158,58 @@ export function CityMap({
       zoom: Math.max(current.zoom, 13.2),
     }));
   }, [markers]);
+
+  useEffect(() => {
+    if (activeDistrictId == null) {
+      lastDistrictFocusRef.current = null;
+      return;
+    }
+
+    if (!boundaries) {
+      return;
+    }
+
+    const districtFeature = findDistrictFeature(boundaries, activeDistrictId);
+    if (!districtFeature) {
+      return;
+    }
+
+    const [[minLng, minLat], [maxLng, maxLat]] = getFeatureBounds(districtFeature);
+    const centerLng = (minLng + maxLng) / 2;
+    const centerLat = (minLat + maxLat) / 2;
+
+    const previousFocusedId = lastDistrictFocusRef.current;
+    const isSwitchingDistrict =
+      previousFocusedId != null && previousFocusedId !== activeDistrictId;
+
+    if (isSwitchingDistrict) {
+      lastDistrictFocusRef.current = activeDistrictId;
+      setViewState((current) => ({
+        ...current,
+        longitude: centerLng,
+        latitude: centerLat,
+      }));
+      return;
+    }
+
+    if (previousFocusedId === activeDistrictId) {
+      return;
+    }
+
+    const lngSpan = Math.max(maxLng - minLng, 0.0025);
+    const latSpan = Math.max(maxLat - minLat, 0.0025);
+    const horizontalZoom = Math.log2(360 / lngSpan) - 1.4;
+    const verticalZoom = Math.log2(180 / latSpan) - 0.8;
+    const focusZoom = Math.max(9.8, Math.min(13.6, Math.min(horizontalZoom, verticalZoom)));
+
+    lastDistrictFocusRef.current = activeDistrictId;
+    setViewState((current) => ({
+      ...current,
+      longitude: centerLng,
+      latitude: centerLat,
+      zoom: focusZoom,
+    }));
+  }, [activeDistrictId, boundaries]);
 
   function handleMapClick(event: MapLayerMouseEvent) {
     onMapBackgroundClick();
@@ -189,6 +250,7 @@ export function CityMap({
           <Source id="district-boundaries" type="geojson" data={boundaries}>
             <Layer {...districtFillLayer} />
             <Layer {...districtOutlineLayer} />
+            {activeDistrictId != null ? <Layer {...buildHighlightLayer(activeDistrictId)} /> : null}
           </Source>
         ) : null}
 
