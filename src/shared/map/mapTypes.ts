@@ -8,7 +8,7 @@ export interface MapMarker {
   latitude: number;
   districtId: number | null;
   projectId: string | null;
-  kind: "project" | "search";
+  kind: "project";
 }
 
 export const categoryAppearance = {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Map, {
   Layer,
   Marker,
@@ -11,13 +11,12 @@ import Map, {
 import { useDistrictProfile } from "../districts/useDistrictProfile";
 import { findDistrictFeature, getFeatureBounds, type DistrictBoundaryCollection } from "../../shared/map/districtBoundaries";
 import { districtFillLayer, districtHighlightLayer, districtOutlineLayer } from "../../shared/map/districtLayers";
-import { categoryAppearance, type MapMarker, type MarkerCategory } from "../../shared/map/mapTypes";
+import type { MapMarker, MarkerCategory } from "../../shared/map/mapTypes";
 import {
   FilterIcon,
   HousingIcon,
   InfoIcon,
   InfrastructureIcon,
-  SearchIcon,
   TransitIcon,
 } from "../../shared/ui/visicIcons";
 
@@ -91,11 +90,8 @@ interface CityMapProps {
   markers: MapMarker[];
   activeMarkerId?: string | null;
   activeDistrictId: number | null;
-  searchQuery: string;
-  searchResults: string[];
-  onSearchChange: (value: string) => void;
-  onSearchSubmit: () => void;
-  onSelectResult: (label: string) => void;
+  /** Geocoded address from landing; used to zoom before district GeoJSON is ready, and as fallback. */
+  addressFocusPoint?: { latitude: number; longitude: number } | null;
   onMarkerSelect: (marker: MapMarker) => void;
   onMapBackgroundClick: () => void;
   onOpenDistrictOverview: (districtId: number) => void;
@@ -107,11 +103,7 @@ export function CityMap({
   markers,
   activeMarkerId,
   activeDistrictId,
-  searchQuery,
-  searchResults,
-  onSearchChange,
-  onSearchSubmit,
-  onSelectResult,
+  addressFocusPoint = null,
   onMarkerSelect,
   onMapBackgroundClick,
   onOpenDistrictOverview,
@@ -145,71 +137,71 @@ export function CityMap({
     }
   }, [activeDistrictId]);
 
-  useEffect(() => {
-    const searchMarker = markers.find((marker) => marker.kind === "search");
-    if (!searchMarker) {
-      return;
-    }
-
-    setViewState((current) => ({
-      ...current,
-      longitude: searchMarker.longitude,
-      latitude: searchMarker.latitude,
-      zoom: Math.max(current.zoom, 13.2),
-    }));
-  }, [markers]);
-
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (activeDistrictId == null) {
       lastDistrictFocusRef.current = null;
+      if (addressFocusPoint) {
+        setViewState((current) => ({
+          ...current,
+          longitude: addressFocusPoint.longitude,
+          latitude: addressFocusPoint.latitude,
+          zoom: Math.max(current.zoom, 12.8),
+        }));
+      }
       return;
     }
 
-    if (!boundaries) {
-      return;
+    if (boundaries) {
+      const districtFeature = findDistrictFeature(boundaries, activeDistrictId);
+      if (districtFeature) {
+        const [[minLng, minLat], [maxLng, maxLat]] = getFeatureBounds(districtFeature);
+        const centerLng = (minLng + maxLng) / 2;
+        const centerLat = (minLat + maxLat) / 2;
+
+        const previousFocusedId = lastDistrictFocusRef.current;
+        const isSwitchingDistrict =
+          previousFocusedId != null && previousFocusedId !== activeDistrictId;
+
+        if (isSwitchingDistrict) {
+          lastDistrictFocusRef.current = activeDistrictId;
+          setViewState((current) => ({
+            ...current,
+            longitude: centerLng,
+            latitude: centerLat,
+          }));
+          return;
+        }
+
+        if (previousFocusedId === activeDistrictId) {
+          return;
+        }
+
+        const lngSpan = Math.max(maxLng - minLng, 0.0025);
+        const latSpan = Math.max(maxLat - minLat, 0.0025);
+        const horizontalZoom = Math.log2(360 / lngSpan) - 1.4;
+        const verticalZoom = Math.log2(180 / latSpan) - 0.8;
+        const focusZoom = Math.max(9.8, Math.min(13.6, Math.min(horizontalZoom, verticalZoom)));
+
+        lastDistrictFocusRef.current = activeDistrictId;
+        setViewState((current) => ({
+          ...current,
+          longitude: centerLng,
+          latitude: centerLat,
+          zoom: focusZoom,
+        }));
+        return;
+      }
     }
 
-    const districtFeature = findDistrictFeature(boundaries, activeDistrictId);
-    if (!districtFeature) {
-      return;
-    }
-
-    const [[minLng, minLat], [maxLng, maxLat]] = getFeatureBounds(districtFeature);
-    const centerLng = (minLng + maxLng) / 2;
-    const centerLat = (minLat + maxLat) / 2;
-
-    const previousFocusedId = lastDistrictFocusRef.current;
-    const isSwitchingDistrict =
-      previousFocusedId != null && previousFocusedId !== activeDistrictId;
-
-    if (isSwitchingDistrict) {
-      lastDistrictFocusRef.current = activeDistrictId;
+    if (addressFocusPoint) {
       setViewState((current) => ({
         ...current,
-        longitude: centerLng,
-        latitude: centerLat,
+        longitude: addressFocusPoint.longitude,
+        latitude: addressFocusPoint.latitude,
+        zoom: Math.max(current.zoom, 12.8),
       }));
-      return;
     }
-
-    if (previousFocusedId === activeDistrictId) {
-      return;
-    }
-
-    const lngSpan = Math.max(maxLng - minLng, 0.0025);
-    const latSpan = Math.max(maxLat - minLat, 0.0025);
-    const horizontalZoom = Math.log2(360 / lngSpan) - 1.4;
-    const verticalZoom = Math.log2(180 / latSpan) - 0.8;
-    const focusZoom = Math.max(9.8, Math.min(13.6, Math.min(horizontalZoom, verticalZoom)));
-
-    lastDistrictFocusRef.current = activeDistrictId;
-    setViewState((current) => ({
-      ...current,
-      longitude: centerLng,
-      latitude: centerLat,
-      zoom: focusZoom,
-    }));
-  }, [activeDistrictId, boundaries]);
+  }, [activeDistrictId, boundaries, addressFocusPoint]);
 
   function handleMapClick(event: MapLayerMouseEvent) {
     onMapBackgroundClick();
@@ -255,7 +247,7 @@ export function CityMap({
         ) : null}
 
         {markers.map((marker) => {
-          const showLabel = marker.kind === "search" || activeMarkerId === marker.id || hoveredMarkerId === marker.id;
+          const showLabel = activeMarkerId === marker.id || hoveredMarkerId === marker.id;
           const isMuted = !filterState[marker.category];
           const markerZIndex = activeMarkerId === marker.id ? 4 : showLabel ? 3 : 1;
 
@@ -267,28 +259,22 @@ export function CityMap({
               anchor="bottom"
               style={{ zIndex: markerZIndex }}
             >
-              <div className="marker-stack">
-                <button
-                  type="button"
-                  className={`demo-marker ${categoryAppearance[marker.category].className} ${marker.kind === "search" ? "marker-search-hit" : ""} ${activeMarkerId === marker.id ? "marker-active" : ""} ${isMuted ? "marker-muted" : ""}`}
-                  aria-label={marker.label}
-                  onMouseEnter={() => setHoveredMarkerId(marker.id)}
-                  onMouseLeave={() => setHoveredMarkerId((current) => (current === marker.id ? null : current))}
-                  onFocus={() => setHoveredMarkerId(marker.id)}
-                  onBlur={() => setHoveredMarkerId((current) => (current === marker.id ? null : current))}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onMarkerSelect(marker);
-                  }}
-                >
-                  <CategoryMarkerIcon category={marker.category} />
-                </button>
-                {showLabel ? (
-                  <div className="demo-marker-label">
-                    <span>{marker.label}</span>
-                  </div>
-                ) : null}
-              </div>
+              <button
+                type="button"
+                className={`demo-marker ${activeMarkerId === marker.id ? "marker-active" : ""} ${isMuted ? "marker-muted" : ""}`}
+                aria-label={marker.label}
+                onMouseEnter={() => setHoveredMarkerId(marker.id)}
+                onMouseLeave={() => setHoveredMarkerId((current) => (current === marker.id ? null : current))}
+                onFocus={() => setHoveredMarkerId(marker.id)}
+                onBlur={() => setHoveredMarkerId((current) => (current === marker.id ? null : current))}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onMarkerSelect(marker);
+                }}
+              >
+                <CategoryMarkerIcon category={marker.category} />
+                {showLabel ? <span className="demo-marker-label">{marker.label}</span> : null}
+              </button>
             </Marker>
           );
         })}
@@ -315,36 +301,6 @@ export function CityMap({
           </span>
         </button>
       </div>
-
-      <form
-        className="map-search-dock"
-        onSubmit={(event) => {
-          event.preventDefault();
-          onSearchSubmit();
-        }}
-      >
-        <div className="map-search-panel">
-          <button type="submit" className="map-search-inline-icon" aria-label="Search map">
-            <SearchIcon />
-          </button>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(event) => onSearchChange(event.target.value)}
-            aria-label="Search query"
-            placeholder="Search an address or place"
-          />
-          {searchResults.length > 0 ? (
-            <div className="map-search-results">
-              {searchResults.map((result) => (
-                <button key={result} type="button" onClick={() => onSelectResult(result)}>
-                  {result}
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </div>
-      </form>
 
       <div className="map-control-stack" aria-label="Map controls">
         <div className="map-menu-shell">

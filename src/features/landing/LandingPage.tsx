@@ -145,9 +145,10 @@ export function LandingPage() {
     }
 
     const nextParams = new URLSearchParams();
-    nextParams.set("q", trimmedQuery);
 
     if (primaryResult) {
+      nextParams.set("focusLat", String(primaryResult.latitude));
+      nextParams.set("focusLng", String(primaryResult.longitude));
       try {
         const boundaries = await loadDistrictBoundaries();
         const districtId = findDistrictIdForPoint(boundaries, primaryResult.longitude, primaryResult.latitude);
@@ -173,7 +174,7 @@ export function LandingPage() {
     try {
       await navigateToMapWithDistrict(trimmedQuery);
     } catch {
-      navigate(`/map?q=${encodeURIComponent(trimmedQuery)}`);
+      navigate("/map");
     }
   }
 

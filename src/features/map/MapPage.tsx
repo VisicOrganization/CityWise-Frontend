@@ -1,9 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { DistrictOverviewSheet } from "../districts/DistrictOverviewSheet";
-import type { GeocodeSearchResult } from "../../shared/map/geocodeSearch";
-import { buildSearchMarker, searchAddresses } from "../../shared/map/geocodeSearch";
 import type { MapMarker } from "../../shared/map/mapTypes";
 import { AppShell } from "../../shared/ui/AppShell";
 import { CityMap } from "./CityMap";
@@ -14,11 +12,9 @@ import { useProjectDetail } from "./useProjectDetail";
 
 export function MapPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [searchQuery, setSearchQuery] = useState(searchParams.get("q") ?? "");
-  const [results, setResults] = useState<GeocodeSearchResult[]>([]);
-  const [searchMarker, setSearchMarker] = useState<MapMarker | null>(null);
   const [activeMarker, setActiveMarker] = useState<MapMarker | null>(null);
   const [activeDistrictId, setActiveDistrictId] = useState<number | null>(null);
+  const [isProjectSidebarOpen, setIsProjectSidebarOpen] = useState(true);
   const districtFocusId = useMemo(() => {
     const districtFocusValue = searchParams.get("districtFocus");
     if (!districtFocusValue) {
@@ -30,7 +26,28 @@ export function MapPage() {
   }, [searchParams]);
   const districtProfileIntent = searchParams.get("showDistrictProfile");
   const shouldShowDistrictProfile = districtFocusId !== null && districtProfileIntent !== "0";
+  const addressFocusPoint = useMemo(() => {
+    const latRaw = searchParams.get("focusLat");
+    const lngRaw = searchParams.get("focusLng");
+    if (!latRaw || !lngRaw) {
+      return null;
+    }
+
+    const latitude = Number(latRaw);
+    const longitude = Number(lngRaw);
+    if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
+      return null;
+    }
+
+    return { latitude, longitude };
+  }, [searchParams]);
   const { boundaries, projectCards, projectMarkers } = useMapData();
+
+  useEffect(() => {
+    if (activeMarker) {
+      setIsProjectSidebarOpen(true);
+    }
+  }, [activeMarker?.id]);
   const {
     activeProject,
     detailsError,
@@ -39,81 +56,16 @@ export function MapPage() {
     resetProjectDetail,
   } = useProjectDetail();
 
-  useEffect(() => {
-    const incomingQuery = searchParams.get("q") ?? "";
-    setSearchQuery(incomingQuery);
-  }, [searchParams]);
-
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (districtFocusId) {
       setActiveDistrictId(districtFocusId);
     }
   }, [districtFocusId]);
 
-  useEffect(() => {
-    let ignore = false;
-
-    if (!searchQuery.trim()) {
-      setResults([]);
-      setSearchMarker(null);
-      return undefined;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      void searchAddresses(searchQuery)
-        .then((nextResults) => {
-          if (ignore) {
-            return;
-          }
-
-          setResults(nextResults);
-          setSearchMarker(nextResults[0] ? buildSearchMarker(nextResults[0], searchQuery) : null);
-        })
-        .catch(() => {
-          if (!ignore) {
-            setResults([]);
-            setSearchMarker(null);
-          }
-        });
-    }, 180);
-
-    return () => {
-      ignore = true;
-      window.clearTimeout(timeoutId);
-    };
-  }, [searchQuery]);
-
-  async function runSearch(query: string) {
-    const nextResults = await searchAddresses(query);
-    setResults(nextResults);
-    if (nextResults[0]) {
-      setSearchMarker(buildSearchMarker(nextResults[0], query));
-    } else {
-      setSearchMarker(null);
-    }
-  }
-
-  async function handleSearchSubmit() {
-    try {
-      await runSearch(searchQuery);
-    } catch {
-      setResults([]);
-    }
-  }
-
-  function handleSelectResult(label: string) {
-    const selected = results.find((result) => result.label === label);
-    if (!selected) {
-      return;
-    }
-
-    setSearchQuery(label);
-    setSearchMarker(buildSearchMarker(selected, label));
-  }
-
   async function handleMarkerSelect(marker: MapMarker) {
     setActiveMarker(marker);
     setActiveDistrictId(marker.districtId);
+    setIsProjectSidebarOpen(true);
     await loadProjectForMarker(marker, projectCards);
   }
 
@@ -146,16 +98,10 @@ export function MapPage() {
       <section className="map-demo-screen">
         <CityMap
           boundaries={boundaries}
-          markers={searchMarker ? [...projectMarkers, searchMarker] : projectMarkers}
+          markers={projectMarkers}
           activeMarkerId={activeMarker?.id ?? null}
           activeDistrictId={activeDistrictId}
-          searchQuery={searchQuery}
-          searchResults={results.map((result) => result.label)}
-          onSearchChange={setSearchQuery}
-          onSearchSubmit={() => {
-            void handleSearchSubmit();
-          }}
-          onSelectResult={handleSelectResult}
+          addressFocusPoint={addressFocusPoint}
           onMarkerSelect={(marker) => {
             void handleMarkerSelect(marker);
           }}
@@ -167,12 +113,13 @@ export function MapPage() {
             setActiveDistrictId(districtId);
           }}
         />
-        {(activeMarker || isDetailsLoading || detailsError) ? (
+        {(activeMarker || isDetailsLoading || detailsError) && isProjectSidebarOpen ? (
           <ProjectDetailsPanel
             marker={activeMarker}
             detail={activeProject}
             isLoading={isDetailsLoading}
             errorMessage={detailsError}
+            onExploreMap={() => setIsProjectSidebarOpen(false)}
           />
         ) : null}
         {(districtFocusId && shouldShowDistrictProfile) ? (

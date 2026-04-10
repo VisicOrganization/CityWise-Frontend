@@ -355,43 +355,22 @@ describe("mock app routes", () => {
     const input = screen.getByLabelText("Search address");
     await user.type(input, "456 Sunset Blvd{Enter}");
 
-    expect(await screen.findByLabelText("Search query")).toHaveValue("456 Sunset Blvd");
+    expect(screen.queryByLabelText("Search query")).not.toBeInTheDocument();
     expect(await screen.findByLabelText("District overview")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Open Map" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Open Map" })).toBeInTheDocument();
   });
 
   it("renders the general map-only mock screen", async () => {
-    fetchMock.mockImplementation((input: string | URL | Request) => {
-      const url = String(input);
-
-      if (url.startsWith("https://nominatim.openstreetmap.org/search")) {
-        return Promise.resolve(
-          new Response(
-            JSON.stringify([
-              {
-                place_id: 1,
-                display_name: "123 Main St, Los Angeles, California, United States",
-                lat: "34.0500",
-                lon: "-118.2500",
-              },
-            ]),
-          ),
-        );
-      }
-
-      return defaultFetchMock(input);
-    });
-
     render(
-      <MemoryRouter initialEntries={["/map?q=123%20Main%20St"]}>
+      <MemoryRouter initialEntries={["/map"]}>
         <App />
       </MemoryRouter>,
     );
 
     expect(screen.getByTestId("demo-map")).toBeInTheDocument();
     expect(screen.queryByLabelText(/Open District .* overview/)).not.toBeInTheDocument();
-    expect(await screen.findByLabelText("Search query")).toHaveValue("123 Main St");
-    expect(await screen.findByText("123 Main St, Los Angeles, California, United States")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Search query")).not.toBeInTheDocument();
+    await screen.findByTestId("mock-boundary-source");
   });
 
   it("renders district boundaries before the district project preload finishes", async () => {
@@ -430,6 +409,12 @@ describe("mock app routes", () => {
 
       if (url.match(/\/districts\/(\d+)\/projects/)) {
         return new Promise(() => {});
+      }
+
+      if (url.startsWith("https://nominatim.openstreetmap.org/search")) {
+        return Promise.resolve(
+          new Response(JSON.stringify([{ lat: "34.05", lon: "-118.25" }])),
+        );
       }
 
       return Promise.reject(new Error(`Unhandled fetch for ${url}`));
@@ -667,63 +652,6 @@ describe("mock app routes", () => {
     expect(screen.getByText("Jordan Alvarez • District 11")).toBeInTheDocument();
   });
 
-  it("submits the map search from the icon and Enter key", async () => {
-    const user = userEvent.setup();
-
-    fetchMock.mockImplementation((input: string | URL | Request) => {
-      const url = String(input);
-
-      if (url.includes("q=200+N+Spring+St")) {
-        return Promise.resolve(
-          new Response(
-            JSON.stringify([
-              {
-                place_id: 1,
-                display_name: "200 N Spring St, Los Angeles, California, United States",
-                lat: "34.0537",
-                lon: "-118.2428",
-              },
-            ]),
-          ),
-        );
-      }
-
-      if (url.includes("q=City+Hall")) {
-        return Promise.resolve(
-          new Response(
-            JSON.stringify([
-              {
-                place_id: 2,
-                display_name: "City Hall, Los Angeles, California, United States",
-                lat: "34.0536",
-                lon: "-118.2427",
-              },
-            ]),
-          ),
-        );
-      }
-
-      return defaultFetchMock(input);
-    });
-
-    render(
-      <MemoryRouter initialEntries={["/map"]}>
-        <App />
-      </MemoryRouter>,
-    );
-
-    const input = screen.getByLabelText("Search query");
-    await user.type(input, "200 N Spring St");
-    await user.click(screen.getByLabelText("Search map"));
-
-    expect(await screen.findByText("200 N Spring St, Los Angeles, California, United States")).toBeInTheDocument();
-
-    await user.clear(input);
-    await user.type(input, "City Hall{Enter}");
-
-    expect(await screen.findByText("City Hall, Los Angeles, California, United States")).toBeInTheDocument();
-  });
-
   it("opens the filter and accessibility menus", async () => {
     const user = userEvent.setup();
 
@@ -820,13 +748,14 @@ describe("mock app routes", () => {
 
     expect(await screen.findByLabelText("Project details")).toBeInTheDocument();
     expect(await screen.findByRole("heading", { name: "Council File 25-0358" })).toBeInTheDocument();
-    expect(await screen.findByText("TRACI PARK")).toBeInTheDocument();
+    expect(await screen.findByText(/TRACI\s+PARK/)).toBeInTheDocument();
 
-    await user.click(screen.getByRole("tab", { name: /Timeline/i }));
-    expect(await screen.findByText("Motion introduced.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Timeline view/i }));
+    const motionNodes = await screen.findAllByText("Motion introduced.");
+    expect(motionNodes.length).toBeGreaterThanOrEqual(1);
 
     await user.click(screen.getByLabelText("Toggle voting record"));
-    expect(await screen.findByLabelText("Voting record popover")).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: /Voting record/i })).toBeInTheDocument();
     expect(await screen.findByText("Yes")).toBeInTheDocument();
 
     randomSpy.mockRestore();
