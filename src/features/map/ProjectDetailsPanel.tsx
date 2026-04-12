@@ -481,7 +481,7 @@ export function ProjectDetailsPanel({
                   }}
                 >
                   <img
-                    src={timelineViewOpen ? "/images/timeline-selected.png" : "/images/timeline.png"}
+                    src={timelineViewOpen ? "/images/timeline-selected.svg" : "/images/timeline.svg"}
                     alt=""
                     width={24}
                     height={24}
