@@ -9,10 +9,10 @@ import { SearchIcon } from "../../shared/ui/visicIcons";
 import { LandingCommentBlue, LandingCommentGreen, LandingCommentGrey } from "./LandingCommentBubbles";
 
 const landingPinAssets = [
-  "/images/pins/blue-pin.png",
-  "/images/pins/brown-pin.png",
-  "/images/pins/green-pin.png",
-  "/images/pins/orange-pin.png",
+  "/images/pins/blue-pin.svg",
+  "/images/pins/brown-pin.svg",
+  "/images/pins/green-pin.svg",
+  "/images/pins/orange-pin.svg",
 ];
 
 type LandingPin = {

@@ -501,7 +501,7 @@ export function ProjectDetailsPanel({
                 }}
               >
                 <img
-                  src={isVotingPopoverOpen ? "/images/voting-selected.png" : "/images/voting-record.png"}
+                  src={isVotingPopoverOpen ? "/images/voting-selected.svg" : "/images/voting-record.svg"}
                   alt=""
                   width={24}
                   height={24}
