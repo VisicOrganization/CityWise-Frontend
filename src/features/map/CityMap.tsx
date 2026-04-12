@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Map, {
   Layer,
   Marker,
@@ -9,23 +9,10 @@ import Map, {
 } from "react-map-gl/maplibre";
 
 import { useDistrictProfile } from "../districts/useDistrictProfile";
-import type { DistrictBoundaryCollection } from "../../shared/map/districtBoundaries";
-import { districtFillLayer, districtOutlineLayer } from "../../shared/map/districtLayers";
-import { categoryAppearance, type MapMarker, type MarkerCategory } from "../../shared/map/mapTypes";
-import {
-  FilterIcon,
-  HousingIcon,
-  InfoIcon,
-  InfrastructureIcon,
-  SearchIcon,
-  TransitIcon,
-} from "../../shared/ui/visicIcons";
-
-const categoryLabels: Record<MarkerCategory, string> = {
-  housing: "Housing",
-  transit: "Transportation",
-  parks: "Infrastructure",
-};
+import { findDistrictFeature, getFeatureBounds, type DistrictBoundaryCollection } from "../../shared/map/districtBoundaries";
+import { districtFillLayer, districtHighlightLayer, districtOutlineLayer } from "../../shared/map/districtLayers";
+import type { MapMarker, MarkerCategory } from "../../shared/map/mapTypes";
+import { HousingIcon, InfoIcon, InfrastructureIcon, TransitIcon } from "../../shared/ui/visicIcons";
 
 const LIGHT_BASE_MAP_STYLE = {
   version: 8,
@@ -79,16 +66,20 @@ const DEFAULT_VIEW_STATE: ViewState = {
   pitch: 0,
 };
 
+function buildHighlightLayer(activeDistrictId: number) {
+  return {
+    ...districtHighlightLayer,
+    filter: ["==", ["get", "District"], activeDistrictId] as ["==", ["get", string], number],
+  } satisfies typeof districtHighlightLayer;
+}
+
 interface CityMapProps {
   boundaries: DistrictBoundaryCollection | null;
   markers: MapMarker[];
   activeMarkerId?: string | null;
   activeDistrictId: number | null;
-  searchQuery: string;
-  searchResults: string[];
-  onSearchChange: (value: string) => void;
-  onSearchSubmit: () => void;
-  onSelectResult: (label: string) => void;
+  /** Geocoded address from landing; used to zoom before district GeoJSON is ready, and as fallback. */
+  addressFocusPoint?: { latitude: number; longitude: number } | null;
   onMarkerSelect: (marker: MapMarker) => void;
   onMapBackgroundClick: () => void;
   onOpenDistrictOverview: (districtId: number) => void;
@@ -100,26 +91,18 @@ export function CityMap({
   markers,
   activeMarkerId,
   activeDistrictId,
-  searchQuery,
-  searchResults,
-  onSearchChange,
-  onSearchSubmit,
-  onSelectResult,
+  addressFocusPoint = null,
   onMarkerSelect,
   onMapBackgroundClick,
   onOpenDistrictOverview,
   onDistrictSelect,
 }: CityMapProps) {
   const [viewState, setViewState] = useState(DEFAULT_VIEW_STATE);
+  /** Last district we auto-framed (zoom + center); used to avoid resetting zoom when switching districts or when boundaries refetch. */
+  const lastDistrictFocusRef = useRef<number | null>(null);
   const [lastVisibleDistrictId, setLastVisibleDistrictId] = useState<number | null>(null);
   const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null);
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
-  const [filterState, setFilterState] = useState<Record<MarkerCategory, boolean>>({
-    housing: true,
-    transit: true,
-    parks: true,
-  });
 
   const { profile: districtProfile } = useDistrictProfile(activeDistrictId);
   const activeDistrict = activeDistrictId != null;
@@ -136,19 +119,71 @@ export function CityMap({
     }
   }, [activeDistrictId]);
 
-  useEffect(() => {
-    const searchMarker = markers.find((marker) => marker.kind === "search");
-    if (!searchMarker) {
+  useLayoutEffect(() => {
+    if (activeDistrictId == null) {
+      lastDistrictFocusRef.current = null;
+      if (addressFocusPoint) {
+        setViewState((current) => ({
+          ...current,
+          longitude: addressFocusPoint.longitude,
+          latitude: addressFocusPoint.latitude,
+          zoom: Math.max(current.zoom, 12.8),
+        }));
+      }
       return;
     }
 
-    setViewState((current) => ({
-      ...current,
-      longitude: searchMarker.longitude,
-      latitude: searchMarker.latitude,
-      zoom: Math.max(current.zoom, 13.2),
-    }));
-  }, [markers]);
+    if (boundaries) {
+      const districtFeature = findDistrictFeature(boundaries, activeDistrictId);
+      if (districtFeature) {
+        const [[minLng, minLat], [maxLng, maxLat]] = getFeatureBounds(districtFeature);
+        const centerLng = (minLng + maxLng) / 2;
+        const centerLat = (minLat + maxLat) / 2;
+
+        const previousFocusedId = lastDistrictFocusRef.current;
+        const isSwitchingDistrict =
+          previousFocusedId != null && previousFocusedId !== activeDistrictId;
+
+        if (isSwitchingDistrict) {
+          lastDistrictFocusRef.current = activeDistrictId;
+          setViewState((current) => ({
+            ...current,
+            longitude: centerLng,
+            latitude: centerLat,
+          }));
+          return;
+        }
+
+        if (previousFocusedId === activeDistrictId) {
+          return;
+        }
+
+        const lngSpan = Math.max(maxLng - minLng, 0.0025);
+        const latSpan = Math.max(maxLat - minLat, 0.0025);
+        const horizontalZoom = Math.log2(360 / lngSpan) - 1.4;
+        const verticalZoom = Math.log2(180 / latSpan) - 0.8;
+        const focusZoom = Math.max(9.8, Math.min(13.6, Math.min(horizontalZoom, verticalZoom)));
+
+        lastDistrictFocusRef.current = activeDistrictId;
+        setViewState((current) => ({
+          ...current,
+          longitude: centerLng,
+          latitude: centerLat,
+          zoom: focusZoom,
+        }));
+        return;
+      }
+    }
+
+    if (addressFocusPoint) {
+      setViewState((current) => ({
+        ...current,
+        longitude: addressFocusPoint.longitude,
+        latitude: addressFocusPoint.latitude,
+        zoom: Math.max(current.zoom, 12.8),
+      }));
+    }
+  }, [activeDistrictId, boundaries, addressFocusPoint]);
 
   function handleMapClick(event: MapLayerMouseEvent) {
     onMapBackgroundClick();
@@ -189,12 +224,12 @@ export function CityMap({
           <Source id="district-boundaries" type="geojson" data={boundaries}>
             <Layer {...districtFillLayer} />
             <Layer {...districtOutlineLayer} />
+            {activeDistrictId != null ? <Layer {...buildHighlightLayer(activeDistrictId)} /> : null}
           </Source>
         ) : null}
 
         {markers.map((marker) => {
-          const showLabel = marker.kind === "search" || activeMarkerId === marker.id || hoveredMarkerId === marker.id;
-          const isMuted = !filterState[marker.category];
+          const showLabel = activeMarkerId === marker.id || hoveredMarkerId === marker.id;
           const markerZIndex = activeMarkerId === marker.id ? 4 : showLabel ? 3 : 1;
 
           return (
@@ -205,28 +240,22 @@ export function CityMap({
               anchor="bottom"
               style={{ zIndex: markerZIndex }}
             >
-              <div className="marker-stack">
-                <button
-                  type="button"
-                  className={`demo-marker ${categoryAppearance[marker.category].className} ${marker.kind === "search" ? "marker-search-hit" : ""} ${activeMarkerId === marker.id ? "marker-active" : ""} ${isMuted ? "marker-muted" : ""}`}
-                  aria-label={marker.label}
-                  onMouseEnter={() => setHoveredMarkerId(marker.id)}
-                  onMouseLeave={() => setHoveredMarkerId((current) => (current === marker.id ? null : current))}
-                  onFocus={() => setHoveredMarkerId(marker.id)}
-                  onBlur={() => setHoveredMarkerId((current) => (current === marker.id ? null : current))}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onMarkerSelect(marker);
-                  }}
-                >
-                  <CategoryMarkerIcon category={marker.category} />
-                </button>
-                {showLabel ? (
-                  <div className="demo-marker-label">
-                    <span>{marker.label}</span>
-                  </div>
-                ) : null}
-              </div>
+              <button
+                type="button"
+                className={`demo-marker ${activeMarkerId === marker.id ? "marker-active" : ""}`}
+                aria-label={marker.label}
+                onMouseEnter={() => setHoveredMarkerId(marker.id)}
+                onMouseLeave={() => setHoveredMarkerId((current) => (current === marker.id ? null : current))}
+                onFocus={() => setHoveredMarkerId(marker.id)}
+                onBlur={() => setHoveredMarkerId((current) => (current === marker.id ? null : current))}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onMarkerSelect(marker);
+                }}
+              >
+                <CategoryMarkerIcon category={marker.category} />
+                {showLabel ? <span className="demo-marker-label">{marker.label}</span> : null}
+              </button>
             </Marker>
           );
         })}
@@ -254,74 +283,8 @@ export function CityMap({
         </button>
       </div>
 
-      <form
-        className="map-search-dock"
-        onSubmit={(event) => {
-          event.preventDefault();
-          onSearchSubmit();
-        }}
-      >
-        <div className="map-search-panel">
-          <button type="submit" className="map-search-inline-icon" aria-label="Search map">
-            <SearchIcon />
-          </button>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(event) => onSearchChange(event.target.value)}
-            aria-label="Search query"
-            placeholder="Search an address or place"
-          />
-          {searchResults.length > 0 ? (
-            <div className="map-search-results">
-              {searchResults.map((result) => (
-                <button key={result} type="button" onClick={() => onSelectResult(result)}>
-                  {result}
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </div>
-      </form>
-
       <div className="map-control-stack" aria-label="Map controls">
-        <div className="map-menu-shell">
-          <button
-            type="button"
-            className={`map-utility-button ${isFilterOpen ? "is-active" : ""}`}
-            aria-label="Toggle filters"
-            aria-expanded={isFilterOpen}
-            onClick={() => {
-              setIsFilterOpen((current) => !current);
-              setIsInfoOpen(false);
-            }}
-          >
-            <FilterIcon />
-          </button>
-          {isFilterOpen ? (
-            <div className="map-utility-panel" aria-label="Filter menu">
-              <div className="map-utility-header">
-                <strong>Project categories</strong>
-                <span>Preview only</span>
-              </div>
-              {Object.entries(categoryLabels).map(([category, label]) => (
-                <label key={category} className="map-filter-row">
-                  <input
-                    type="checkbox"
-                    checked={filterState[category as MarkerCategory]}
-                    onChange={() =>
-                      setFilterState((current) => ({
-                        ...current,
-                        [category]: !current[category as MarkerCategory],
-                      }))
-                    }
-                  />
-                  <span>{label}</span>
-                </label>
-              ))}
-            </div>
-          ) : null}
-        </div>
+        {/* Project categories filter (right stack) commented out — was map-menu-shell + FilterIcon + category checkboxes */}
 
         <div className="map-menu-shell">
           <button
@@ -331,7 +294,6 @@ export function CityMap({
             aria-expanded={isInfoOpen}
             onClick={() => {
               setIsInfoOpen((current) => !current);
-              setIsFilterOpen(false);
             }}
           >
             <InfoIcon />

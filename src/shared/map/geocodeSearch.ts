@@ -1,14 +1,9 @@
-import type { MapMarker } from "./mapTypes";
-
-
 export interface GeocodeSearchResult {
   id: string;
   label: string;
   longitude: number;
   latitude: number;
 }
-
-const SEARCH_MARKER_CATEGORY: MapMarker["category"] = "housing";
 
 export async function searchAddresses(query: string): Promise<GeocodeSearchResult[]> {
   const trimmedQuery = query.trim();
@@ -44,17 +39,4 @@ export async function searchAddresses(query: string): Promise<GeocodeSearchResul
     latitude: Number(result.lat),
     longitude: Number(result.lon),
   }));
-}
-
-export function buildSearchMarker(result: GeocodeSearchResult, query: string): MapMarker {
-  return {
-    id: `search-${result.id}`,
-    category: SEARCH_MARKER_CATEGORY,
-    label: result.label.split(",")[0] || query,
-    longitude: result.longitude,
-    latitude: result.latitude,
-    districtId: null,
-    projectId: null,
-    kind: "search",
-  };
 }

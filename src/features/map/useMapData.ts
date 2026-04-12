@@ -12,24 +12,15 @@ import type { MapMarker } from "../../shared/map/mapTypes";
 import { getPrimaryStreetForGeocoding } from "../../shared/map/projectAddress";
 import { buildProjectMarkers, type ProjectMarkerInput } from "./projectMarkers";
 
-const PROJECT_PAGE_SIZE = 100;
+/** Map demo loads a small sample per district to limit API and geocoding work. */
+const MAP_PROJECTS_PER_DISTRICT = 3;
 
 let cachedBoundariesPromise: Promise<DistrictBoundaryCollection> | null = null;
 let cachedProjectCardsPromise: Promise<DistrictProjectCard[]> | null = null;
 
 async function loadDistrictProjectCards(districtId: number): Promise<DistrictProjectCard[]> {
-  const firstPage = await getDistrictProjects(districtId, 1, PROJECT_PAGE_SIZE);
-  if (firstPage.total_pages <= 1) {
-    return firstPage.items;
-  }
-
-  const remainingPages = await Promise.all(
-    Array.from({ length: firstPage.total_pages - 1 }, (_, index) =>
-      getDistrictProjects(districtId, index + 2, PROJECT_PAGE_SIZE),
-    ),
-  );
-
-  return [firstPage, ...remainingPages].flatMap((page) => page.items);
+  const firstPage = await getDistrictProjects(districtId, 1, MAP_PROJECTS_PER_DISTRICT);
+  return firstPage.items.slice(0, MAP_PROJECTS_PER_DISTRICT);
 }
 
 async function loadAllProjectCards(): Promise<DistrictProjectCard[]> {
