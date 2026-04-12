@@ -12,19 +12,7 @@ import { useDistrictProfile } from "../districts/useDistrictProfile";
 import { findDistrictFeature, getFeatureBounds, type DistrictBoundaryCollection } from "../../shared/map/districtBoundaries";
 import { districtFillLayer, districtHighlightLayer, districtOutlineLayer } from "../../shared/map/districtLayers";
 import type { MapMarker, MarkerCategory } from "../../shared/map/mapTypes";
-import {
-  FilterIcon,
-  HousingIcon,
-  InfoIcon,
-  InfrastructureIcon,
-  TransitIcon,
-} from "../../shared/ui/visicIcons";
-
-const categoryLabels: Record<MarkerCategory, string> = {
-  housing: "Housing",
-  transit: "Transportation",
-  parks: "Infrastructure",
-};
+import { HousingIcon, InfoIcon, InfrastructureIcon, TransitIcon } from "../../shared/ui/visicIcons";
 
 const LIGHT_BASE_MAP_STYLE = {
   version: 8,
@@ -114,13 +102,7 @@ export function CityMap({
   const lastDistrictFocusRef = useRef<number | null>(null);
   const [lastVisibleDistrictId, setLastVisibleDistrictId] = useState<number | null>(null);
   const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null);
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
-  const [filterState, setFilterState] = useState<Record<MarkerCategory, boolean>>({
-    housing: true,
-    transit: true,
-    parks: true,
-  });
 
   const { profile: districtProfile } = useDistrictProfile(activeDistrictId);
   const activeDistrict = activeDistrictId != null;
@@ -248,7 +230,6 @@ export function CityMap({
 
         {markers.map((marker) => {
           const showLabel = activeMarkerId === marker.id || hoveredMarkerId === marker.id;
-          const isMuted = !filterState[marker.category];
           const markerZIndex = activeMarkerId === marker.id ? 4 : showLabel ? 3 : 1;
 
           return (
@@ -261,7 +242,7 @@ export function CityMap({
             >
               <button
                 type="button"
-                className={`demo-marker ${activeMarkerId === marker.id ? "marker-active" : ""} ${isMuted ? "marker-muted" : ""}`}
+                className={`demo-marker ${activeMarkerId === marker.id ? "marker-active" : ""}`}
                 aria-label={marker.label}
                 onMouseEnter={() => setHoveredMarkerId(marker.id)}
                 onMouseLeave={() => setHoveredMarkerId((current) => (current === marker.id ? null : current))}
@@ -303,43 +284,7 @@ export function CityMap({
       </div>
 
       <div className="map-control-stack" aria-label="Map controls">
-        <div className="map-menu-shell">
-          <button
-            type="button"
-            className={`map-utility-button ${isFilterOpen ? "is-active" : ""}`}
-            aria-label="Toggle filters"
-            aria-expanded={isFilterOpen}
-            onClick={() => {
-              setIsFilterOpen((current) => !current);
-              setIsInfoOpen(false);
-            }}
-          >
-            <FilterIcon />
-          </button>
-          {isFilterOpen ? (
-            <div className="map-utility-panel" aria-label="Filter menu">
-              <div className="map-utility-header">
-                <strong>Project categories</strong>
-                <span>Preview only</span>
-              </div>
-              {Object.entries(categoryLabels).map(([category, label]) => (
-                <label key={category} className="map-filter-row">
-                  <input
-                    type="checkbox"
-                    checked={filterState[category as MarkerCategory]}
-                    onChange={() =>
-                      setFilterState((current) => ({
-                        ...current,
-                        [category]: !current[category as MarkerCategory],
-                      }))
-                    }
-                  />
-                  <span>{label}</span>
-                </label>
-              ))}
-            </div>
-          ) : null}
-        </div>
+        {/* Project categories filter (right stack) commented out — was map-menu-shell + FilterIcon + category checkboxes */}
 
         <div className="map-menu-shell">
           <button
@@ -349,7 +294,6 @@ export function CityMap({
             aria-expanded={isInfoOpen}
             onClick={() => {
               setIsInfoOpen((current) => !current);
-              setIsFilterOpen(false);
             }}
           >
             <InfoIcon />

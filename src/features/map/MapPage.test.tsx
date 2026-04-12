@@ -652,7 +652,7 @@ describe("mock app routes", () => {
     expect(screen.getByText("Jordan Alvarez • District 11")).toBeInTheDocument();
   });
 
-  it("opens the filter and accessibility menus", async () => {
+  it("opens the accessibility menu", async () => {
     const user = userEvent.setup();
 
     render(
@@ -660,10 +660,6 @@ describe("mock app routes", () => {
         <App />
       </MemoryRouter>,
     );
-
-    await user.click(screen.getByLabelText("Toggle filters"));
-    expect(screen.getByLabelText("Filter menu")).toBeInTheDocument();
-    expect(screen.getByText("Project categories")).toBeInTheDocument();
 
     await user.click(screen.getByLabelText("Toggle accessibility information"));
     expect(screen.getByLabelText("Accessibility information")).toBeInTheDocument();

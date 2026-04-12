@@ -6,6 +6,8 @@ import { findDistrictIdForPoint, loadDistrictBoundaries } from "../../shared/map
 import { AppShell } from "../../shared/ui/AppShell";
 import { SearchIcon } from "../../shared/ui/visicIcons";
 
+import { LandingCommentBlue, LandingCommentGreen, LandingCommentGrey } from "./LandingCommentBubbles";
+
 const landingPinAssets = [
   "/images/pins/blue-pin.png",
   "/images/pins/brown-pin.png",
@@ -77,26 +79,6 @@ function generateLandingPins(count: number, seed: number) {
 
 const desktopPins = generateLandingPins(18, 20260409);
 const mobilePins = generateLandingPins(10, 20260410);
-const landingComments = [
-  {
-    id: "comment-blue",
-    src: "/images/comments/comment-blue.png",
-    className: "landing-comment-blue",
-    text: "What district am I in?",
-  },
-  {
-    id: "comment-grey",
-    src: "/images/comments/comment-grey.png",
-    className: "landing-comment-grey",
-    text: "Who is my council member?",
-  },
-  {
-    id: "comment-green",
-    src: "/images/comments/comment-green.png",
-    className: "landing-comment-green",
-    text: "What\u2019s happening in my district?",
-  },
-];
 
 export function LandingPage() {
   const navigate = useNavigate();
@@ -223,19 +205,10 @@ export function LandingPage() {
             />
           ))}
         </div>
-        <div className="landing-comments" aria-hidden="true">
-          {landingComments.map((comment) => (
-            <div key={comment.id} className={`landing-comment ${comment.className}`}>
-              <img
-                src={comment.src}
-                alt=""
-                onError={(event) => {
-                  event.currentTarget.style.display = "none";
-                }}
-              />
-              <span className="landing-comment-text">{comment.text}</span>
-            </div>
-          ))}
+        <div className="landing-comments">
+          <LandingCommentBlue>What district am I in?</LandingCommentBlue>
+          <LandingCommentGrey>Who is my council member?</LandingCommentGrey>
+          <LandingCommentGreen>{"What\u2019s happening in my district?"}</LandingCommentGreen>
         </div>
 
         <div className="landing-centerpiece">

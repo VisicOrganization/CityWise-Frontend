@@ -4,6 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import type { ProjectDetail } from "../../shared/api/contracts";
 import type { MapMarker, MarkerCategory } from "../../shared/map/mapTypes";
 import {
+  ChevronLeftIcon,
   CloseIcon,
   ExternalLinkIcon,
   HousingIcon,
@@ -595,6 +596,14 @@ export function ProjectDetailsPanel({
           </button>
         ) : null}
       </div>
+      <button
+        type="button"
+        className="project-sidebar-close-tab"
+        aria-label="Close project panel"
+        onClick={onExploreMap}
+      >
+        <ChevronLeftIcon width={20} height={20} />
+      </button>
     </aside>
     {votingRecordDialog}
     </>
