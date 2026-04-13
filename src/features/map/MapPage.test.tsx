@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { ReactNode } from "react";
+import React, { type ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -11,42 +11,52 @@ import { resetMapDataCacheForTests } from "./useMapData";
 
 
 vi.mock("react-map-gl/maplibre", () => ({
-  default: ({ children, onClick }: { children?: ReactNode; onClick?: (event: unknown) => void }) => (
-    <div data-testid="demo-map">
-      <button
-        type="button"
-        data-testid="mock-boundary-click"
-        onClick={() =>
-          onClick?.({
-            features: [
-              {
-                properties: {
-                  District: 11,
+  default: React.forwardRef(function MockMap(
+    { children, onClick }: { children?: ReactNode; onClick?: (event: unknown) => void },
+    ref: React.ForwardedRef<{ getMap: () => { getZoom: () => number; easeTo: () => void } } | null>,
+  ) {
+    React.useImperativeHandle(ref, () => ({
+      getMap: () => ({
+        getZoom: () => 10,
+        easeTo: vi.fn(),
+      }),
+    }));
+    return (
+      <div data-testid="demo-map">
+        <button
+          type="button"
+          data-testid="mock-boundary-click"
+          onClick={() =>
+            onClick?.({
+              features: [
+                {
+                  properties: {
+                    District: 11,
+                  },
                 },
-              },
-            ],
-          })
-        }
-      >
-        mock boundary click
-      </button>
-      <button
-        type="button"
-        data-testid="mock-empty-map-click"
-        onClick={() =>
-          onClick?.({
-            features: [],
-          })
-        }
-      >
-        mock empty click
-      </button>
-      {children}
-    </div>
-  ),
+              ],
+            })
+          }
+        >
+          mock boundary click
+        </button>
+        <button
+          type="button"
+          data-testid="mock-empty-map-click"
+          onClick={() =>
+            onClick?.({
+              features: [],
+            })
+          }
+        >
+          mock empty click
+        </button>
+        {children}
+      </div>
+    );
+  }),
   Layer: () => null,
   Marker: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
-  NavigationControl: () => null,
   Source: ({ children, id }: { children?: ReactNode; id?: string }) => (
     <div data-testid={id === "district-boundaries" ? "mock-boundary-source" : undefined}>{children}</div>
   ),
