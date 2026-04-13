@@ -5,6 +5,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import App from "../../app/App";
+import { formatPersonNameForDisplay } from "../../shared/formatPersonName";
 import { resetCouncilMemberBiosCacheForTests } from "../districts/useCouncilMemberBios";
 import { resetMapDataCacheForTests } from "./useMapData";
 
@@ -798,7 +799,9 @@ describe("mock app routes", () => {
 
     expect(await screen.findByLabelText("Project details")).toBeInTheDocument();
     expect(await screen.findByRole("heading", { name: "Council File 25-0358" })).toBeInTheDocument();
-    expect(await screen.findByText("Traci Park")).toBeInTheDocument();
+    expect(
+      await screen.findByText(formatPersonNameForDisplay("TRACI PARK")),
+    ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /Timeline view/i }));
     const motionNodes = await screen.findAllByText("Motion introduced.");
