@@ -176,6 +176,27 @@ a {
     radial-gradient(circle at top left, rgba(64, 184, 133, 0.12), transparent 22rem);
 }
 
+/* Map route: fill dynamic viewport (mobile browser chrome); flex chain below fixed top-nav */
+.map-demo-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+.map-demo-shell .shell-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .landing-shell .top-nav {
   background: #ffffff;
   border-bottom: 1px solid #e8e8e8;
@@ -669,14 +690,19 @@ a {
 .map-demo-screen,
 .district-overview-route {
   position: relative;
-  height: 100vh;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
   padding-top: 5.25rem;
+  box-sizing: border-box;
 }
 
 .city-demo-map,
 .district-map-shell {
   position: relative;
   height: 100%;
+  min-height: 0;
+  width: 100%;
   overflow: hidden;
 }
 
@@ -737,19 +763,15 @@ a {
   font-weight: 600;
 }
 
-.map-district-avatar,
-.district-portrait {
+.map-district-avatar {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
   border-radius: 999px;
   background: linear-gradient(135deg, #41b985, #1d9467);
   color: white;
-}
-
-.map-district-avatar {
-  width: 2.1rem;
-  height: 2.1rem;
   font-size: 0.8rem;
   box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.2);
 }
@@ -2408,14 +2430,82 @@ a {
   font-weight: 600;
 }
 
-.district-bottom-sheet {
+/*
+ * Dock: pill overlaps sheet by half its height (Figma Top Divot).
+ * Must start BELOW fixed .top-nav (z-index 30); map-demo-screen uses the same offset for in-flow map content.
+ * --district-dock-top-gap: scalable air under nav (~Figma ~40px rhythm at mid viewports).
+ * Bottom: flush to screen (map hidden below sheet); only safe-area inset on notched devices.
+ */
+.district-sheet-dock {
+  --district-dock-nav-offset: 5.25rem;
+  --district-dock-top-gap: max(env(safe-area-inset-top, 0px), clamp(0.75rem, 2.25vw + 0.75rem, 2.5rem));
   position: absolute;
+  top: calc(var(--district-dock-nav-offset) + var(--district-dock-top-gap));
   left: 0;
   right: 0;
-  bottom: 0;
-  z-index: 25;
+  bottom: env(safe-area-inset-bottom, 0px);
+  z-index: 28;
+  display: flex;
   width: 100%;
-  max-height: calc(100vh - 10.5rem);
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.district-sheet-dock .district-bottom-sheet,
+.district-sheet-dock .district-sheet-top-pill-shell {
+  pointer-events: auto;
+}
+
+/*
+ * Figma Top Divot (1726:2001): white, #e1e1e1 border, shadow 0 2px 8px @ 25%, py 12 px 16,
+ * radius 125px, Schibsted Grotesk Medium 16px rgba(0,0,0,0.6). Half the pill overlaps the sheet.
+ */
+.district-sheet-top-pill-shell {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  margin-bottom: -24px;
+}
+
+.district-sheet-top-pill {
+  box-sizing: border-box;
+  max-width: min(calc(100vw - 2rem), 36rem);
+  min-height: 44px;
+  padding: 12px 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 125px;
+  background: #ffffff;
+  border: 1px solid #e1e1e1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.district-sheet-top-pill-text {
+  min-width: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: normal;
+  color: rgba(0, 0, 0, 0.6);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.district-bottom-sheet {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  /* Fill dock to bottom of screen; scroll lives inside .district-sheet-scroll-area */
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: calc(100% - 2.75rem);
   padding: 0;
   border-radius: 28px 28px 0 0;
   background: #ffffff;
@@ -2437,7 +2527,8 @@ a {
   width: min(1120px, 100%);
   margin-left: auto;
   margin-right: auto;
-  padding: 1rem 1rem 1.5rem;
+  /* Extra top padding (scalable) below overlapping divot so content is not tight to the sheet top */
+  padding: calc(clamp(1.25rem, 2.5vw + 0.75rem, 2.25rem) + 14px) 1rem 1.5rem;
   padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
 }
 
@@ -2470,17 +2561,9 @@ a {
   position: absolute;
   inset: 0;
   top: 0;
-  z-index: 24;
+  z-index: 27;
   border: 0;
   background: transparent;
-}
-
-.district-sheet-handle {
-  width: 4rem;
-  height: 0.38rem;
-  margin: 0 auto 0.5rem;
-  border-radius: 999px;
-  background: rgba(23, 50, 77, 0.12);
 }
 
 .district-sheet-action-row {
@@ -2517,21 +2600,27 @@ a {
 }
 
 .district-bottom-sheet .district-portrait {
-  width: 12.5rem;
-  height: 12.5rem;
+  width: 11rem;
+  height: 11rem;
   border-radius: 999px;
   overflow: hidden;
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  border: 1px solid #e3e3e3;
   background: #e5e7eb;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
 }
 
 .district-bottom-sheet .district-portrait img {
   width: 100%;
   height: 100%;
+  min-width: 100%;
+  min-height: 100%;
   object-fit: cover;
+  object-position: center center;
+  display: block;
+  flex-shrink: 0;
 }
 
 .district-bottom-sheet .district-portrait span {
@@ -2557,27 +2646,80 @@ a {
   text-align: left;
 }
 
-.district-bottom-sheet .district-about-block h2 {
+/* About label: same size as body copy; weight distinguishes hierarchy */
+.district-bottom-sheet .district-about-heading {
+  margin: 0;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: normal;
+  color: #000000;
+}
+
+/* Body: Schibsted Grotesk Regular 14px, rgba(0,0,0,0.8) */
+.district-bottom-sheet .district-about-body {
+  margin: 0.25rem 0 0;
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: normal;
+  color: rgba(0, 0, 0, 0.8);
+  max-width: 46.875rem;
+}
+
+.district-bottom-sheet .district-about-body--collapsed {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
+.district-bottom-sheet .district-about-toggle {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1d865e;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  cursor: pointer;
+}
+
+.district-bottom-sheet .district-about-toggle:hover {
+  color: #166a4a;
+}
+
+.district-bottom-sheet .district-about-toggle:focus-visible {
+  outline: 2px solid #1d865e;
+  outline-offset: 2px;
+}
+
+/* Legacy h2/p inside sheet (about uses .district-about-heading / .district-about-body) */
+.district-bottom-sheet .district-about-block h2:not(.district-about-heading) {
   margin: 0;
   font-size: 0.875rem;
   font-weight: 400;
   color: #111827;
 }
 
-.district-bottom-sheet .district-about-block p {
+.district-bottom-sheet .district-about-block p:not(.district-about-body) {
   margin: 0.5rem 0 0;
   font-size: 0.9375rem;
   line-height: 1.6;
   color: #4b5563;
 }
 
+/* Figma: John Lee • District 12 — Public Sans Bold 48px */
 .district-profile-copy h1 {
   margin: 0;
-  color: #111827;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-  font-size: clamp(2.25rem, 4.2vw, 2.5rem);
-  font-weight: 400;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  color: #000000;
+  line-height: normal;
+  letter-spacing: normal;
+  font-size: clamp(1.75rem, 5vw, 3rem);
+  font-weight: 700;
 }
 
 .district-bottom-sheet .district-contact-grid {
@@ -2599,6 +2741,10 @@ a {
   padding: 0;
 }
 
+.district-bottom-sheet .district-contact-grid > div {
+  min-width: 0;
+}
+
 .district-bottom-sheet .district-contact-grid dd {
   overflow-wrap: anywhere;
 }
@@ -2610,21 +2756,63 @@ a {
   text-decoration: none;
 }
 
+/* Website / Phone / Email labels — same font size as values (14px); weight for hierarchy */
 .district-bottom-sheet .district-contact-grid dt {
   margin: 0;
-  color: #111827;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  color: #000000;
   font-size: 0.875rem;
-  font-weight: 400;
+  font-weight: 600;
+  line-height: normal;
   text-transform: none;
   letter-spacing: normal;
 }
 
-.district-bottom-sheet .district-contact-grid dd {
-  margin: 0.35rem 0 0;
-  color: #4b5563;
-  font-size: 0.9375rem;
-  line-height: 1.45;
+/* Figma: Website & Phone values — Public Sans Regular 14px */
+.district-bottom-sheet .district-contact-grid dd.district-contact-value-web {
+  margin: 0.25rem 0 0;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  color: rgba(0, 0, 0, 0.8);
+  font-size: 0.875rem;
   font-weight: 400;
+  line-height: normal;
+}
+
+/* Figma: Email value — Schibsted Grotesk Regular 14px */
+.district-bottom-sheet .district-contact-grid dd.district-contact-value-email {
+  margin: 0.25rem 0 0;
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+  color: rgba(0, 0, 0, 0.8);
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: normal;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Website URL: same as phone until hover/focus — then link styling */
+.district-bottom-sheet .district-contact-grid dd.district-contact-value-web a {
+  color: rgba(0, 0, 0, 0.8);
+  text-decoration: none;
+}
+
+.district-bottom-sheet .district-contact-grid dd.district-contact-value-web a:hover,
+.district-bottom-sheet .district-contact-grid dd.district-contact-value-web a:focus-visible {
+  color: #1d4ed8;
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+.district-bottom-sheet .district-contact-grid dd.district-contact-value-email a {
+  display: block;
+  color: rgba(0, 0, 0, 0.8);
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .district-impact-panel {
@@ -2635,6 +2823,204 @@ a {
 .district-recent-panel {
   margin-top: 2.75rem;
   padding: 0;
+}
+
+/* Council sheet: profile + recent projects each use 80% of sheet width (centered). */
+.district-bottom-sheet .district-profile-panel,
+.district-bottom-sheet .district-recent-panel {
+  width: 80%;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+}
+
+.district-bottom-sheet .recent-projects-container {
+  width: 100%;
+  max-width: none;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Recent Projects — Figma: ~16px, regular weight */
+.district-overview-recent-heading {
+  margin: 0 0 1.25rem;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.55);
+  line-height: normal;
+}
+
+.district-overview-projects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Figma node 1726:1917 — district recent project cards (16px TB / 24px LR, responsive) */
+.district-overview-project-card {
+  border: 1px solid #e3e3e3;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  box-sizing: border-box;
+  padding-block: clamp(0.875rem, 0.65rem + 0.9vw, 1rem);
+  padding-inline: clamp(1rem, 0.55rem + 2.8vw, 1.5rem);
+}
+
+.district-overview-project-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0;
+}
+
+.district-overview-project-card__open {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+
+.district-overview-project-card__top .district-overview-project-card__open--titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.district-overview-project-card__open--rest {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.65rem 0 0;
+  margin: 0;
+}
+
+.district-overview-project-card__open:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+}
+
+.district-overview-project-card__title {
+  display: block;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #333333;
+}
+
+.district-overview-project-card__subtitle {
+  display: block;
+  margin: 0.35rem 0 0;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.125rem);
+  font-weight: 400;
+  line-height: 1.3;
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.district-overview-project-card__top-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.district-overview-project-card__external-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem;
+  border-radius: 6px;
+  color: #333333;
+  text-decoration: none;
+}
+
+.district-overview-project-card__external-link:hover,
+.district-overview-project-card__external-link:focus-visible {
+  color: #1d4ed8;
+  outline: none;
+}
+
+.district-overview-project-card__external-icon {
+  display: block;
+}
+
+.district-overview-project-card__badge {
+  padding: 0.35rem 0.75rem;
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+.district-overview-project-card__badge--completed {
+  background: #dcf5e4;
+  color: #1f7a4d;
+}
+
+.district-overview-project-card__badge--planned {
+  background: #ffe8cc;
+  color: #9a5f00;
+}
+
+.district-overview-project-card__badge--in_progress {
+  background: #fff4e0;
+  color: #8b6914;
+}
+
+.district-overview-project-card__badge--default {
+  background: #e8e8e8;
+  color: #5a5a5a;
+}
+
+.district-overview-project-card__description {
+  margin: 0;
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.district-overview-project-card__rule {
+  height: 1px;
+  margin: 0.85rem 0 0.75rem;
+  background: #e3e3e3;
+}
+
+.district-overview-project-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.district-overview-project-card__meta-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.district-overview-project-card__meta-label {
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.district-overview-project-card__meta-value {
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  color: #000000;
+  text-align: right;
 }
 
 .district-impact-grid {
@@ -2932,8 +3318,8 @@ a {
   }
 
   .district-bottom-sheet .district-portrait {
-    width: min(12.5rem, 70vw);
-    height: min(12.5rem, 70vw);
+    width: min(11rem, 62vw);
+    height: min(11rem, 62vw);
   }
 
   .district-profile-header {
@@ -3003,6 +3389,8 @@ a {
   .district-overview-route {
     padding-left: 0;
     padding-right: 0;
+    /* Align with shorter mobile top-nav; flex parent fills 100dvh */
+    padding-top: 4.85rem;
   }
 
   /* First value in each max() is the minimum side gutter (keeps content from touching edges on narrow phones). */
@@ -3104,35 +3492,207 @@ a {
     bottom: 15rem;
   }
 
+  .district-sheet-dock {
+    --district-dock-nav-offset: 4.85rem;
+    --district-dock-top-gap: max(env(safe-area-inset-top, 0px), clamp(0.65rem, 2vw + 0.5rem, 2rem));
+  }
+
   .district-bottom-sheet {
     width: 100%;
-    bottom: 0;
-    max-height: calc(100vh - 8.5rem);
   }
 
   .district-sheet-scroll-area {
-    padding: 0.9rem 0.9rem 1.25rem;
+    padding-top: calc(clamp(1rem, 2.2vw + 0.65rem, 2rem) + 12px);
+    padding-right: max(1.5rem, env(safe-area-inset-right, 0px));
     padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+    padding-left: max(1.5rem, env(safe-area-inset-left, 0px));
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .district-bottom-sheet .district-profile-panel,
+  .district-bottom-sheet .district-recent-panel {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .district-profile-panel {
+    justify-items: center;
+    text-align: center;
+    padding: 0.15rem 0 0;
+  }
+
+  .district-profile-copy {
+    justify-self: stretch;
+    width: 100%;
+    max-width: 100%;
+    text-align: left;
+  }
+
+  .district-profile-header {
+    text-align: left;
+  }
+
+  .district-bottom-sheet .district-contact-grid {
+    text-align: left;
+  }
+
+  /* District sheet copy not covered by project-card scaling above */
+  .district-sheet-top-pill {
+    min-height: 40px;
+    padding: 10px 14px;
+  }
+
+  .district-sheet-top-pill-text {
+    font-size: clamp(0.8125rem, 0.72rem + 0.4vw, 0.9375rem);
+  }
+
+  .district-overview-recent-heading {
+    font-size: clamp(0.8125rem, 0.7rem + 0.45vw, 0.9375rem);
+    margin-bottom: 1rem;
+  }
+
+  .district-bottom-sheet .district-contact-grid dt {
+    font-size: clamp(0.75rem, 0.66rem + 0.35vw, 0.8125rem);
+  }
+
+  .district-bottom-sheet .district-contact-grid dd.district-contact-value-web,
+  .district-bottom-sheet .district-contact-grid dd.district-contact-value-email {
+    font-size: clamp(0.75rem, 0.66rem + 0.35vw, 0.8125rem);
+  }
+
+  .district-bottom-sheet .district-about-heading,
+  .district-bottom-sheet .district-about-body,
+  .district-bottom-sheet .district-about-toggle,
+  .district-bottom-sheet .district-about-block h2:not(.district-about-heading) {
+    font-size: clamp(0.75rem, 0.66rem + 0.35vw, 0.8125rem);
+  }
+
+  .district-bottom-sheet .district-about-block p:not(.district-about-body) {
+    font-size: clamp(0.8125rem, 0.72rem + 0.35vw, 0.875rem);
+    line-height: 1.5;
+  }
+
+  .district-bottom-sheet .recent-projects-container .status-message {
+    font-size: clamp(0.7rem, 0.62rem + 0.35vw, 0.8125rem);
+  }
+
+  .district-bottom-sheet .district-profile-body .status-message {
+    font-size: clamp(0.7rem, 0.62rem + 0.35vw, 0.8125rem);
+  }
+
+  .district-bottom-sheet .district-portrait span {
+    font-size: clamp(1.35rem, 4.5vw + 0.5rem, 1.55rem);
+  }
+
+  .district-overview-project-card {
+    padding-block: clamp(0.65rem, 0.55rem + 0.55vw, 0.8125rem);
+    padding-inline: clamp(0.65rem, 0.42rem + 1.8vw, 0.9rem);
+  }
+
+  /* Recent project cards: status top-right, document link stacked below (DOM: link then badge → column-reverse) */
+  .district-overview-project-card__title {
+    font-size: clamp(0.78rem, 0.68rem + 1.1vw, 0.95rem);
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .district-overview-project-card__subtitle {
+    font-size: clamp(0.6875rem, 0.63rem + 0.35vw, 0.78125rem);
+    margin-top: 0.22rem;
+    line-height: 1.25;
+  }
+
+  .district-overview-project-card__top {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+
+  .district-overview-project-card__top-actions {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: 0.3rem;
+    margin-top: 0;
+  }
+
+  .district-overview-project-card__badge {
+    padding: 0.22rem 0.5rem;
+    font-size: 0.6875rem;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .district-overview-project-card__external-link {
+    padding: 0.06rem;
+    flex-shrink: 0;
+    line-height: 0;
+  }
+
+  .district-overview-project-card__external-icon {
+    width: 13px;
+    height: 13px;
+  }
+
+  .district-overview-project-card__description {
+    font-size: 0.75rem;
+    line-height: 1.42;
+  }
+
+  .district-overview-project-card__rule {
+    margin: 0.55rem 0 0.45rem;
+  }
+
+  .district-overview-project-card__meta {
+    gap: clamp(0.2rem, 0.5vw, 0.35rem);
+  }
+
+  .district-overview-project-card__meta-label,
+  .district-overview-project-card__meta-value {
+    font-size: clamp(0.65625rem, 0.58rem + 0.45vw, 0.75rem);
+    line-height: 1.25;
+  }
+
+  .district-overview-project-card__meta-row {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: clamp(0.45rem, 2.5vw, 0.75rem);
+    flex-wrap: nowrap;
+    min-width: 0;
+  }
+
+  .district-overview-project-card__meta-label {
+    flex-shrink: 0;
+  }
+
+  .district-overview-project-card__meta-value {
+    text-align: right;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .district-open-map-fixed {
     bottom: max(0.85rem, env(safe-area-inset-bottom));
     width: min(45vw, calc((100vw - 1.5rem) / 2));
     max-width: 45%;
-    font-size: 1.05rem;
-  }
-
-  .district-profile-panel {
-    padding: 0.15rem 0 0;
+    font-size: clamp(0.875rem, 0.78rem + 0.4vw, 1rem);
+    padding: 0.72rem 1.05rem;
   }
 
   .district-bottom-sheet .district-portrait {
-    width: min(11rem, 72vw);
-    height: min(11rem, 72vw);
-  }
-
-  .district-bottom-sheet .district-portrait span {
-    font-size: 1.65rem;
+    width: min(9.75rem, 68vw);
+    height: min(9.75rem, 68vw);
   }
 
   .district-profile-copy h1 {
@@ -3239,6 +3799,10 @@ a {
 
   .landing-search-button-icon-wrap {
     display: inline-flex;
+  }
+
+  .district-sheet-top-pill {
+    max-width: calc(100vw - 1.25rem);
   }
 }
 

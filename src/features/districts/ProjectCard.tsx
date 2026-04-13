@@ -1,4 +1,8 @@
+import { ExternalLinkIcon } from "../../shared/ui/visicIcons";
+
 export type ProjectStatusVariant = "completed" | "planned" | "in_progress" | "default";
+
+export type ProjectCardLayoutVariant = "default" | "districtOverview";
 
 export interface ProjectCardProps {
   title: string;
@@ -10,9 +14,29 @@ export interface ProjectCardProps {
   startDate: string;
   completedStatus: string;
   className?: string;
+  layoutVariant?: ProjectCardLayoutVariant;
+  /** District overview: open this project on the map and sidebar */
+  onOpenOnMap?: () => void;
+  /** District overview: primary http document URL (opens in new tab from link control) */
+  externalUrl?: string | null;
 }
 
 function statusBadgeClasses(variant: ProjectStatusVariant): string {
+  const base =
+    "status-badge shrink-0 rounded-full font-normal leading-none district-overview-project-card__badge";
+  if (variant === "completed") {
+    return `${base} district-overview-project-card__badge--completed`;
+  }
+  if (variant === "planned") {
+    return `${base} district-overview-project-card__badge--planned`;
+  }
+  if (variant === "in_progress") {
+    return `${base} district-overview-project-card__badge--in_progress`;
+  }
+  return `${base} district-overview-project-card__badge--default`;
+}
+
+function statusBadgeClassesDefault(variant: ProjectStatusVariant): string {
   const base = "status-badge shrink-0 px-4 py-1.5 rounded-full text-sm font-normal leading-none";
   if (variant === "completed") {
     return `${base} bg-[#DCF5E4] text-[#1F7A4D]`;
@@ -36,7 +60,60 @@ export function ProjectCard({
   startDate,
   completedStatus,
   className = "",
+  layoutVariant = "default",
+  onOpenOnMap,
+  externalUrl = null,
 }: ProjectCardProps) {
+  if (layoutVariant === "districtOverview") {
+    return (
+      <article className={`district-overview-project-card ${className}`.trim()}>
+        <div className="district-overview-project-card__top">
+          <button
+            type="button"
+            className="district-overview-project-card__open district-overview-project-card__open--titles"
+            onClick={() => onOpenOnMap?.()}
+          >
+            <span className="district-overview-project-card__title">{title}</span>
+            <span className="district-overview-project-card__subtitle">{subtitle}</span>
+          </button>
+          <div className="district-overview-project-card__top-actions">
+            {externalUrl ? (
+              <a
+                href={externalUrl}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="district-overview-project-card__external-link"
+                aria-label="Open project document in new tab"
+              >
+                <ExternalLinkIcon width={18} height={18} className="district-overview-project-card__external-icon" aria-hidden />
+              </a>
+            ) : null}
+            <span className={statusBadgeClasses(statusVariant)}>{statusLabel}</span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          className="district-overview-project-card__open district-overview-project-card__open--rest"
+          onClick={() => onOpenOnMap?.()}
+        >
+          <p className="district-overview-project-card__description">{description}</p>
+          <div className="district-overview-project-card__rule" role="presentation" />
+          <div className="district-overview-project-card__meta">
+            <div className="district-overview-project-card__meta-row">
+              <span className="district-overview-project-card__meta-label">Started:</span>
+              <span className="district-overview-project-card__meta-value">{startDate}</span>
+            </div>
+            <div className="district-overview-project-card__meta-row">
+              <span className="district-overview-project-card__meta-label">Completed:</span>
+              <span className="district-overview-project-card__meta-value">{completedStatus}</span>
+            </div>
+          </div>
+        </button>
+      </article>
+    );
+  }
+
   return (
     <article
       className={`project-card w-full rounded-2xl border border-gray-200/80 bg-white p-8 font-schibsted shadow-[0_2px_12px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.06)] ${className}`.trim()}
@@ -56,7 +133,7 @@ export function ProjectCard({
             <h3 className="project-title m-0 min-w-0 text-[22px] font-normal text-black">{title}</h3>
           )}
         </div>
-        <span className={statusBadgeClasses(statusVariant)}>{statusLabel}</span>
+        <span className={statusBadgeClassesDefault(statusVariant)}>{statusLabel}</span>
       </div>
 
       <p className="project-subtitle mt-2 text-base font-normal text-[#6B6B6B]">{subtitle}</p>

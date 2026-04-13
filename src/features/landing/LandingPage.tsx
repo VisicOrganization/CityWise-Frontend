@@ -75,6 +75,7 @@ export function LandingPage() {
     if (primaryResult) {
       nextParams.set("focusLat", String(primaryResult.latitude));
       nextParams.set("focusLng", String(primaryResult.longitude));
+      nextParams.set("focusLabel", trimmedQuery);
       try {
         const boundaries = await loadDistrictBoundaries();
         const districtId = findDistrictIdForPoint(boundaries, primaryResult.longitude, primaryResult.latitude);

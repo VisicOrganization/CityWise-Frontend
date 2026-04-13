@@ -271,6 +271,50 @@ function defaultFetchMock(input: string | URL | Request) {
     return Promise.resolve(new Response(JSON.stringify(payload)));
   }
 
+  const projectDetailMatch = pathname.match(/^\/projects\/(.+)$/);
+  if (projectDetailMatch) {
+    const projectId = projectDetailMatch[1];
+    return Promise.resolve(
+      new Response(
+        JSON.stringify({
+          project: {
+            id: projectId,
+            source_council_file_id: projectId,
+            title: `Council File ${projectId}`,
+            summary: "Mock summary for tests.",
+            status: "planned",
+            district_id: 11,
+            about: null,
+            start_date: "2025-04-04",
+            last_changed_date: "2025-04-11",
+            end_date: null,
+            meeting_date: null,
+            meeting_type: null,
+            vote_action: null,
+            vote_given: null,
+            reference_numbers: null,
+            mover_seconder_comment: null,
+          },
+          movers: { primary: [], secondary: [], other: [] },
+          votes: [],
+          timeline: [],
+          documents:
+            projectId === "25-0358"
+              ? [
+                  {
+                    url: "https://example.com/cf.pdf",
+                    title: "CF PDF",
+                    date: "2025-04-04",
+                    source: "test",
+                  },
+                ]
+              : [],
+          address_info: null,
+        }),
+      ),
+    );
+  }
+
   return Promise.reject(new Error(`Unhandled fetch for ${url}`));
 }
 

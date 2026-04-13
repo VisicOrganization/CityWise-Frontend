@@ -2,6 +2,7 @@ import { createPortal } from "react-dom";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import type { ProjectDetail } from "../../shared/api/contracts";
+import { primaryHttpDocumentUrlFromDetail } from "../../shared/map/projectDocuments";
 import type { MapMarker, MarkerCategory } from "../../shared/map/mapTypes";
 import {
   ChevronLeftIcon,
@@ -71,14 +72,6 @@ function categoryLine(marker: MapMarker | null, detail: ProjectDetail | null): s
     return `${base} & ${topics[0]}`;
   }
   return `${base} & Infrastructure`;
-}
-
-function primaryDocumentUrl(detail: ProjectDetail | null): string | null {
-  if (!detail) {
-    return null;
-  }
-  const doc = detail.documents.find((d) => d.url?.startsWith("http"));
-  return doc?.url ?? null;
 }
 
 interface ProjectDetailsPanelProps {
@@ -308,7 +301,7 @@ export function ProjectDetailsPanel({
     return parts.length > 0 ? parts.join("\n\n") : "No additional overview is available for this project yet.";
   }, [detail]);
 
-  const externalUrl = primaryDocumentUrl(detail);
+  const externalUrl = primaryHttpDocumentUrlFromDetail(detail);
   const category = categoryLine(marker, detail);
 
   const categoryIconProps = { width: 22, height: 22, className: "project-sidebar-cat-icon", "aria-hidden": true as const };

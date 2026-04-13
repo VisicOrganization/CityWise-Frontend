@@ -2,16 +2,14 @@
 
 @import "tailwindcss";
 
-/* Council name line only */
+/* Council name line only (weight set in app.css to match Figma: Bold 48) */
 .font-public-sans {
   font-family: "Public Sans", ui-sans-serif, system-ui, sans-serif;
-  font-weight: 400;
 }
 
 /* Ensure council heading keeps Public Sans above sheet typography rules */
 .district-bottom-sheet .district-profile-copy h1.font-public-sans {
   font-family: "Public Sans", ui-sans-serif, system-ui, sans-serif;
-  font-weight: 400;
 }
 
 /* All other district popup copy */

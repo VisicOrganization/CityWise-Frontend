@@ -41,6 +41,7 @@ export function MapPage() {
 
     return { latitude, longitude };
   }, [searchParams]);
+  const districtSheetFocusLabel = searchParams.get("focusLabel")?.trim() || null;
   const { boundaries, projectCards, projectMarkers } = useMapData();
 
   useEffect(() => {
@@ -93,6 +94,17 @@ export function MapPage() {
     setDistrictFocus(districtId);
   }
 
+  function handleSelectProjectFromDistrictOverview(projectId: string) {
+    const marker = projectMarkers.find((m) => m.kind === "project" && m.projectId === projectId) ?? null;
+    if (!marker) {
+      return;
+    }
+    if (districtFocusId !== null) {
+      setDistrictFocus(districtFocusId, false);
+    }
+    void handleMarkerSelect(marker);
+  }
+
   return (
     <AppShell className="map-demo-shell">
       <section className="map-demo-screen">
@@ -102,6 +114,7 @@ export function MapPage() {
           activeMarkerId={activeMarker?.id ?? null}
           activeDistrictId={activeDistrictId}
           addressFocusPoint={addressFocusPoint}
+          districtOverviewOpen={Boolean(districtFocusId && shouldShowDistrictProfile)}
           onMarkerSelect={(marker) => {
             void handleMarkerSelect(marker);
           }}
@@ -130,7 +143,12 @@ export function MapPage() {
               aria-label="Close district overview"
               onClick={() => setDistrictFocus(districtFocusId, false)}
             />
-            <DistrictOverviewSheet districtId={districtFocusId} onOpenMap={() => setDistrictFocus(districtFocusId, false)} />
+            <DistrictOverviewSheet
+              districtId={districtFocusId}
+              focusLabel={districtSheetFocusLabel}
+              onOpenMap={() => setDistrictFocus(districtFocusId, false)}
+              onSelectProjectOnMap={handleSelectProjectFromDistrictOverview}
+            />
           </>
         ) : null}
       </section>
