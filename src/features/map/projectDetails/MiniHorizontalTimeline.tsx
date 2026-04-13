@@ -58,12 +58,8 @@ export function HorizontalTimelineTrack({ nodes }: HorizontalTimelineTrackProps)
         ))}
       </div>
 
-      <div className="project-h-timeline-bar">
-        <div className="project-h-timeline-segments" aria-hidden="true">
-          <div className="project-h-timeline-line project-h-timeline-line--solid" />
-          <div className="project-h-timeline-line project-h-timeline-line--dashed" />
-          <div className="project-h-timeline-line project-h-timeline-line--solid" />
-        </div>
+      <div className="project-h-timeline-bar project-h-timeline-bar--continuous">
+        <div className="project-h-timeline-line-full" aria-hidden="true" />
         <div className="project-h-timeline-nodes" style={{ gridTemplateColumns: gridCols }}>
           {nodes.map((n) => (
             <HorizontalTimelineNode key={n.id} label={n.label} date={n.date} status={n.status} />

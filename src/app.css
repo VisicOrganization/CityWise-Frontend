@@ -1045,11 +1045,32 @@ a {
 }
 
 /* —— Project sidebar (map detail panel) —— */
+/* Host positions on map; aside is the white panel; edge controls are siblings (Figma 1099:2514) */
+.project-sidebar-host {
+  position: absolute;
+  top: 5.25rem;
+  left: 0;
+  bottom: 0;
+  z-index: 20;
+  width: min(28.5rem, 100%);
+  max-width: 456px;
+  pointer-events: none;
+}
+
+.project-sidebar-host--expanded {
+  width: 100%;
+  max-width: none;
+}
+
 .project-details-panel.project-sidebar-panel {
-  --ps-teal: #14b8a6;
-  --ps-teal-dark: #0d9488;
-  --ps-success-bg: #e6f7f1;
-  --ps-success-text: #00a67e;
+  /* Figma Visic UI: primary #1d865e, badge completed #dbfce7 / #85efad */
+  --ps-forest: #1d865e;
+  --ps-forest-hover: #166b50;
+  --ps-teal: #1d865e;
+  --ps-teal-dark: #166b50;
+  --ps-success-bg: #dbfce7;
+  --ps-success-text: #1d865e;
+  --ps-success-border: #85efad;
   --ps-gray-900: #111827;
   --ps-gray-700: #374151;
   --ps-gray-600: #4b5563;
@@ -1059,20 +1080,19 @@ a {
   --ps-gray-200: #e5e7eb;
 
   position: absolute;
-  top: 5.25rem;
-  left: 0;
-  bottom: 0;
-  z-index: 20;
+  inset: 0;
+  z-index: 1;
   display: flex;
   flex-direction: column;
-  width: min(28.5rem, 100%);
-  max-width: 456px;
+  width: auto;
+  max-width: none;
   max-height: none;
   overflow: visible;
   padding: 0;
   background: #ffffff;
-  border-right: 1px solid var(--ps-gray-200);
-  box-shadow: 8px 0 32px rgba(17, 24, 39, 0.08);
+  border-right: 1px solid #e1e1e1;
+  box-shadow: 1px 0 8px rgba(0, 0, 0, 0.25);
+  pointer-events: auto;
   transition:
     width 0.42s ease-out,
     max-width 0.42s ease-out,
@@ -1080,49 +1100,50 @@ a {
     border-radius 0.42s ease-out;
 }
 
-.project-sidebar-close-tab {
+/* Figma 1099:2514 — 44px control on sidebar/map edge */
+.project-sidebar-edge-controls {
   position: absolute;
-  top: 50%;
-  right: 0;
-  z-index: 25;
+  top: 12px;
+  left: 100%;
+  z-index: 26;
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-left: -22px;
+  pointer-events: none;
+}
+
+.project-sidebar-edge-btn {
+  pointer-events: auto;
+  box-sizing: border-box;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.65rem;
-  min-height: 3.1rem;
+  width: 44px;
+  height: 44px;
   margin: 0;
-  padding: 0 0.1rem;
-  border: 1px solid var(--ps-gray-200);
-  border-right: none;
-  border-radius: 10px 0 0 10px;
-  background: #ffffff;
-  color: var(--ps-gray-600);
+  padding: 0;
+  border: 0.688px solid #e1e1e1;
+  border-radius: 3.438px;
+  background: #f9f9f9;
+  color: #4b5563;
   cursor: pointer;
-  box-shadow: -2px 0 10px rgba(17, 24, 39, 0.06);
-  transform: translateY(-50%);
+  box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.25);
   transition:
     background 0.15s ease,
     color 0.15s ease,
-    box-shadow 0.15s ease;
+    border-color 0.15s ease;
 }
 
-.project-sidebar-close-tab:hover {
-  background: var(--ps-gray-200);
-  color: var(--ps-gray-900);
-  box-shadow: -2px 0 12px rgba(17, 24, 39, 0.1);
+.project-sidebar-edge-btn:hover {
+  background: #f3f4f6;
+  color: #111827;
 }
 
-.project-sidebar-close-tab:focus-visible {
-  outline: 2px solid var(--ps-teal);
+.project-sidebar-edge-btn:focus-visible {
+  outline: 2px solid var(--ps-forest, #1d865e);
   outline-offset: 2px;
-}
-
-.project-sidebar-panel--expanded .project-sidebar-close-tab {
-  background: #f8fafc;
-}
-
-.project-sidebar-panel--expanded .project-sidebar-close-tab:hover {
-  background: #e2e8f0;
 }
 
 .project-details-panel.project-sidebar-panel.project-sidebar-panel--expanded {
@@ -1142,12 +1163,56 @@ a {
   max-height: calc(100vh - 5.25rem);
   height: 100%;
   overflow-x: visible;
-  overflow-y: auto;
-  padding: 1.25rem 2.6rem 1.5rem 1.25rem;
+  overflow-y: hidden;
+  padding: 0;
   box-sizing: border-box;
   scrollbar-width: thin;
   scrollbar-color: var(--ps-gray-400) transparent;
   scrollbar-gutter: stable;
+}
+
+/* Figma Inner 1099:2520 + Bottom 1099:2537 */
+.project-sidebar-figma-surface {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: #ffffff;
+  border-radius: 25px 25px 0 0;
+}
+
+/* Figma 1099:2521 — bar sits inside 1099:2520; radius comes from parent overflow + rounded corners only */
+.project-sidebar-category-bar {
+  flex-shrink: 0;
+  width: 100%;
+  height: 24px;
+  border-radius: 0;
+}
+
+.project-sidebar-category-bar--expanded {
+  border-radius: 0;
+  max-width: 100%;
+}
+
+.project-sidebar-figma-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.project-sidebar-footer-cta {
+  flex-shrink: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 68px;
+  padding: 8px 16px;
+  border-top: 1px solid #e3e3e3;
+  background: #ffffff;
 }
 
 .project-sidebar-inner::-webkit-scrollbar {
@@ -1160,6 +1225,7 @@ a {
 }
 
 .project-sidebar-inner--saas-expanded {
+  overflow-y: auto;
   padding: 1.5rem 2.5rem 2rem 1rem;
   background: #f8fafc;
 }
@@ -1244,6 +1310,18 @@ a {
   padding-right: 2.75rem;
 }
 
+.project-expanded-header-aside {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem 0.75rem;
+}
+
+.project-expanded-subtitle--plain {
+  display: block;
+}
+
 .project-expanded-title-row {
   display: flex;
   flex-wrap: wrap;
@@ -1252,16 +1330,58 @@ a {
   gap: 0.75rem 1rem;
 }
 
+/* Figma 1099:2525 — project title (Watts Community Center Expansion): Public Sans SemiBold 24px, #333, leading normal */
 .project-expanded-title {
   margin: 0;
-  flex: 1 1 12rem;
+  flex: 1 1 auto;
   min-width: 0;
+  max-width: 100%;
   font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
-  font-size: clamp(1.75rem, 4vw, 2.25rem);
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-  color: #1a1a1a;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: normal;
+  letter-spacing: normal;
+  color: #333333;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+.project-expanded-title-band {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 0 0;
+}
+
+/* Match Inner 1099:2520: rounded shell clips category bar (1099:2521) */
+.project-expanded-header.project-expanded-header--figma {
+  border-radius: 25px 25px 0 0;
+  overflow: hidden;
+}
+
+/* Figma 1099:2526 — category under title (e.g. Housing & Infrastructure): Public Sans Regular 16px rgba(0,0,0,0.6) */
+.project-expanded-header--figma .project-expanded-subtitle--plain {
+  margin: 4px 0 0;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: normal;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.project-expanded-description--figma {
+  margin: 1rem 0 0;
+  font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: normal;
+  color: rgba(0, 0, 0, 0.6);
+  white-space: pre-line;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .project-expanded-title-meta {
@@ -1605,17 +1725,18 @@ a {
 
 .project-expanded-open-map {
   width: 100%;
-  max-width: 22rem;
+  max-width: 25rem;
   margin: 0 auto;
-  padding: 14px 1.75rem;
+  padding: 10px 12px;
   border: 0;
-  border-radius: 18px;
-  background: #1b7a5a;
+  border-radius: 50px;
+  background: #1d865e;
   color: #fff;
-  font-size: 0.9375rem;
-  font-weight: 700;
+  font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(27, 122, 90, 0.35);
+  box-shadow: 0 4px 14px rgba(29, 134, 94, 0.35);
   transition:
     background-color 160ms ease,
     box-shadow 160ms ease,
@@ -1624,7 +1745,7 @@ a {
 
 .project-expanded-open-map:hover {
   background: #166b50;
-  box-shadow: 0 6px 18px rgba(27, 122, 90, 0.4);
+  box-shadow: 0 6px 18px rgba(29, 134, 94, 0.4);
 }
 
 .project-expanded-open-map:active {
@@ -1634,58 +1755,100 @@ a {
 .project-sidebar-header {
   flex-shrink: 0;
   overflow: visible;
+  margin: 0;
+  padding: 0;
 }
 
-.project-sidebar-title-row {
+/* Figma 1099:2525 + 1153:1880 — title left, status column top-right */
+.project-sidebar-title-band {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 12px;
+  padding: 16px 16px 0 16px;
 }
 
+/* Figma 1099:2525 — same type spec as expanded header title */
 .project-sidebar-title {
   margin: 0;
-  flex: 1 1 12rem;
+  flex: 1 1 auto;
   min-width: 0;
+  max-width: 100%;
   font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
-  font-size: clamp(1.35rem, 2.8vw, 1.65rem);
+  font-size: 24px;
   font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  color: var(--ps-gray-900);
+  line-height: normal;
+  letter-spacing: normal;
+  color: #333333;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
 }
 
-.project-sidebar-title-actions {
+.project-sidebar-status-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.project-sidebar-tool-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  gap: 4px;
 }
 
-.project-sidebar-expand-btn {
+.project-sidebar-tool-btn {
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 24px;
+  height: 24px;
   padding: 0;
-  border: 1px solid var(--ps-gray-200);
-  border-radius: 6px;
-  background: #f3f4f6;
-  color: var(--ps-gray-600);
+  border: 0.375px solid #e1e1e1;
+  border-radius: 1.875px;
+  background: #ffffff;
+  color: #4b5563;
   cursor: pointer;
-  flex-shrink: 0;
+  text-decoration: none;
   transition:
-    background-color 0.15s ease,
-    color 0.15s ease,
-    border-color 0.15s ease;
+    background-color 120ms ease,
+    color 120ms ease,
+    border-color 120ms ease;
 }
 
-.project-sidebar-expand-btn:hover {
-  background: #e5e7eb;
-  color: var(--ps-gray-800);
-  border-color: var(--ps-gray-300);
+/* Figma 1153:1233 — 32px icon frames */
+.project-sidebar-tool-btn--32 {
+  width: 32px;
+  height: 32px;
+  border-radius: 2px;
+}
+
+.project-sidebar-tool-btn:hover:not(:disabled) {
+  background: #f9fafb;
+  color: #111827;
+  border-color: #d1d5db;
+}
+
+.project-sidebar-tool-btn:focus-visible {
+  outline: 2px solid var(--ps-forest, #1d865e);
+  outline-offset: 2px;
+}
+
+.project-sidebar-tool-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.project-sidebar-tool-btn.is-active {
+  background: rgba(29, 134, 94, 0.08);
+  color: var(--ps-forest, #1d865e);
+  border-color: rgba(29, 134, 94, 0.35);
 }
 
 .project-sidebar-icon-btn {
@@ -1719,42 +1882,51 @@ a {
 .project-status-badge {
   display: inline-flex;
   align-items: center;
-  padding: 6px 12px;
-  border-radius: 16px;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  line-height: 1.2;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 100px;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: normal;
   white-space: nowrap;
+  border: 1px solid transparent;
 }
 
 .project-status-badge--completed {
   background: var(--ps-success-bg);
   color: var(--ps-success-text);
+  border-color: var(--ps-success-border);
 }
 
 .project-status-badge--in_progress {
   background: #fef3c7;
   color: #b45309;
+  border-color: rgba(180, 83, 9, 0.35);
 }
 
 /* Match district overview / ProjectCard planned badge */
 .project-status-badge--planned {
   background: #ffe8cc;
   color: #9a5f00;
+  border-color: rgba(154, 95, 0, 0.35);
 }
 
 .project-status-badge--default {
   background: #f3f4f6;
   color: var(--ps-gray-600);
+  border-color: rgba(107, 114, 128, 0.35);
 }
 
+/* Figma 1099:2526 — category label; x=18 in frame vs title x=16 */
 .project-sidebar-category {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0.5rem 0 0;
-  font-size: 0.9375rem;
-  color: var(--ps-gray-500);
+  margin: 4px 0 0;
+  padding: 0 18px;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: normal;
+  color: rgba(0, 0, 0, 0.6);
 }
 
 .project-sidebar-cat-icon {
@@ -2001,16 +2173,35 @@ a {
   color: #b91c1c;
 }
 
-.project-sidebar-overview {
-  margin-top: 1.5rem;
+.project-sidebar-figma-scroll .project-sidebar-overview {
+  margin-top: 24px;
+  padding: 0 18px;
 }
 
+.project-sidebar-figma-scroll .project-sidebar-status {
+  margin: 1rem 18px 0;
+}
+
+.project-sidebar-figma-scroll .project-h-timeline {
+  padding: 0 14.5px;
+}
+
+.project-sidebar-figma-scroll .project-sidebar-timeline-fallback {
+  padding: 0 18px;
+}
+
+.project-sidebar-overview {
+  margin-top: 1.25rem;
+}
+
+/* Figma 1099:2528 — Public Sans Medium 20px black */
 .project-sidebar-section-title {
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.65rem;
   font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--ps-gray-900);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: normal;
+  color: #000000;
 }
 
 .project-sidebar-overview-body {
@@ -2019,6 +2210,115 @@ a {
   line-height: 1.6;
   color: var(--ps-gray-600);
   white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Figma 1099:2524 — Schibsted Regular 12px rgba(0,0,0,0.6) */
+.project-sidebar-overview-summary {
+  margin: 0;
+  font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: normal;
+  color: rgba(0, 0, 0, 0.6);
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.project-sidebar-meta {
+  margin: 1rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.project-sidebar-meta-row {
+  display: grid;
+  grid-template-columns: minmax(0, 7.5rem) 1fr;
+  gap: 0.5rem 0.75rem;
+  align-items: baseline;
+  margin: 0;
+}
+
+.project-sidebar-meta-row dt {
+  margin: 0;
+  font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: normal;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.project-sidebar-meta-row dd {
+  margin: 0;
+  font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: normal;
+  color: rgba(0, 0, 0, 0.85);
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Voting modal / metadata — Yes #16a34a, No #dc2626, Absent #4b5563, sep #9ca3af */
+.project-sidebar-tally {
+  font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: normal;
+}
+
+.project-sidebar-tally-yes {
+  color: #16a34a;
+  font-weight: 700;
+}
+
+.project-sidebar-tally-no {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.project-sidebar-tally-absent {
+  color: #4b5563;
+  font-weight: 700;
+}
+
+.project-sidebar-tally-sep {
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.project-sidebar-tally-fallback {
+  color: rgba(0, 0, 0, 0.85);
+  font-weight: 400;
+}
+
+.project-sidebar-meta--expanded {
+  margin-top: 1rem;
+}
+
+.project-sidebar-movers {
+  margin-top: 1rem;
+}
+
+.project-sidebar-movers-label {
+  margin: 0 0 0.2rem;
+  font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: normal;
+  color: rgba(0, 0, 0, 0.75);
+}
+
+.project-sidebar-movers-text {
+  margin: 0;
+  font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: normal;
+  color: rgba(0, 0, 0, 0.85);
   overflow-wrap: break-word;
   word-break: break-word;
 }
@@ -2110,6 +2410,22 @@ a {
   min-height: 16px;
 }
 
+.project-h-timeline-bar--continuous {
+  min-height: 18px;
+}
+
+.project-h-timeline-line-full {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 2px;
+  border-radius: 1px;
+  background-color: var(--ps-forest, #1d865e);
+  pointer-events: none;
+}
+
 .project-h-timeline-segments {
   position: absolute;
   left: 0;
@@ -2127,7 +2443,7 @@ a {
   min-width: 0;
   height: 4px;
   border-radius: 2px;
-  background-color: #2f855a;
+  background-color: var(--ps-forest, #1d865e);
 }
 
 .project-h-timeline-line--dashed {
@@ -2135,7 +2451,7 @@ a {
   width: 100px;
   height: 0;
   border: 0;
-  border-top: 4px dashed #2f855a;
+  border-top: 4px dashed var(--ps-forest, #1d865e);
   background: none;
 }
 
@@ -2163,18 +2479,61 @@ a {
 }
 
 .project-h-timeline-node--completed {
-  background-color: #2f855a;
+  background-color: var(--ps-forest, #1d865e);
 }
 
 .project-h-timeline-node--upcoming {
   box-sizing: border-box;
   background-color: #fff;
-  border: 3px solid #2f855a;
+  border: 2px solid var(--ps-forest, #1d865e);
+}
+
+.project-h-timeline--mini .project-h-timeline-label-top {
+  font-size: 0.625rem;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+  padding: 0 4px;
+}
+
+.project-h-timeline--mini .project-h-timeline-label-bottom {
+  font-size: 0.5625rem;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+  padding: 0 4px;
+}
+
+.project-h-timeline--mini .project-h-timeline-labels-top {
+  margin-bottom: 6px;
+}
+
+.project-h-timeline--mini .project-h-timeline-labels-bottom {
+  margin-top: 6px;
+}
+
+.project-h-timeline--mini .project-h-timeline-node {
+  width: 10px;
+  height: 10px;
+}
+
+.project-h-timeline--mini .project-h-timeline-node--upcoming {
+  border-width: 2px;
 }
 
 /* Expanded vertical timeline: below header, scrolls; header + toggles stay visible */
 .project-sidebar-inner--timeline-expanded {
   overflow: hidden;
+}
+
+.project-sidebar-inner--timeline-expanded .project-sidebar-figma-scroll {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.project-sidebar-inner--timeline-expanded .project-sidebar-timeline-expanded {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .project-sidebar-timeline-expanded {
@@ -2397,23 +2756,35 @@ a {
   color: var(--ps-gray-600, #4b5563);
 }
 
+.project-sidebar-footer-cta .project-sidebar-explore-map {
+  margin-top: 0;
+  max-width: 400px;
+  width: 100%;
+}
+
 .project-sidebar-explore-map {
   flex-shrink: 0;
-  margin-top: 2rem;
+  margin-top: 1.75rem;
   width: 100%;
-  padding: 14px 1rem;
+  padding: 10px 12px;
   border: 0;
-  border-radius: 8px;
-  background: #14b8a6;
+  border-radius: 50px;
+  background: var(--ps-forest, #1d865e);
   color: #fff;
-  font-size: 0.9375rem;
-  font-weight: 600;
+  font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 140ms ease;
+  transition: background-color 140ms ease, box-shadow 140ms ease;
 }
 
 .project-sidebar-explore-map:hover {
-  background: #0d9488;
+  background: var(--ps-forest-hover, #166b50);
+}
+
+.project-sidebar-explore-map:focus-visible {
+  outline: 2px solid var(--ps-forest, #1d865e);
+  outline-offset: 3px;
 }
 
 /* Shared detail copy styles (district cards, etc.) */
@@ -3342,12 +3713,16 @@ a {
 }
 
 @media (max-width: 960px) {
-  .project-details-panel {
+  .project-sidebar-host {
     top: auto;
     left: 1rem;
     right: 1rem;
     bottom: 1rem;
     width: auto;
+    max-width: none;
+  }
+
+  .project-details-panel.project-sidebar-panel {
     max-height: 56vh;
     border: 1px solid rgba(23, 50, 77, 0.08);
     border-right: 1px solid rgba(23, 50, 77, 0.08);
