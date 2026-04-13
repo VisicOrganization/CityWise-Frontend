@@ -130,6 +130,11 @@ const districtProjectsResponseByDistrict = {
           places: [],
           topics: [],
           segments: [],
+          geocode: {
+            latitude: 34.0501,
+            longitude: -118.4501,
+            provider: "backend",
+          },
         },
       },
       {
@@ -152,6 +157,11 @@ const districtProjectsResponseByDistrict = {
           places: [],
           topics: [],
           segments: [],
+          geocode: {
+            latitude: 34.0602,
+            longitude: -118.4602,
+            provider: "backend",
+          },
         },
       },
     ],
@@ -183,6 +193,11 @@ const districtProjectsResponseByDistrict = {
           places: [],
           topics: [],
           segments: [],
+          geocode: {
+            latitude: 34.0703,
+            longitude: -118.4703,
+            provider: "backend",
+          },
         },
       },
     ],
@@ -264,6 +279,8 @@ function defaultFetchMock(input: string | URL | Request) {
 
   const districtMatch = url.match(/\/districts\/(\d+)\/projects/);
   if (districtMatch) {
+    const requestUrl = new URL(url, "http://localhost");
+    expect(requestUrl.searchParams.get("has_geocode")).toBe("true");
     const districtId = Number(districtMatch[1]);
     const payload =
       districtProjectsResponseByDistrict[districtId as keyof typeof districtProjectsResponseByDistrict] ??
@@ -455,12 +472,6 @@ describe("mock app routes", () => {
         return new Promise(() => {});
       }
 
-      if (url.startsWith("https://nominatim.openstreetmap.org/search")) {
-        return Promise.resolve(
-          new Response(JSON.stringify([{ lat: "34.05", lon: "-118.25" }])),
-        );
-      }
-
       return Promise.reject(new Error(`Unhandled fetch for ${url}`));
     });
 
@@ -472,6 +483,28 @@ describe("mock app routes", () => {
 
     expect(await screen.findByTestId("mock-boundary-source")).toBeInTheDocument();
     expect(screen.getByTestId("demo-map")).toBeInTheDocument();
+  });
+
+  it("uses backend geocode coordinates for project markers without client-side geocoding", async () => {
+    fetchMock.mockImplementation((input: string | URL | Request) => {
+      const url = String(input);
+
+      if (url.startsWith("https://nominatim.openstreetmap.org/search")) {
+        return Promise.reject(new Error("project markers should not geocode on the client"));
+      }
+
+      return defaultFetchMock(input);
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/map"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByLabelText("Council File 25-0358")).toBeInTheDocument();
+    expect(screen.getByLabelText("Council File 25-0400")).toBeInTheDocument();
+    expect(screen.getByLabelText("Council File 25-0501")).toBeInTheDocument();
   });
 
   it("updates the district pill when a project pin is clicked", async () => {
@@ -564,7 +597,15 @@ describe("mock app routes", () => {
               votes: [],
               timeline: [],
               documents: [],
-              address_info: null,
+              address_info: {
+                project_title: "Council File 25-0358",
+                primary_address: "100 First St",
+                addresses: ["100 First St"],
+                places: [],
+                topics: [],
+                segments: [],
+                geocode: null,
+              },
             }),
           ),
         );
@@ -625,7 +666,15 @@ describe("mock app routes", () => {
               votes: [],
               timeline: [],
               documents: [],
-              address_info: null,
+              address_info: {
+                project_title: "Council File 25-0358",
+                primary_address: "100 First St",
+                addresses: ["100 First St"],
+                places: [],
+                topics: [],
+                segments: [],
+                geocode: null,
+              },
             }),
           ),
         );
@@ -775,7 +824,15 @@ describe("mock app routes", () => {
                 },
               ],
               documents: [],
-              address_info: null,
+              address_info: {
+                project_title: "Council File 25-0358",
+                primary_address: "100 First St",
+                addresses: ["100 First St"],
+                places: [],
+                topics: [],
+                segments: [],
+                geocode: null,
+              },
             }),
           ),
         );
