@@ -798,7 +798,7 @@ describe("mock app routes", () => {
 
     expect(await screen.findByLabelText("Project details")).toBeInTheDocument();
     expect(await screen.findByRole("heading", { name: "Council File 25-0358" })).toBeInTheDocument();
-    expect(await screen.findByText(/TRACI\s+PARK/)).toBeInTheDocument();
+    expect(await screen.findByText("Traci Park")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /Timeline view/i }));
     const motionNodes = await screen.findAllByText("Motion introduced.");
