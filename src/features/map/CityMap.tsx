@@ -8,7 +8,9 @@ import Map, {
   type ViewState,
 } from "react-map-gl/maplibre";
 
+import { useCouncilMemberBios } from "../districts/useCouncilMemberBios";
 import { useDistrictProfile } from "../districts/useDistrictProfile";
+import { formatPersonNameForDisplay } from "../../shared/formatPersonName";
 import { findDistrictFeature, getFeatureBounds, type DistrictBoundaryCollection } from "../../shared/map/districtBoundaries";
 import { districtFillLayer, districtHighlightLayer, districtOutlineLayer } from "../../shared/map/districtLayers";
 import type { MapMarker, MarkerCategory } from "../../shared/map/mapTypes";
@@ -80,6 +82,8 @@ interface CityMapProps {
   activeDistrictId: number | null;
   /** Geocoded address from landing; used to zoom before district GeoJSON is ready, and as fallback. */
   addressFocusPoint?: { latitude: number; longitude: number } | null;
+  /** Hides the floating district pill (e.g. while the district overview sheet is open — avoids a second “divot”). */
+  districtOverviewOpen?: boolean;
   onMarkerSelect: (marker: MapMarker) => void;
   onMapBackgroundClick: () => void;
   onOpenDistrictOverview: (districtId: number) => void;
@@ -92,6 +96,7 @@ export function CityMap({
   activeMarkerId,
   activeDistrictId,
   addressFocusPoint = null,
+  districtOverviewOpen = false,
   onMarkerSelect,
   onMapBackgroundClick,
   onOpenDistrictOverview,
@@ -103,21 +108,43 @@ export function CityMap({
   const [lastVisibleDistrictId, setLastVisibleDistrictId] = useState<number | null>(null);
   const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [pillPortraitFailed, setPillPortraitFailed] = useState(false);
 
   const { profile: districtProfile } = useDistrictProfile(activeDistrictId);
+  const { biosByDistrict } = useCouncilMemberBios();
   const activeDistrict = activeDistrictId != null;
   const displayedDistrictId = activeDistrictId ?? lastVisibleDistrictId;
-  const displayedName =
-    districtProfile?.name ??
-    (displayedDistrictId != null ? `District ${displayedDistrictId}` : "District");
+  const bio = activeDistrictId != null ? biosByDistrict?.get(activeDistrictId) : undefined;
+  const councilNameRaw = (bio?.name?.trim() || districtProfile?.name?.trim() || "") || "";
+  const displayedName = councilNameRaw
+    ? formatPersonNameForDisplay(councilNameRaw)
+    : displayedDistrictId != null
+      ? `District ${displayedDistrictId}`
+      : "District";
   const displayedLabel =
     displayedDistrictId != null ? `District ${displayedDistrictId}` : "";
+  const portraitSrc = (bio?.profilePic?.trim() || districtProfile?.profile_pic?.trim() || "").trim() || null;
+  const initials = displayedName
+    .split(" ")
+    .map((part) => part[0])
+    .filter(Boolean)
+    .join("");
 
   useEffect(() => {
     if (activeDistrictId) {
       setLastVisibleDistrictId(activeDistrictId);
     }
   }, [activeDistrictId]);
+
+  useEffect(() => {
+    if (districtOverviewOpen) {
+      setIsInfoOpen(false);
+    }
+  }, [districtOverviewOpen]);
+
+  useEffect(() => {
+    setPillPortraitFailed(false);
+  }, [portraitSrc, activeDistrictId]);
 
   useLayoutEffect(() => {
     if (activeDistrictId == null) {
@@ -219,7 +246,7 @@ export function CityMap({
         attributionControl={false}
         style={{ width: "100%", height: "100%" }}
       >
-        <NavigationControl position="top-right" />
+        {districtOverviewOpen ? null : <NavigationControl position="top-right" />}
         {boundaries ? (
           <Source id="district-boundaries" type="geojson" data={boundaries}>
             <Layer {...districtFillLayer} />
@@ -261,7 +288,9 @@ export function CityMap({
         })}
       </Map>
 
-      <div className={`map-district-pill-shell ${activeDistrict ? "is-visible" : "is-hidden"}`}>
+      <div
+        className={`map-district-pill-shell ${activeDistrict && !districtOverviewOpen ? "is-visible" : "is-hidden"}`}
+      >
         <button
           type="button"
           className="map-district-pill"
@@ -271,49 +300,65 @@ export function CityMap({
             }
           }}
           aria-label={activeDistrictId != null ? `Open District ${activeDistrictId} overview` : "District overview hidden"}
-          aria-hidden={activeDistrict ? undefined : true}
-          tabIndex={activeDistrict ? 0 : -1}
+          aria-hidden={activeDistrict && !districtOverviewOpen ? undefined : true}
+          tabIndex={activeDistrict && !districtOverviewOpen ? 0 : -1}
         >
-          <span className="map-district-avatar">
-            {displayedName.split(" ").map((part) => part[0]).join("")}
+          <span className="map-district-avatar" aria-hidden="true">
+            {portraitSrc && !pillPortraitFailed ? (
+              <img
+                src={portraitSrc}
+                alt=""
+                className="map-district-avatar-img"
+                onError={() => setPillPortraitFailed(true)}
+              />
+            ) : (
+              <span className="map-district-avatar-initials">{initials}</span>
+            )}
           </span>
-          <span>
-            {`${displayedName} • ${displayedLabel}`}
+          <span className="map-district-pill-copy">
+            <span className="map-district-pill-name">{displayedName}</span>
+            <span className="map-district-pill-sep" aria-hidden="true">
+              {" "}
+              •{" "}
+            </span>
+            <span className="map-district-pill-district">{displayedLabel}</span>
           </span>
         </button>
       </div>
 
-      <div className="map-control-stack" aria-label="Map controls">
-        {/* Project categories filter (right stack) commented out — was map-menu-shell + FilterIcon + category checkboxes */}
+      {districtOverviewOpen ? null : (
+        <div className="map-control-stack" aria-label="Map controls">
+          {/* Project categories filter (right stack) commented out — was map-menu-shell + FilterIcon + category checkboxes */}
 
-        <div className="map-menu-shell">
-          <button
-            type="button"
-            className={`map-utility-button ${isInfoOpen ? "is-active" : ""}`}
-            aria-label="Toggle accessibility information"
-            aria-expanded={isInfoOpen}
-            onClick={() => {
-              setIsInfoOpen((current) => !current);
-            }}
-          >
-            <InfoIcon />
-          </button>
-          {isInfoOpen ? (
-            <div className="map-utility-panel" aria-label="Accessibility information">
-              <div className="map-utility-header">
-                <strong>Map guidance</strong>
-                <span>Informational</span>
+          <div className="map-menu-shell">
+            <button
+              type="button"
+              className={`map-utility-button ${isInfoOpen ? "is-active" : ""}`}
+              aria-label="Toggle accessibility information"
+              aria-expanded={isInfoOpen}
+              onClick={() => {
+                setIsInfoOpen((current) => !current);
+              }}
+            >
+              <InfoIcon />
+            </button>
+            {isInfoOpen ? (
+              <div className="map-utility-panel" aria-label="Accessibility information">
+                <div className="map-utility-header">
+                  <strong>Map guidance</strong>
+                  <span>Informational</span>
+                </div>
+                <p>Use the district overlays for geographic context and the project markers for quick detail checks.</p>
+                <ul className="map-utility-list">
+                  <li>Hover markers to preview project names.</li>
+                  <li>Click markers to open project details.</li>
+                  <li>Click a district boundary to update the district overview pill.</li>
+                </ul>
               </div>
-              <p>Use the district overlays for geographic context and the project markers for quick detail checks.</p>
-              <ul className="map-utility-list">
-                <li>Hover markers to preview project names.</li>
-                <li>Click markers to open project details.</li>
-                <li>Click a district boundary to update the district overview pill.</li>
-              </ul>
-            </div>
-          ) : null}
+            ) : null}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

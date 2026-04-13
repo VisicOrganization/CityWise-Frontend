@@ -11,11 +11,10 @@ export function AppShell({ children, className, overlay }: AppShellProps) {
   return (
     <div className={`app-shell ${className ?? ""}`.trim()}>
       <header className="top-nav">
-        <Link to="/" className="brand-mark" aria-label="CityWise home">
+        <Link to="/" className="brand-mark brand-mark--logo-only" aria-label="CityWise home">
           <span className="brand-pin">
             <img src="/brand/visic-logo.png" alt="" />
           </span>
-          <span className="brand-copy">CityWise</span>
         </Link>
 
         <nav className="top-nav-links" aria-label="Primary navigation">

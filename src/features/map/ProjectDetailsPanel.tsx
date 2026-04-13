@@ -2,16 +2,16 @@ import { createPortal } from "react-dom";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import type { ProjectDetail } from "../../shared/api/contracts";
-import type { MapMarker, MarkerCategory } from "../../shared/map/mapTypes";
+import { formatPersonNameForDisplay } from "../../shared/formatPersonName";
+import { primaryHttpDocumentUrlFromDetail } from "../../shared/map/projectDocuments";
+import type { MapMarker } from "../../shared/map/mapTypes";
 import {
-  ChevronLeftIcon,
+  BallotIcon,
+  ChartLineIcon,
   CloseIcon,
   ExternalLinkIcon,
-  HousingIcon,
-  InfrastructureIcon,
   SidebarCollapseIcon,
   SidebarExpandIcon,
-  TransitIcon,
 } from "../../shared/ui/visicIcons";
 import { formatProjectDateLong, formatUsNumericDate } from "./projectDetails/formatProjectDate";
 import { MiniHorizontalTimeline } from "./projectDetails/MiniHorizontalTimeline";
@@ -23,6 +23,7 @@ import {
 import { VerticalTimelineView } from "./projectDetails/VerticalTimelineView";
 import { StatusBadge } from "./projectDetails/StatusBadge";
 import { ExpandedProjectDetailLayout } from "./projectDetails/ExpandedProjectDetailLayout";
+import { SidebarVoteTallyValue, sidebarHasVoteTallyDisplay } from "./projectDetails/sidebarVoteTally";
 
 function normalizeVoteGroup(vote: string | null): "Yes" | "No" | "Absent" {
   const normalized = vote?.trim().toLowerCase();
@@ -45,18 +46,39 @@ type VoteRow = {
   memberId: number | null;
 };
 
-function parseVoteGivenTally(voteGiven: string | null): { yes: number; no: number; absent: number } | null {
-  if (!voteGiven) {
+function parseVoteGivenTally(voteGiven: unknown): { yes: number; no: number; absent: number } | null {
+  if (voteGiven == null) {
+    return null;
+  }
+  const str =
+    typeof voteGiven === "string"
+      ? voteGiven.trim()
+      : typeof voteGiven === "number" && Number.isFinite(voteGiven)
+        ? String(voteGiven)
+        : null;
+  if (!str) {
     return null;
   }
 
-  const inner = voteGiven.trim().replace(/^\(|\)$/g, "");
+  const inner = str.replace(/^\(|\)$/g, "");
   const parts = inner.split(/\s*-\s*/).map((part) => Number.parseInt(part.trim(), 10));
   if (parts.length === 3 && parts.every((n) => !Number.isNaN(n))) {
     return { yes: parts[0] ?? 0, no: parts[1] ?? 0, absent: parts[2] ?? 0 };
   }
 
   return null;
+}
+
+/** Figma map pins: brown housing #8d6e63, blue transit #3779f4, orange infrastructure #e67e22 */
+function categoryAccentBarColor(marker: MapMarker | null): string {
+  const cat = marker?.category;
+  if (cat === "transit") {
+    return "#3779f4";
+  }
+  if (cat === "housing") {
+    return "#8d6e63";
+  }
+  return "#e67e22";
 }
 
 function categoryLine(marker: MapMarker | null, detail: ProjectDetail | null): string {
@@ -71,14 +93,6 @@ function categoryLine(marker: MapMarker | null, detail: ProjectDetail | null): s
     return `${base} & ${topics[0]}`;
   }
   return `${base} & Infrastructure`;
-}
-
-function primaryDocumentUrl(detail: ProjectDetail | null): string | null {
-  if (!detail) {
-    return null;
-  }
-  const doc = detail.documents.find((d) => d.url?.startsWith("http"));
-  return doc?.url ?? null;
 }
 
 interface ProjectDetailsPanelProps {
@@ -131,7 +145,7 @@ export function ProjectDetailsPanel({
       Absent: [],
     };
 
-    detail?.votes.forEach((vote, index) => {
+    detail?.votes?.forEach((vote, index) => {
       const bucket = normalizeVoteGroup(vote.vote);
       const memberId = vote.member?.id ?? null;
       groups[bucket].push({
@@ -151,7 +165,8 @@ export function ProjectDetailsPanel({
     }
 
     const tallied = { yes: 0, no: 0, absent: 0 };
-    for (const vote of detail.votes) {
+    const votes = detail.votes ?? [];
+    for (const vote of votes) {
       const bucket = normalizeVoteGroup(vote.vote);
       if (bucket === "Yes") {
         tallied.yes += 1;
@@ -162,14 +177,14 @@ export function ProjectDetailsPanel({
       }
     }
 
-    if (detail.votes.length > 0) {
+    if (votes.length > 0) {
       return tallied;
     }
 
     return parseVoteGivenTally(detail.project.vote_given) ?? tallied;
   }, [detail]);
 
-  const primaryMoverId = detail?.movers.primary[0]?.id ?? null;
+  const primaryMoverId = detail?.movers?.primary?.[0]?.id ?? null;
 
   const updateVotePopoverPlacement = useCallback(() => {
     if (!isVotingPopoverOpen || !detail) {
@@ -263,65 +278,18 @@ export function ProjectDetailsPanel({
     });
   }, [detail]);
 
-  const overviewBody = useMemo(() => {
+  /** Figma: no placeholder when summary empty — omit body copy entirely */
+  const overviewSummary = useMemo((): string | null => {
     if (!detail) {
-      return "Project summary content will appear when backend data is loaded.";
+      return null;
     }
-
-    const parts: string[] = [];
-    const main = detail.project.about ?? detail.project.summary;
-    if (main) {
-      parts.push(main);
-    }
-
-    const metaLines: string[] = [];
-    if (detail.project.district_id != null) {
-      metaLines.push(`Council district: ${detail.project.district_id}`);
-    }
-    if (detail.project.meeting_date) {
-      metaLines.push(`Meeting date: ${formatProjectDateLong(detail.project.meeting_date)}`);
-    }
-    if (detail.project.vote_action) {
-      metaLines.push(`Vote action: ${detail.project.vote_action}`);
-    }
-    if (detail.project.vote_given) {
-      metaLines.push(`Vote tally: ${detail.project.vote_given}`);
-    }
-    if (detail.project.reference_numbers) {
-      metaLines.push(`References: ${detail.project.reference_numbers}`);
-    }
-    if (metaLines.length > 0) {
-      parts.push(metaLines.join("\n"));
-    }
-
-    const movers: string[] = [];
-    if (detail.movers.primary.length > 0) {
-      movers.push(`Primary movers: ${detail.movers.primary.map((m) => m.name).join(", ")}`);
-    }
-    if (detail.movers.secondary.length > 0) {
-      movers.push(`Secondary movers: ${detail.movers.secondary.map((m) => m.name).join(", ")}`);
-    }
-    if (movers.length > 0) {
-      parts.push(movers.join("\n"));
-    }
-
-    return parts.length > 0 ? parts.join("\n\n") : "No additional overview is available for this project yet.";
+    const main = (detail.project.about ?? detail.project.summary)?.trim();
+    return main && main.length > 0 ? main : null;
   }, [detail]);
 
-  const externalUrl = primaryDocumentUrl(detail);
+  const externalUrl = primaryHttpDocumentUrlFromDetail(detail);
   const category = categoryLine(marker, detail);
-
-  const categoryIconProps = { width: 22, height: 22, className: "project-sidebar-cat-icon", "aria-hidden": true as const };
-
-  function categoryIcon(cat: MarkerCategory | undefined) {
-    if (cat === "housing") {
-      return <HousingIcon {...categoryIconProps} />;
-    }
-    if (cat === "transit") {
-      return <TransitIcon {...categoryIconProps} />;
-    }
-    return <InfrastructureIcon {...categoryIconProps} />;
-  }
+  const categoryAccent = useMemo(() => categoryAccentBarColor(marker), [marker]);
 
   const votingRecordDialog =
     isVotingPopoverOpen && detail && votePopoverPlacement
@@ -345,9 +313,9 @@ export function ProjectDetailsPanel({
                 <span className="voting-popover-tally" aria-label="Vote tally">
                   <span className="voting-popover-tally-paren">(</span>
                   <span className="voting-popover-tally-yes">{voteTally.yes}</span>
-                  <span className="voting-popover-tally-sep"> - </span>
+                  <span className="voting-popover-tally-sep"> · </span>
                   <span className="voting-popover-tally-no">{voteTally.no}</span>
-                  <span className="voting-popover-tally-sep"> - </span>
+                  <span className="voting-popover-tally-sep"> · </span>
                   <span className="voting-popover-tally-absent">{voteTally.absent}</span>
                   <span className="voting-popover-tally-paren">)</span>
                 </span>
@@ -385,7 +353,7 @@ export function ProjectDetailsPanel({
                                 : "voting-popover-name"
                             }
                           >
-                            <span className="voting-popover-name-text">{row.name}</span>
+                            <span className="voting-popover-name-text">{formatPersonNameForDisplay(row.name)}</span>
                             {row.districtId != null ? (
                               <span className="voting-popover-district"> ({row.districtId})</span>
                             ) : null}
@@ -409,203 +377,256 @@ export function ProjectDetailsPanel({
 
   return (
     <>
-    <aside
-      ref={sidebarRef}
-      className={`project-details-panel project-sidebar-panel${sidebarWidthExpanded ? " project-sidebar-panel--expanded" : ""}`}
-      aria-label="Project details"
-    >
       <div
-        className={`project-sidebar-inner${
-          sidebarWidthExpanded ? " project-sidebar-inner--saas-expanded" : ""
-        }${
-          detail && timelineViewOpen && verticalTimelineItems.length > 0
-            ? " project-sidebar-inner--timeline-expanded"
-            : ""
-        }`}
+        className={`project-sidebar-host${sidebarWidthExpanded ? " project-sidebar-host--expanded" : ""}`}
       >
-        {!sidebarWidthExpanded ? (
-          <header className="project-sidebar-header">
-            <div className="project-sidebar-title-row">
-              <h2 className="project-sidebar-title">{title}</h2>
-              <div className="project-sidebar-title-actions">
-                {externalUrl ? (
-                  <a
-                    className="project-sidebar-icon-btn"
-                    href={externalUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Open primary project document in a new tab"
-                  >
-                    <ExternalLinkIcon width={18} height={18} />
-                  </a>
-                ) : (
-                  <button
-                    type="button"
-                    className="project-sidebar-icon-btn"
-                    disabled
-                    aria-label="No external document link available for this project"
-                    aria-disabled="true"
-                  >
-                    <ExternalLinkIcon width={18} height={18} />
-                  </button>
-                )}
-                <StatusBadge status={status} project={detail?.project ?? null} />
+        <aside
+          ref={sidebarRef}
+          className={`project-details-panel project-sidebar-panel${sidebarWidthExpanded ? " project-sidebar-panel--expanded" : ""}`}
+          aria-label="Project details"
+        >
+        <div
+          className={`project-sidebar-inner${
+            sidebarWidthExpanded ? " project-sidebar-inner--saas-expanded" : ""
+          }${
+            detail && timelineViewOpen && verticalTimelineItems.length > 0
+              ? " project-sidebar-inner--timeline-expanded"
+              : ""
+          }`}
+        >
+          {sidebarWidthExpanded ? (
+            detail ? (
+              <ExpandedProjectDetailLayout
+                detail={detail}
+                title={title}
+                category={category}
+                categoryAccent={categoryAccent}
+                overviewSummary={overviewSummary}
+                externalUrl={externalUrl}
+                status={status}
+                voteRows={voteRows}
+                voteTally={voteTally}
+                primaryMoverId={primaryMoverId}
+                votingRecordFooter={votingRecordFooter}
+                horizontalMilestones={horizontalMilestones}
+                onCollapse={() => setSidebarWidthExpanded(false)}
+                onExploreMap={onExploreMap}
+              />
+            ) : (
+              <div className="project-expanded-root project-expanded-root--loading">
                 <button
                   type="button"
-                  className="project-sidebar-expand-btn"
-                  aria-label={sidebarWidthExpanded ? "Collapse project panel" : "Expand project panel"}
-                  aria-pressed={sidebarWidthExpanded}
-                  onClick={() => setSidebarWidthExpanded((v) => !v)}
+                  className="project-expanded-collapse-fab"
+                  aria-label="Collapse project panel"
+                  onClick={() => setSidebarWidthExpanded(false)}
                 >
-                  {sidebarWidthExpanded ? <SidebarCollapseIcon width={18} height={18} /> : <SidebarExpandIcon width={18} height={18} />}
+                  <SidebarCollapseIcon width={18} height={18} />
+                </button>
+                <p className="project-expanded-loading-msg">
+                  {isLoading ? "Loading backend project data…" : errorMessage ?? "Project data is not available yet."}
+                </p>
+              </div>
+            )
+          ) : (
+            <div className="project-sidebar-figma-surface">
+              <div
+                className="project-sidebar-category-bar"
+                style={{ backgroundColor: categoryAccent }}
+                aria-hidden="true"
+              />
+
+              <div className="project-sidebar-figma-scroll">
+                <header className="project-sidebar-header">
+                  <div className="project-sidebar-title-band">
+                    <h2 className="project-sidebar-title">{title}</h2>
+                    <div className="project-sidebar-status-column">
+                      <StatusBadge status={status} project={detail?.project ?? null} />
+                      <div className="project-sidebar-tool-row">
+                        {externalUrl ? (
+                          <a
+                            className="project-sidebar-tool-btn project-sidebar-tool-btn--32"
+                            href={externalUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="Open primary project document in a new tab"
+                          >
+                            <ExternalLinkIcon width={18} height={18} />
+                          </a>
+                        ) : (
+                          <button
+                            type="button"
+                            className="project-sidebar-tool-btn project-sidebar-tool-btn--32"
+                            disabled
+                            aria-label="No external document link available for this project"
+                            aria-disabled="true"
+                          >
+                            <ExternalLinkIcon width={18} height={18} />
+                          </button>
+                        )}
+                        {detail && horizontalMilestones.length > 0 ? (
+                          <button
+                            type="button"
+                            className={`project-sidebar-tool-btn project-sidebar-tool-btn--32 ${timelineViewOpen ? "is-active" : ""}`}
+                            aria-label="Timeline view"
+                            aria-expanded={timelineViewOpen}
+                            aria-controls="project-vertical-timeline-panel"
+                            onClick={() => {
+                              setIsVotingPopoverOpen(false);
+                              setTimelineViewOpen((v) => !v);
+                            }}
+                          >
+                            <ChartLineIcon width={18} height={18} />
+                          </button>
+                        ) : null}
+                        <button
+                          ref={voteButtonRef}
+                          type="button"
+                          className={`project-sidebar-tool-btn project-sidebar-tool-btn--32 ${isVotingPopoverOpen ? "is-active" : ""}`}
+                          aria-label="Toggle voting record"
+                          aria-expanded={isVotingPopoverOpen}
+                          disabled={!detail}
+                          onClick={() => {
+                            setTimelineViewOpen(false);
+                            setIsVotingPopoverOpen((current) => !current);
+                          }}
+                        >
+                          <BallotIcon width={18} height={18} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="project-sidebar-category">{category}</p>
+                </header>
+
+                {detail && timelineViewOpen && verticalTimelineItems.length > 0 ? (
+                  <div
+                    id="project-vertical-timeline-panel"
+                    className="project-sidebar-timeline-expanded"
+                    role="region"
+                    aria-label="Project timeline"
+                  >
+                    <VerticalTimelineView items={verticalTimelineItems} />
+                  </div>
+                ) : (
+                  <>
+                    {isLoading ? <p className="project-sidebar-status">Loading backend project data…</p> : null}
+                    {errorMessage ? (
+                      <p className="project-sidebar-status project-sidebar-status--error">{errorMessage}</p>
+                    ) : null}
+
+                    <section className="project-sidebar-overview" aria-labelledby="project-overview-heading">
+                      <h3 id="project-overview-heading" className="project-sidebar-section-title">
+                        Project Overview
+                      </h3>
+                      {overviewSummary ? <p className="project-sidebar-overview-summary">{overviewSummary}</p> : null}
+                      {detail &&
+                      (detail.project.district_id != null ||
+                        detail.project.meeting_date ||
+                        (typeof detail.project.vote_action === "string" && detail.project.vote_action.trim()) ||
+                        sidebarHasVoteTallyDisplay(detail)) ? (
+                        <dl className="project-sidebar-meta">
+                          {detail.project.district_id != null ? (
+                            <div className="project-sidebar-meta-row">
+                              <dt>Council District:</dt>
+                              <dd>{detail.project.district_id}</dd>
+                            </div>
+                          ) : null}
+                          {detail.project.meeting_date ? (
+                            <div className="project-sidebar-meta-row">
+                              <dt>Meeting Date:</dt>
+                              <dd>{formatProjectDateLong(detail.project.meeting_date)}</dd>
+                            </div>
+                          ) : null}
+                          {typeof detail.project.vote_action === "string" && detail.project.vote_action.trim() ? (
+                            <div className="project-sidebar-meta-row">
+                              <dt>Vote Action:</dt>
+                              <dd>{detail.project.vote_action.trim()}</dd>
+                            </div>
+                          ) : null}
+                          {sidebarHasVoteTallyDisplay(detail) ? (
+                            <div className="project-sidebar-meta-row">
+                              <dt>Vote Tally:</dt>
+                              <dd>
+                                <SidebarVoteTallyValue detail={detail} voteTally={voteTally} />
+                              </dd>
+                            </div>
+                          ) : null}
+                        </dl>
+                      ) : null}
+                      {detail && detail.movers.primary.length > 0 ? (
+                        <div className="project-sidebar-movers">
+                          <h4 className="project-sidebar-movers-label">Primary Movers:</h4>
+                          <p className="project-sidebar-movers-text">
+                            {detail.movers.primary.map((m) => formatPersonNameForDisplay(m.name)).join(", ")}
+                          </p>
+                        </div>
+                      ) : null}
+                      {detail && detail.movers.secondary.length > 0 ? (
+                        <div className="project-sidebar-movers">
+                          <h4 className="project-sidebar-movers-label">Secondary Movers:</h4>
+                          <p className="project-sidebar-movers-text">
+                            {detail.movers.secondary.map((m) => formatPersonNameForDisplay(m.name)).join(", ")}
+                          </p>
+                        </div>
+                      ) : null}
+                    </section>
+
+                    {detail && horizontalMilestones.length > 0 ? (
+                      <MiniHorizontalTimeline milestones={horizontalMilestones} />
+                    ) : null}
+
+                    {detail && detail.timeline.length > 0 && verticalTimelineItems.length === 0 ? (
+                      <section className="project-sidebar-timeline-fallback" aria-label="Timeline events">
+                        <h3 className="project-sidebar-section-title">Timeline</h3>
+                        <ol className="project-timeline project-sidebar-vertical-tl">
+                          {detail.timeline.map((entry, index) => (
+                            <li key={`${detail.project.id}-timeline-${index}`}>
+                              <div className="project-timeline-dot" aria-hidden="true" />
+                              <div>
+                                <p className="project-timeline-date">{formatProjectDateLong(entry.date)}</p>
+                                <p className="project-timeline-text">{entry.text ?? "Activity recorded"}</p>
+                              </div>
+                            </li>
+                          ))}
+                        </ol>
+                      </section>
+                    ) : null}
+                  </>
+                )}
+              </div>
+
+              <div className="project-sidebar-footer-cta">
+                <button type="button" className="project-sidebar-explore-map" onClick={onExploreMap}>
+                  Explore Map
                 </button>
               </div>
             </div>
-
-            <p className="project-sidebar-category">
-              {categoryIcon(marker?.category)}
-              <span>{category}</span>
-            </p>
-
-            <div className="project-sidebar-actions-row">
-              {detail && horizontalMilestones.length > 0 ? (
-                <button
-                  type="button"
-                  className={`project-sidebar-icon-toggle ${timelineViewOpen ? "is-active" : ""}`}
-                  aria-label="Timeline view"
-                  aria-expanded={timelineViewOpen}
-                  aria-controls="project-vertical-timeline-panel"
-                  onClick={() => {
-                    setIsVotingPopoverOpen(false);
-                    setTimelineViewOpen((v) => !v);
-                  }}
-                >
-                  <img
-                    src={timelineViewOpen ? "/images/timeline-selected.png" : "/images/timeline.png"}
-                    alt=""
-                    width={24}
-                    height={24}
-                  />
-                </button>
-              ) : null}
-              <button
-                ref={voteButtonRef}
-                type="button"
-                className={`project-sidebar-icon-toggle ${isVotingPopoverOpen ? "is-active" : ""}`}
-                aria-label="Toggle voting record"
-                aria-expanded={isVotingPopoverOpen}
-                disabled={!detail}
-                onClick={() => {
-                  setTimelineViewOpen(false);
-                  setIsVotingPopoverOpen((current) => !current);
-                }}
-              >
-                <img
-                  src={isVotingPopoverOpen ? "/images/voting-selected.png" : "/images/voting-record.png"}
-                  alt=""
-                  width={24}
-                  height={24}
-                />
-              </button>
-            </div>
-          </header>
-        ) : null}
-
-        {sidebarWidthExpanded ? (
-          detail ? (
-            <ExpandedProjectDetailLayout
-              marker={marker}
-              detail={detail}
-              title={title}
-              category={category}
-              overviewBody={overviewBody}
-              externalUrl={externalUrl}
-              status={status}
-              voteRows={voteRows}
-              voteTally={voteTally}
-              primaryMoverId={primaryMoverId}
-              votingRecordFooter={votingRecordFooter}
-              horizontalMilestones={horizontalMilestones}
-              onCollapse={() => setSidebarWidthExpanded(false)}
-              onExploreMap={onExploreMap}
-            />
-          ) : (
-            <div className="project-expanded-root project-expanded-root--loading">
-              <button
-                type="button"
-                className="project-expanded-collapse-fab"
-                aria-label="Collapse project panel"
-                onClick={() => setSidebarWidthExpanded(false)}
-              >
-                <SidebarCollapseIcon width={18} height={18} />
-              </button>
-              <p className="project-expanded-loading-msg">
-                {isLoading ? "Loading backend project data…" : errorMessage ?? "Project data is not available yet."}
-              </p>
-            </div>
-          )
-        ) : detail && timelineViewOpen && verticalTimelineItems.length > 0 ? (
-          <div
-            id="project-vertical-timeline-panel"
-            className="project-sidebar-timeline-expanded"
-            role="region"
-            aria-label="Project timeline"
-          >
-            <VerticalTimelineView items={verticalTimelineItems} />
-          </div>
-        ) : (
-          <>
-            {isLoading ? <p className="project-sidebar-status">Loading backend project data…</p> : null}
-            {errorMessage ? (
-              <p className="project-sidebar-status project-sidebar-status--error">{errorMessage}</p>
-            ) : null}
-
-            <section className="project-sidebar-overview" aria-labelledby="project-overview-heading">
-              <h3 id="project-overview-heading" className="project-sidebar-section-title">
-                Project Overview
-              </h3>
-              <p className="project-sidebar-overview-body">{overviewBody}</p>
-            </section>
-
-            {detail && horizontalMilestones.length > 0 ? (
-              <MiniHorizontalTimeline milestones={horizontalMilestones} />
-            ) : null}
-
-            {detail && detail.timeline.length > 0 && verticalTimelineItems.length === 0 ? (
-              <section className="project-sidebar-timeline-fallback" aria-label="Timeline events">
-                <h3 className="project-sidebar-section-title">Timeline</h3>
-                <ol className="project-timeline project-sidebar-vertical-tl">
-                  {detail.timeline.map((entry, index) => (
-                    <li key={`${detail.project.id}-timeline-${index}`}>
-                      <div className="project-timeline-dot" aria-hidden="true" />
-                      <div>
-                        <p className="project-timeline-date">{formatProjectDateLong(entry.date)}</p>
-                        <p className="project-timeline-text">{entry.text ?? "Activity recorded"}</p>
-                      </div>
-                    </li>
-                  ))}
-                </ol>
-              </section>
-            ) : null}
-          </>
-        )}
-
+          )}
+        </div>
+        </aside>
         {!sidebarWidthExpanded ? (
-          <button type="button" className="project-sidebar-explore-map" onClick={onExploreMap}>
-            Explore Map
-          </button>
+          <div className="project-sidebar-edge-controls">
+            <button
+              type="button"
+              className="project-sidebar-edge-btn project-sidebar-edge-btn--expand"
+              aria-label="Expand project panel"
+              aria-pressed={false}
+              onClick={() => setSidebarWidthExpanded(true)}
+            >
+              <SidebarExpandIcon width={20} height={20} />
+            </button>
+            <button
+              type="button"
+              className="project-sidebar-edge-btn project-sidebar-edge-btn--close"
+              aria-label="Close project panel"
+              onClick={onExploreMap}
+            >
+              <CloseIcon width={20} height={20} />
+            </button>
+          </div>
         ) : null}
       </div>
-      <button
-        type="button"
-        className="project-sidebar-close-tab"
-        aria-label="Close project panel"
-        onClick={onExploreMap}
-      >
-        <ChevronLeftIcon width={20} height={20} />
-      </button>
-    </aside>
-    {votingRecordDialog}
+      {votingRecordDialog}
     </>
   );
 }

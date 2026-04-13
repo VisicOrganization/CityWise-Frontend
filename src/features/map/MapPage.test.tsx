@@ -288,6 +288,50 @@ function defaultFetchMock(input: string | URL | Request) {
     return Promise.resolve(new Response(JSON.stringify(payload)));
   }
 
+  const projectDetailMatch = pathname.match(/^\/projects\/(.+)$/);
+  if (projectDetailMatch) {
+    const projectId = projectDetailMatch[1];
+    return Promise.resolve(
+      new Response(
+        JSON.stringify({
+          project: {
+            id: projectId,
+            source_council_file_id: projectId,
+            title: `Council File ${projectId}`,
+            summary: "Mock summary for tests.",
+            status: "planned",
+            district_id: 11,
+            about: null,
+            start_date: "2025-04-04",
+            last_changed_date: "2025-04-11",
+            end_date: null,
+            meeting_date: null,
+            meeting_type: null,
+            vote_action: null,
+            vote_given: null,
+            reference_numbers: null,
+            mover_seconder_comment: null,
+          },
+          movers: { primary: [], secondary: [], other: [] },
+          votes: [],
+          timeline: [],
+          documents:
+            projectId === "25-0358"
+              ? [
+                  {
+                    url: "https://example.com/cf.pdf",
+                    title: "CF PDF",
+                    date: "2025-04-04",
+                    source: "test",
+                  },
+                ]
+              : [],
+          address_info: null,
+        }),
+      ),
+    );
+  }
+
   return Promise.reject(new Error(`Unhandled fetch for ${url}`));
 }
 
@@ -475,7 +519,9 @@ describe("mock app routes", () => {
     expect(screen.queryByLabelText(/Open District .* overview/)).not.toBeInTheDocument();
     await user.click(await screen.findByLabelText("Council File 25-0358"));
     expect(screen.getByLabelText("Open District 11 overview")).toBeInTheDocument();
-    expect(await screen.findByText("Jordan Alvarez • District 11")).toBeInTheDocument();
+    expect(screen.getByLabelText("Open District 11 overview")).toHaveTextContent(
+      /jordan\s+alvarez\s*•\s*district\s+11/i,
+    );
   });
 
   it("updates the district pill when a district boundary is clicked", async () => {
@@ -489,7 +535,9 @@ describe("mock app routes", () => {
 
     expect(screen.queryByLabelText(/Open District .* overview/)).not.toBeInTheDocument();
     await user.click(screen.getByTestId("mock-boundary-click"));
-    expect(await screen.findByText("Jordan Alvarez • District 11")).toBeInTheDocument();
+    expect(await screen.findByLabelText("Open District 11 overview")).toHaveTextContent(
+      /jordan\s+alvarez\s*•\s*district\s+11/i,
+    );
   });
 
   it("hides the district pill when the map is clicked outside district boundaries", async () => {
@@ -502,7 +550,9 @@ describe("mock app routes", () => {
     );
 
     await user.click(await screen.findByLabelText("Council File 25-0358"));
-    expect(await screen.findByText("Jordan Alvarez • District 11")).toBeInTheDocument();
+    expect(await screen.findByLabelText("Open District 11 overview")).toHaveTextContent(
+      /jordan\s+alvarez\s*•\s*district\s+11/i,
+    );
 
     await user.click(screen.getByTestId("mock-empty-map-click"));
 
@@ -645,7 +695,9 @@ describe("mock app routes", () => {
     await user.click(screen.getByTestId("mock-boundary-click"));
 
     expect(screen.queryByLabelText("Project details")).not.toBeInTheDocument();
-    expect(await screen.findByText("Jordan Alvarez • District 11")).toBeInTheDocument();
+    expect(await screen.findByLabelText("Open District 11 overview")).toHaveTextContent(
+      /jordan\s+alvarez\s*•\s*district\s+11/i,
+    );
     randomSpy.mockRestore();
   });
 
@@ -698,7 +750,9 @@ describe("mock app routes", () => {
     await user.click(screen.getByRole("button", { name: "Open Map" }));
     expect(screen.queryByLabelText("District overview")).not.toBeInTheDocument();
     expect(await screen.findByLabelText("Open District 11 overview")).toBeInTheDocument();
-    expect(screen.getByText("Jordan Alvarez • District 11")).toBeInTheDocument();
+    expect(screen.getByLabelText("Open District 11 overview")).toHaveTextContent(
+      /jordan\s+alvarez\s*•\s*district\s+11/i,
+    );
   });
 
   it("opens the accessibility menu", async () => {

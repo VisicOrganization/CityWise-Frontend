@@ -57,6 +57,11 @@ a {
 }
 
 .top-nav {
+  /*
+   * Horizontal inset from the viewport: (100% − 2 × inset) is the content band.
+   * Default 5% each side ≈ inner % for logo + links. Change --top-nav-side-inset to tune.
+   */
+  --top-nav-side-inset: 5%;
   position: absolute;
   top: 0;
   left: 0;
@@ -67,7 +72,7 @@ a {
   justify-content: space-between;
   gap: 1rem;
   min-height: 5.25rem;
-  padding: 1rem 1.5rem;
+  padding: 1rem var(--top-nav-side-inset);
   background: rgba(253, 251, 246, 0.94);
   border-bottom: 1px solid rgba(23, 50, 77, 0.08);
   box-shadow: 0 10px 28px rgba(23, 50, 77, 0.08);
@@ -98,8 +103,13 @@ a {
   object-fit: contain;
 }
 
-.brand-copy {
-  font-weight: 800;
+.brand-mark--logo-only {
+  gap: 0;
+}
+
+.brand-mark--logo-only .brand-pin {
+  width: 1.75rem;
+  height: 2.45rem;
 }
 
 .top-nav-links {
@@ -112,13 +122,53 @@ a {
   color: #258f69;
   text-decoration: none;
   font-weight: 600;
+  font-size: 1.125rem;
+  line-height: 1.35;
+  transition:
+    color 0.18s ease,
+    text-decoration-color 0.18s ease;
+  text-decoration-color: transparent;
+}
+
+.top-nav-links a:hover {
+  color: #1a7a55;
+  text-decoration: underline;
+  text-decoration-color: rgba(37, 143, 105, 0.55);
+  text-underline-offset: 0.22em;
+}
+
+.top-nav-links a:focus-visible {
+  outline: 2px solid rgba(37, 143, 105, 0.65);
+  outline-offset: 3px;
+  border-radius: 2px;
 }
 
 .top-nav-links a.active {
   color: #17324d;
 }
 
-.landing-shell,
+.top-nav-links a.active:hover {
+  color: #122a42;
+  text-decoration-color: rgba(23, 50, 77, 0.45);
+}
+
+.landing-shell {
+  position: relative;
+  height: 100dvh;
+  max-height: 100dvh;
+  min-height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background-color: #f8f8f8;
+}
+
+.landing-shell .shell-content {
+  height: 100%;
+  max-height: 100%;
+  min-height: 100%;
+  overflow: hidden;
+}
+
 .map-demo-shell,
 .district-page-shell {
   background:
@@ -126,14 +176,89 @@ a {
     radial-gradient(circle at top left, rgba(64, 184, 133, 0.12), transparent 22rem);
 }
 
-.landing-hero {
-  position: relative;
+/* Map route: fill dynamic viewport (mobile browser chrome); flex chain below fixed top-nav */
+.map-demo-shell {
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
-  padding: 8.5rem 1.25rem 2rem;
+  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+.map-demo-shell .shell-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.landing-shell .top-nav {
+  background: #ffffff;
+  border-bottom: 1px solid #e8e8e8;
+  box-shadow: none;
+  backdrop-filter: none;
+  min-height: 5rem;
+}
+
+.landing-shell .top-nav-links a {
+  color: #1d865e;
+}
+
+.landing-shell .top-nav-links a:hover {
+  color: #166b4b;
+  text-decoration-color: rgba(29, 134, 94, 0.55);
+}
+
+.landing-shell .top-nav-links a:focus-visible {
+  outline-color: rgba(29, 134, 94, 0.75);
+}
+
+.landing-shell .top-nav-links a.active {
+  color: #1d865e;
+}
+
+.landing-shell .top-nav-links a.active:hover {
+  color: #145a3f;
+  text-decoration-color: rgba(29, 134, 94, 0.5);
+}
+
+.landing-hero {
+  --landing-art-opacity: 0.22;
+  --landing-pin-opacity: var(--landing-art-opacity);
+
+  position: relative;
+  height: 100%;
+  min-height: 100%;
+  max-height: 100%;
+  padding: 0;
+  overflow: hidden;
+}
+
+.landing-hero-content {
+  position: relative;
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  padding: 5.25rem clamp(1rem, 4vw, 1.5rem) clamp(1rem, 3vh, 1.75rem);
+  padding-top: max(5.25rem, env(safe-area-inset-top, 0px));
+  padding-bottom: max(clamp(1rem, 3vh, 1.75rem), env(safe-area-inset-bottom, 0px));
+  padding-left: max(clamp(1rem, 4vw, 1.5rem), env(safe-area-inset-left, 0px));
+  padding-right: max(clamp(1rem, 4vw, 1.5rem), env(safe-area-inset-right, 0px));
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.landing-hero-content .landing-centerpiece {
+  pointer-events: auto;
 }
 
 @keyframes landing-fade-in-soft {
@@ -158,25 +283,117 @@ a {
   }
 }
 
-.landing-hero::before {
+@keyframes landing-fade-in-opacity-ellipse {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 0.7;
+  }
+}
+
+@keyframes landing-pin-mount {
+  from {
+    transform: translate(-50%, -50%) translateY(5px);
+  }
+
+  to {
+    transform: translate(-50%, -50%);
+  }
+}
+
+@keyframes landing-comment-bubble-mount {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.landing-hero::before,
+.landing-hero::after {
+  content: none;
+}
+
+.landing-map-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background-color: #f8f8f8;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  animation: landing-fade-in-opacity 480ms ease-out 20ms both;
+}
+
+.landing-map-image {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 100%;
+  min-height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  opacity: var(--landing-art-opacity);
+}
+
+/* z-index 1: soft ellipse sits above the map (z-index 0), below pins and hero content. */
+.landing-hero-ellipse {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  /* ~30% lighter than full-opacity wash + SVG */
+  animation: landing-fade-in-opacity-ellipse 520ms ease-out 80ms both;
+}
+
+/* Stronger center wash than the asset alone (map layer is very light, so a faint SVG reads invisible). */
+.landing-hero-ellipse::before {
   content: "";
   position: absolute;
   inset: 0;
-  background:
-    url("/images/map-bg.png");
-  background-blend-mode: normal, screen, normal;
-  filter: saturate(0.42) brightness(1.06);
-  animation: landing-fade-in-opacity 420ms ease-out 30ms both;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 92% 88% at 50% 46%,
+    rgba(253, 251, 246, 0.94) 0%,
+    rgba(251, 250, 247, 0.72) 32%,
+    rgba(250, 249, 246, 0.38) 55%,
+    rgba(250, 249, 246, 0) 74%
+  );
+  background-repeat: no-repeat;
+  background-position: 50% 46%;
+  /* Sized without transform; tune % to widen/narrow the wash. */
+  background-size: 60% 57%;
 }
 
-.landing-hero::after {
-  content: none;
+.landing-hero-ellipse img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: min(58vw, 30.5rem);
+  max-width: min(55vmin, 430px);
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
 }
 
 .landing-pins {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 3;
   pointer-events: none;
   overflow: hidden;
 }
@@ -185,182 +402,205 @@ a {
   position: absolute;
   top: var(--pin-top);
   left: var(--pin-left);
-  width: var(--pin-size);
+  width: clamp(32px, 3.8vw + 10px, 46px);
   height: auto;
-  opacity: calc(var(--pin-opacity) * 0.38);
-  transform: translate(-50%, -50%) rotate(var(--pin-rotation));
-  filter: saturate(0.82);
+  opacity: var(--landing-pin-opacity);
+  transform: translate(-50%, -50%);
+  filter: saturate(0.88);
   user-select: none;
-  animation: landing-fade-in-opacity 520ms ease-out 90ms both;
-}
-
-.landing-pin-desktop {
-  display: block;
-}
-
-.landing-pin-mobile {
-  display: none;
+  animation: landing-pin-mount 520ms ease-out 90ms both;
 }
 
 .landing-comments {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  z-index: 8;
   pointer-events: none;
 }
 
 .landing-comment {
   position: absolute;
-  width: clamp(9.5rem, 18vw, 15.5rem);
-  opacity: 0.9;
+  width: max-content;
+  max-width: min(calc(100vw - 1.5rem), 100%);
+  opacity: 0.88;
   user-select: none;
+  font-size: clamp(0.65rem, 0.28rem + 1.35vw, 0.875rem);
 }
 
 .landing-comment-bubble {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-height: 2.75rem;
-  padding: 0.5rem 0.85rem;
-  border-radius: 0 1.125rem 1.125rem 1.125rem;
-  box-shadow: 0 10px 28px rgba(23, 50, 77, 0.2);
-  animation: landing-fade-in-opacity 500ms ease-out 130ms both;
+  justify-content: flex-start;
+  width: max-content;
+  max-width: inherit;
+  padding: 0.45em 1em 0.45em 0.85em;
+  border-radius: 0.125em 1.45em 1.45em 1.45em;
+  border-width: clamp(1.5px, 0.12em, 2px);
+  border-style: solid;
+  animation: landing-comment-bubble-mount 500ms ease-out 130ms both;
 }
 
 .landing-comment-bubble-text {
   margin: 0;
-  width: 100%;
   font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
   color: #ffffff;
-  font-size: clamp(0.78rem, 0.98vw, 1.02rem);
+  font-size: 1em;
   font-weight: 500;
-  line-height: 1.3;
-  text-align: center;
-  text-wrap: balance;
+  line-height: 1.45;
+  letter-spacing: normal;
+  text-align: left;
+  white-space: nowrap;
 }
 
 .landing-comment--blue .landing-comment-bubble {
-  background-color: #47a0fa;
+  background-color: #2e90fa;
+  border-color: #1570ef;
+  box-shadow: 4px 4px 10px rgba(46, 144, 250, 0.16);
 }
 
 .landing-comment--blue .landing-comment-bubble-text {
-  text-shadow:
-    0 1px 1px rgba(0, 67, 150, 0.35),
-    0 0 2px rgba(0, 67, 150, 0.22);
+  text-shadow: none;
 }
 
 .landing-comment--grey .landing-comment-bubble {
-  background-color: #8896b5;
+  background-color: #6a7796;
+  border-color: #555f78;
+  box-shadow: 4px 4px 10px rgba(106, 119, 150, 0.16);
 }
 
 .landing-comment--grey .landing-comment-bubble-text {
-  text-shadow:
-    0 1px 1px rgba(23, 50, 77, 0.28),
-    0 0 2px rgba(23, 50, 77, 0.18);
+  text-shadow: none;
 }
 
 .landing-comment--green .landing-comment-bubble {
-  background-color: #52b56a;
+  background-color: #51ac65;
+  border-color: #418a51;
+  box-shadow: 4px 4px 10px rgba(81, 172, 101, 0.16);
 }
 
 .landing-comment--green .landing-comment-bubble-text {
-  font-size: clamp(0.7rem, 0.86vw, 0.88rem);
-  text-shadow:
-    0 1px 1px rgba(12, 92, 40, 0.35),
-    0 0 2px rgba(12, 92, 40, 0.2);
+  text-shadow: none;
 }
 
 .landing-comment--blue {
-  top: 8.4rem;
-  left: 27%;
+  top: 20.2%;
+  left: 27.4%;
 }
 
 .landing-comment--grey {
-  top: 13rem;
-  right: 10.5%;
+  top: 26%;
+  right: 14%;
+  left: auto;
 }
 
 .landing-comment--green {
-  left: 20%;
-  bottom: 3.6rem;
+  top: 84.1%;
+  left: 17.85%;
 }
 
 .landing-centerpiece {
   position: relative;
-  z-index: 3;
-  width: min(54rem, 100%);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(43.4375rem, calc(100% - 1.5rem));
   text-align: center;
+  /* Figma: tagline 24px; h1 64px → 64/24 em on the headline */
+  font-size: clamp(0.875rem, 0.22rem + 2.05vw, 1.5rem);
 }
 
 .landing-centerpiece h1 {
   margin: 0;
+  max-width: min(43.4rem, 100%);
   font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
-  font-size: clamp(2.6rem, 5.2vw, 4.8rem);
-  line-height: 0.92;
+  font-size: calc(8em / 3);
+  font-weight: 700;
+  line-height: 1.08;
   letter-spacing: -0.05em;
-  color: #1b8d66;
+  color: #1d865e;
   animation: landing-fade-in-soft 520ms ease-out 210ms both;
 }
 
-.landing-centerpiece p {
-  max-width: 38rem;
-  margin: 1rem auto 0;
+.landing-tagline {
+  max-width: min(52rem, 100%);
+  margin: 0.67em auto 0;
   font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
-  font-size: 1.32rem;
-  line-height: 1.25;
-  color: rgba(23, 50, 77, 0.7);
+  font-size: 1em;
+  font-weight: 400;
+  line-height: 1.35;
+  color: rgba(0, 0, 0, 0.6);
+  text-align: center;
   animation: landing-fade-in-soft 520ms ease-out 250ms both;
 }
 
 .landing-search {
   position: relative;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
+  z-index: 2;
+  display: flex;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 0.85rem;
-  width: min(34rem, 100%);
-  margin: 2.2rem auto 0;
-  padding: 0.72rem 0.78rem 0.72rem 1rem;
+  justify-content: space-between;
+  gap: 0.5em;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: min(40.65rem, calc(100% - 1.25rem));
+  margin: 1.75rem auto 0;
+  padding: 0.6em 0.55em 0.6em 0.95em;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.96);
-  border: 1px solid rgba(23, 50, 77, 0.08);
-  box-shadow: 0 20px 54px rgba(23, 50, 77, 0.12);
+  background: #ffffff;
+  border: 1px solid #e1e1e1;
+  box-shadow: none;
   font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: clamp(0.8125rem, 0.16rem + 1.9vw, 1.0625rem);
+  line-height: 1.25;
   animation: landing-fade-in-soft 520ms ease-out 290ms both;
 }
 
 .landing-search:focus-within {
-  box-shadow: 0 24px 60px rgba(28, 154, 105, 0.18);
-  border-color: rgba(28, 154, 105, 0.24);
+  border-color: rgba(29, 134, 94, 0.35);
+  box-shadow: 0 0 0 1px rgba(29, 134, 94, 0.12);
 }
 
 .landing-search-icon {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  color: rgba(28, 154, 105, 0.88);
+  color: rgba(0, 0, 0, 0.45);
 }
 
 .landing-search-icon svg {
-  width: 1.1rem;
-  height: 1.1rem;
+  width: 1.2em;
+  height: 1.2em;
+}
+
+.landing-search-field {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 0.45em;
 }
 
 .landing-search input {
+  min-width: 0;
+  flex: 1;
   width: 100%;
   padding: 0;
   border: 0;
   background: transparent;
   color: #17324d;
-  font-size: 0.98rem;
+  font-size: 1em;
+  font-weight: 500;
+  line-height: 1.3;
   outline: none;
 }
 
 .landing-search input::placeholder {
-  color: rgba(23, 50, 77, 0.46);
+  color: rgba(0, 0, 0, 0.6);
 }
 
-.landing-search-button,
 .district-open-map {
   display: inline-flex;
   align-items: center;
@@ -378,7 +618,38 @@ a {
 }
 
 .landing-search-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-height: 2.45em;
+  padding: 0.5em 1.05em;
+  border: 1.5px solid #47997a;
   border-radius: 999px;
+  background: #1d865e;
+  color: white;
+  text-decoration: none;
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 1.05em;
+  font-weight: 600;
+  line-height: 1.2;
+  box-shadow: none;
+}
+
+.landing-search-button-text {
+  display: inline;
+}
+
+.landing-search-button-icon-wrap {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+.landing-search-button-icon-wrap svg {
+  width: 1.2em;
+  height: 1.2em;
 }
 
 .landing-search-results,
@@ -398,7 +669,7 @@ a {
   top: calc(100% + 0.45rem);
   left: 0;
   right: 0;
-  z-index: 5;
+  z-index: 25;
 }
 
 .landing-search-results button,
@@ -416,31 +687,22 @@ a {
   border-top: 1px solid rgba(23, 50, 77, 0.06);
 }
 
-.landing-links {
-  display: flex;
-  justify-content: center;
-  gap: 1.5rem;
-  margin-top: 1rem;
-}
-
-.landing-links a {
-  color: #32936f;
-  text-decoration: none;
-  font-size: 0.98rem;
-  font-weight: 500;
-}
-
 .map-demo-screen,
 .district-overview-route {
   position: relative;
-  height: 100vh;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
   padding-top: 5.25rem;
+  box-sizing: border-box;
 }
 
 .city-demo-map,
 .district-map-shell {
   position: relative;
   height: 100%;
+  min-height: 0;
+  width: 100%;
   overflow: hidden;
 }
 
@@ -488,34 +750,77 @@ a {
   pointer-events: none;
 }
 
+/* Map top divot — Figma: white pill, headshot left, muted dark copy; name shown lowercase */
 .map-district-pill {
   display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 1rem 0.5rem 0.55rem;
-  border: 0;
+  gap: 0.65rem;
+  max-width: min(calc(100vw - 2rem), 22rem);
+  padding: 0.45rem 1rem 0.45rem 0.45rem;
+  border: 1px solid #e1e1e1;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 14px 30px rgba(23, 50, 77, 0.14);
-  color: #17324d;
-  font-weight: 600;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  color: rgba(0, 0, 0, 0.78);
+  font-family: "Schibsted Grotesk", "Public Sans", "Segoe UI", sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.25;
+  cursor: pointer;
+  text-align: left;
 }
 
-.map-district-avatar,
-.district-portrait {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #41b985, #1d9467);
-  color: white;
+.map-district-pill:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 3px;
 }
 
 .map-district-avatar {
-  width: 2.1rem;
-  height: 2.1rem;
+  position: relative;
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e8e8e8;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.map-district-avatar-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+}
+
+.map-district-avatar-initials {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #41b985, #1d9467);
+  color: #ffffff;
   font-size: 0.8rem;
-  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.2);
+  font-weight: 600;
+}
+
+.map-district-pill-copy {
+  min-width: 0;
+  font: inherit;
+  color: inherit;
+}
+
+.map-district-pill-sep {
+  color: rgba(0, 0, 0, 0.45);
+  font-weight: 500;
+}
+
+.map-district-pill-district {
+  color: rgba(0, 0, 0, 0.78);
+  font-weight: 500;
 }
 
 .map-search-dock {
@@ -580,31 +885,17 @@ a {
 
 @media (max-width: 1180px) {
   .landing-comment {
-    width: clamp(8.8rem, 16vw, 12rem);
-    opacity: 0.86;
+    max-width: min(calc(100vw - 2.25rem), 100%);
+    opacity: 0.85;
   }
 
-  .landing-comment--blue {
-    top: 8.8rem;
-    left: 20%;
+  .landing-hero-ellipse img {
+    width: min(56vw, 26rem);
+    max-width: min(53vmin, 380px);
   }
 
-  .landing-comment--grey {
-    top: 12rem;
-    right: 5%;
-  }
-
-  .landing-comment--green {
-    left: 12%;
-    bottom: 4rem;
-  }
-
-  .landing-comment-bubble-text {
-    font-size: clamp(0.7rem, 0.86vw, 0.84rem);
-  }
-
-  .landing-comment--green .landing-comment-bubble-text {
-    font-size: clamp(0.64rem, 0.8vw, 0.78rem);
+  .landing-hero-ellipse::before {
+    background-size: 58% 55%;
   }
 }
 
@@ -754,11 +1045,32 @@ a {
 }
 
 /* —— Project sidebar (map detail panel) —— */
+/* Host positions on map; aside is the white panel; edge controls are siblings (Figma 1099:2514) */
+.project-sidebar-host {
+  position: absolute;
+  top: 5.25rem;
+  left: 0;
+  bottom: 0;
+  z-index: 20;
+  width: min(28.5rem, 100%);
+  max-width: 456px;
+  pointer-events: none;
+}
+
+.project-sidebar-host--expanded {
+  width: 100%;
+  max-width: none;
+}
+
 .project-details-panel.project-sidebar-panel {
-  --ps-teal: #14b8a6;
-  --ps-teal-dark: #0d9488;
-  --ps-success-bg: #e6f7f1;
-  --ps-success-text: #00a67e;
+  /* Figma Visic UI: primary #1d865e, badge completed #dbfce7 / #85efad */
+  --ps-forest: #1d865e;
+  --ps-forest-hover: #166b50;
+  --ps-teal: #1d865e;
+  --ps-teal-dark: #166b50;
+  --ps-success-bg: #dbfce7;
+  --ps-success-text: #1d865e;
+  --ps-success-border: #85efad;
   --ps-gray-900: #111827;
   --ps-gray-700: #374151;
   --ps-gray-600: #4b5563;
@@ -768,20 +1080,19 @@ a {
   --ps-gray-200: #e5e7eb;
 
   position: absolute;
-  top: 5.25rem;
-  left: 0;
-  bottom: 0;
-  z-index: 20;
+  inset: 0;
+  z-index: 1;
   display: flex;
   flex-direction: column;
-  width: min(28.5rem, 100%);
-  max-width: 456px;
+  width: auto;
+  max-width: none;
   max-height: none;
   overflow: visible;
   padding: 0;
   background: #ffffff;
-  border-right: 1px solid var(--ps-gray-200);
-  box-shadow: 8px 0 32px rgba(17, 24, 39, 0.08);
+  border-right: 1px solid #e1e1e1;
+  box-shadow: 1px 0 8px rgba(0, 0, 0, 0.25);
+  pointer-events: auto;
   transition:
     width 0.42s ease-out,
     max-width 0.42s ease-out,
@@ -789,49 +1100,50 @@ a {
     border-radius 0.42s ease-out;
 }
 
-.project-sidebar-close-tab {
+/* Figma 1099:2514 — 44px control on sidebar/map edge */
+.project-sidebar-edge-controls {
   position: absolute;
-  top: 50%;
-  right: 0;
-  z-index: 25;
+  top: 12px;
+  left: 100%;
+  z-index: 26;
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-left: -22px;
+  pointer-events: none;
+}
+
+.project-sidebar-edge-btn {
+  pointer-events: auto;
+  box-sizing: border-box;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.65rem;
-  min-height: 3.1rem;
+  width: 44px;
+  height: 44px;
   margin: 0;
-  padding: 0 0.1rem;
-  border: 1px solid var(--ps-gray-200);
-  border-right: none;
-  border-radius: 10px 0 0 10px;
-  background: #ffffff;
-  color: var(--ps-gray-600);
+  padding: 0;
+  border: 0.688px solid #e1e1e1;
+  border-radius: 3.438px;
+  background: #f9f9f9;
+  color: #4b5563;
   cursor: pointer;
-  box-shadow: -2px 0 10px rgba(17, 24, 39, 0.06);
-  transform: translateY(-50%);
+  box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.25);
   transition:
     background 0.15s ease,
     color 0.15s ease,
-    box-shadow 0.15s ease;
+    border-color 0.15s ease;
 }
 
-.project-sidebar-close-tab:hover {
-  background: var(--ps-gray-200);
-  color: var(--ps-gray-900);
-  box-shadow: -2px 0 12px rgba(17, 24, 39, 0.1);
+.project-sidebar-edge-btn:hover {
+  background: #f3f4f6;
+  color: #111827;
 }
 
-.project-sidebar-close-tab:focus-visible {
-  outline: 2px solid var(--ps-teal);
+.project-sidebar-edge-btn:focus-visible {
+  outline: 2px solid var(--ps-forest, #1d865e);
   outline-offset: 2px;
-}
-
-.project-sidebar-panel--expanded .project-sidebar-close-tab {
-  background: #f8fafc;
-}
-
-.project-sidebar-panel--expanded .project-sidebar-close-tab:hover {
-  background: #e2e8f0;
 }
 
 .project-details-panel.project-sidebar-panel.project-sidebar-panel--expanded {
@@ -851,12 +1163,56 @@ a {
   max-height: calc(100vh - 5.25rem);
   height: 100%;
   overflow-x: visible;
-  overflow-y: auto;
-  padding: 1.25rem 2.6rem 1.5rem 1.25rem;
+  overflow-y: hidden;
+  padding: 0;
   box-sizing: border-box;
   scrollbar-width: thin;
   scrollbar-color: var(--ps-gray-400) transparent;
   scrollbar-gutter: stable;
+}
+
+/* Figma Inner 1099:2520 + Bottom 1099:2537 */
+.project-sidebar-figma-surface {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: #ffffff;
+  border-radius: 25px 25px 0 0;
+}
+
+/* Figma 1099:2521 — bar sits inside 1099:2520; radius comes from parent overflow + rounded corners only */
+.project-sidebar-category-bar {
+  flex-shrink: 0;
+  width: 100%;
+  height: 24px;
+  border-radius: 0;
+}
+
+.project-sidebar-category-bar--expanded {
+  border-radius: 0;
+  max-width: 100%;
+}
+
+.project-sidebar-figma-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.project-sidebar-footer-cta {
+  flex-shrink: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 68px;
+  padding: 8px 16px;
+  border-top: 1px solid #e3e3e3;
+  background: #ffffff;
 }
 
 .project-sidebar-inner::-webkit-scrollbar {
@@ -869,6 +1225,7 @@ a {
 }
 
 .project-sidebar-inner--saas-expanded {
+  overflow-y: auto;
   padding: 1.5rem 2.5rem 2rem 1rem;
   background: #f8fafc;
 }
@@ -953,6 +1310,18 @@ a {
   padding-right: 2.75rem;
 }
 
+.project-expanded-header-aside {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem 0.75rem;
+}
+
+.project-expanded-subtitle--plain {
+  display: block;
+}
+
 .project-expanded-title-row {
   display: flex;
   flex-wrap: wrap;
@@ -961,16 +1330,58 @@ a {
   gap: 0.75rem 1rem;
 }
 
+/* Figma 1099:2525 — project title (Watts Community Center Expansion): Public Sans SemiBold 24px, #333, leading normal */
 .project-expanded-title {
   margin: 0;
-  flex: 1 1 12rem;
+  flex: 1 1 auto;
   min-width: 0;
+  max-width: 100%;
   font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
-  font-size: clamp(1.75rem, 4vw, 2.25rem);
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-  color: #1a1a1a;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: normal;
+  letter-spacing: normal;
+  color: #333333;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+.project-expanded-title-band {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 0 0;
+}
+
+/* Match Inner 1099:2520: rounded shell clips category bar (1099:2521) */
+.project-expanded-header.project-expanded-header--figma {
+  border-radius: 25px 25px 0 0;
+  overflow: hidden;
+}
+
+/* Figma 1099:2526 — category under title (e.g. Housing & Infrastructure): Public Sans Regular 16px rgba(0,0,0,0.6) */
+.project-expanded-header--figma .project-expanded-subtitle--plain {
+  margin: 4px 0 0;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: normal;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.project-expanded-description--figma {
+  margin: 1rem 0 0;
+  font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: normal;
+  color: rgba(0, 0, 0, 0.6);
+  white-space: pre-line;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .project-expanded-title-meta {
@@ -1314,17 +1725,18 @@ a {
 
 .project-expanded-open-map {
   width: 100%;
-  max-width: 22rem;
+  max-width: 25rem;
   margin: 0 auto;
-  padding: 14px 1.75rem;
+  padding: 10px 12px;
   border: 0;
-  border-radius: 18px;
-  background: #1b7a5a;
+  border-radius: 50px;
+  background: #1d865e;
   color: #fff;
-  font-size: 0.9375rem;
-  font-weight: 700;
+  font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(27, 122, 90, 0.35);
+  box-shadow: 0 4px 14px rgba(29, 134, 94, 0.35);
   transition:
     background-color 160ms ease,
     box-shadow 160ms ease,
@@ -1333,7 +1745,7 @@ a {
 
 .project-expanded-open-map:hover {
   background: #166b50;
-  box-shadow: 0 6px 18px rgba(27, 122, 90, 0.4);
+  box-shadow: 0 6px 18px rgba(29, 134, 94, 0.4);
 }
 
 .project-expanded-open-map:active {
@@ -1343,58 +1755,100 @@ a {
 .project-sidebar-header {
   flex-shrink: 0;
   overflow: visible;
+  margin: 0;
+  padding: 0;
 }
 
-.project-sidebar-title-row {
+/* Figma 1099:2525 + 1153:1880 — title left, status column top-right */
+.project-sidebar-title-band {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 12px;
+  padding: 16px 16px 0 16px;
 }
 
+/* Figma 1099:2525 — same type spec as expanded header title */
 .project-sidebar-title {
   margin: 0;
-  flex: 1 1 12rem;
+  flex: 1 1 auto;
   min-width: 0;
+  max-width: 100%;
   font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
-  font-size: clamp(1.35rem, 2.8vw, 1.65rem);
+  font-size: 24px;
   font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  color: var(--ps-gray-900);
+  line-height: normal;
+  letter-spacing: normal;
+  color: #333333;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
 }
 
-.project-sidebar-title-actions {
+.project-sidebar-status-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.project-sidebar-tool-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  gap: 4px;
 }
 
-.project-sidebar-expand-btn {
+.project-sidebar-tool-btn {
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 24px;
+  height: 24px;
   padding: 0;
-  border: 1px solid var(--ps-gray-200);
-  border-radius: 6px;
-  background: #f3f4f6;
-  color: var(--ps-gray-600);
+  border: 0.375px solid #e1e1e1;
+  border-radius: 1.875px;
+  background: #ffffff;
+  color: #4b5563;
   cursor: pointer;
-  flex-shrink: 0;
+  text-decoration: none;
   transition:
-    background-color 0.15s ease,
-    color 0.15s ease,
-    border-color 0.15s ease;
+    background-color 120ms ease,
+    color 120ms ease,
+    border-color 120ms ease;
 }
 
-.project-sidebar-expand-btn:hover {
-  background: #e5e7eb;
-  color: var(--ps-gray-800);
-  border-color: var(--ps-gray-300);
+/* Figma 1153:1233 — 32px icon frames */
+.project-sidebar-tool-btn--32 {
+  width: 32px;
+  height: 32px;
+  border-radius: 2px;
+}
+
+.project-sidebar-tool-btn:hover:not(:disabled) {
+  background: #f9fafb;
+  color: #111827;
+  border-color: #d1d5db;
+}
+
+.project-sidebar-tool-btn:focus-visible {
+  outline: 2px solid var(--ps-forest, #1d865e);
+  outline-offset: 2px;
+}
+
+.project-sidebar-tool-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.project-sidebar-tool-btn.is-active {
+  background: rgba(29, 134, 94, 0.08);
+  color: var(--ps-forest, #1d865e);
+  border-color: rgba(29, 134, 94, 0.35);
 }
 
 .project-sidebar-icon-btn {
@@ -1428,42 +1882,51 @@ a {
 .project-status-badge {
   display: inline-flex;
   align-items: center;
-  padding: 6px 12px;
-  border-radius: 16px;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  line-height: 1.2;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 100px;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: normal;
   white-space: nowrap;
+  border: 1px solid transparent;
 }
 
 .project-status-badge--completed {
   background: var(--ps-success-bg);
   color: var(--ps-success-text);
+  border-color: var(--ps-success-border);
 }
 
 .project-status-badge--in_progress {
   background: #fef3c7;
   color: #b45309;
+  border-color: rgba(180, 83, 9, 0.35);
 }
 
 /* Match district overview / ProjectCard planned badge */
 .project-status-badge--planned {
   background: #ffe8cc;
   color: #9a5f00;
+  border-color: rgba(154, 95, 0, 0.35);
 }
 
 .project-status-badge--default {
   background: #f3f4f6;
   color: var(--ps-gray-600);
+  border-color: rgba(107, 114, 128, 0.35);
 }
 
+/* Figma 1099:2526 — category label; x=18 in frame vs title x=16 */
 .project-sidebar-category {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0.5rem 0 0;
-  font-size: 0.9375rem;
-  color: var(--ps-gray-500);
+  margin: 4px 0 0;
+  padding: 0 18px;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: normal;
+  color: rgba(0, 0, 0, 0.6);
 }
 
 .project-sidebar-cat-icon {
@@ -1710,16 +2173,35 @@ a {
   color: #b91c1c;
 }
 
-.project-sidebar-overview {
-  margin-top: 1.5rem;
+.project-sidebar-figma-scroll .project-sidebar-overview {
+  margin-top: 24px;
+  padding: 0 18px;
 }
 
+.project-sidebar-figma-scroll .project-sidebar-status {
+  margin: 1rem 18px 0;
+}
+
+.project-sidebar-figma-scroll .project-h-timeline {
+  padding: 0 14.5px;
+}
+
+.project-sidebar-figma-scroll .project-sidebar-timeline-fallback {
+  padding: 0 18px;
+}
+
+.project-sidebar-overview {
+  margin-top: 1.25rem;
+}
+
+/* Figma 1099:2528 — Public Sans Medium 20px black */
 .project-sidebar-section-title {
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.65rem;
   font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--ps-gray-900);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: normal;
+  color: #000000;
 }
 
 .project-sidebar-overview-body {
@@ -1728,6 +2210,115 @@ a {
   line-height: 1.6;
   color: var(--ps-gray-600);
   white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Figma 1099:2524 — Schibsted Regular 12px rgba(0,0,0,0.6) */
+.project-sidebar-overview-summary {
+  margin: 0;
+  font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: normal;
+  color: rgba(0, 0, 0, 0.6);
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.project-sidebar-meta {
+  margin: 1rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.project-sidebar-meta-row {
+  display: grid;
+  grid-template-columns: minmax(0, 7.5rem) 1fr;
+  gap: 0.5rem 0.75rem;
+  align-items: baseline;
+  margin: 0;
+}
+
+.project-sidebar-meta-row dt {
+  margin: 0;
+  font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: normal;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.project-sidebar-meta-row dd {
+  margin: 0;
+  font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: normal;
+  color: rgba(0, 0, 0, 0.85);
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Voting modal / metadata — Yes #16a34a, No #dc2626, Absent #4b5563, sep #9ca3af */
+.project-sidebar-tally {
+  font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: normal;
+}
+
+.project-sidebar-tally-yes {
+  color: #16a34a;
+  font-weight: 700;
+}
+
+.project-sidebar-tally-no {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.project-sidebar-tally-absent {
+  color: #4b5563;
+  font-weight: 700;
+}
+
+.project-sidebar-tally-sep {
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.project-sidebar-tally-fallback {
+  color: rgba(0, 0, 0, 0.85);
+  font-weight: 400;
+}
+
+.project-sidebar-meta--expanded {
+  margin-top: 1rem;
+}
+
+.project-sidebar-movers {
+  margin-top: 1rem;
+}
+
+.project-sidebar-movers-label {
+  margin: 0 0 0.2rem;
+  font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: normal;
+  color: rgba(0, 0, 0, 0.75);
+}
+
+.project-sidebar-movers-text {
+  margin: 0;
+  font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: normal;
+  color: rgba(0, 0, 0, 0.85);
   overflow-wrap: break-word;
   word-break: break-word;
 }
@@ -1819,6 +2410,22 @@ a {
   min-height: 16px;
 }
 
+.project-h-timeline-bar--continuous {
+  min-height: 18px;
+}
+
+.project-h-timeline-line-full {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 2px;
+  border-radius: 1px;
+  background-color: var(--ps-forest, #1d865e);
+  pointer-events: none;
+}
+
 .project-h-timeline-segments {
   position: absolute;
   left: 0;
@@ -1836,7 +2443,7 @@ a {
   min-width: 0;
   height: 4px;
   border-radius: 2px;
-  background-color: #2f855a;
+  background-color: var(--ps-forest, #1d865e);
 }
 
 .project-h-timeline-line--dashed {
@@ -1844,7 +2451,7 @@ a {
   width: 100px;
   height: 0;
   border: 0;
-  border-top: 4px dashed #2f855a;
+  border-top: 4px dashed var(--ps-forest, #1d865e);
   background: none;
 }
 
@@ -1872,18 +2479,61 @@ a {
 }
 
 .project-h-timeline-node--completed {
-  background-color: #2f855a;
+  background-color: var(--ps-forest, #1d865e);
 }
 
 .project-h-timeline-node--upcoming {
   box-sizing: border-box;
   background-color: #fff;
-  border: 3px solid #2f855a;
+  border: 2px solid var(--ps-forest, #1d865e);
+}
+
+.project-h-timeline--mini .project-h-timeline-label-top {
+  font-size: 0.625rem;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+  padding: 0 4px;
+}
+
+.project-h-timeline--mini .project-h-timeline-label-bottom {
+  font-size: 0.5625rem;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+  padding: 0 4px;
+}
+
+.project-h-timeline--mini .project-h-timeline-labels-top {
+  margin-bottom: 6px;
+}
+
+.project-h-timeline--mini .project-h-timeline-labels-bottom {
+  margin-top: 6px;
+}
+
+.project-h-timeline--mini .project-h-timeline-node {
+  width: 10px;
+  height: 10px;
+}
+
+.project-h-timeline--mini .project-h-timeline-node--upcoming {
+  border-width: 2px;
 }
 
 /* Expanded vertical timeline: below header, scrolls; header + toggles stay visible */
 .project-sidebar-inner--timeline-expanded {
   overflow: hidden;
+}
+
+.project-sidebar-inner--timeline-expanded .project-sidebar-figma-scroll {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.project-sidebar-inner--timeline-expanded .project-sidebar-timeline-expanded {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .project-sidebar-timeline-expanded {
@@ -2106,23 +2756,35 @@ a {
   color: var(--ps-gray-600, #4b5563);
 }
 
+.project-sidebar-footer-cta .project-sidebar-explore-map {
+  margin-top: 0;
+  max-width: 400px;
+  width: 100%;
+}
+
 .project-sidebar-explore-map {
   flex-shrink: 0;
-  margin-top: 2rem;
+  margin-top: 1.75rem;
   width: 100%;
-  padding: 14px 1rem;
+  padding: 10px 12px;
   border: 0;
-  border-radius: 8px;
-  background: #14b8a6;
+  border-radius: 50px;
+  background: var(--ps-forest, #1d865e);
   color: #fff;
-  font-size: 0.9375rem;
-  font-weight: 600;
+  font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 140ms ease;
+  transition: background-color 140ms ease, box-shadow 140ms ease;
 }
 
 .project-sidebar-explore-map:hover {
-  background: #0d9488;
+  background: var(--ps-forest-hover, #166b50);
+}
+
+.project-sidebar-explore-map:focus-visible {
+  outline: 2px solid var(--ps-forest, #1d865e);
+  outline-offset: 3px;
 }
 
 /* Shared detail copy styles (district cards, etc.) */
@@ -2186,14 +2848,82 @@ a {
   font-weight: 600;
 }
 
-.district-bottom-sheet {
+/*
+ * Dock: pill overlaps sheet by half its height (Figma Top Divot).
+ * Must start BELOW fixed .top-nav (z-index 30); map-demo-screen uses the same offset for in-flow map content.
+ * --district-dock-top-gap: scalable air under nav (~Figma ~40px rhythm at mid viewports).
+ * Bottom: flush to screen (map hidden below sheet); only safe-area inset on notched devices.
+ */
+.district-sheet-dock {
+  --district-dock-nav-offset: 5.25rem;
+  --district-dock-top-gap: max(env(safe-area-inset-top, 0px), clamp(0.75rem, 2.25vw + 0.75rem, 2.5rem));
   position: absolute;
+  top: calc(var(--district-dock-nav-offset) + var(--district-dock-top-gap));
   left: 0;
   right: 0;
-  bottom: 0;
-  z-index: 25;
+  bottom: env(safe-area-inset-bottom, 0px);
+  z-index: 28;
+  display: flex;
   width: 100%;
-  max-height: calc(100vh - 10.5rem);
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.district-sheet-dock .district-bottom-sheet,
+.district-sheet-dock .district-sheet-top-pill-shell {
+  pointer-events: auto;
+}
+
+/*
+ * Figma Top Divot (1726:2001): white, #e1e1e1 border, shadow 0 2px 8px @ 25%, py 12 px 16,
+ * radius 125px, Schibsted Grotesk Medium 16px rgba(0,0,0,0.6). Half the pill overlaps the sheet.
+ */
+.district-sheet-top-pill-shell {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  margin-bottom: -24px;
+}
+
+.district-sheet-top-pill {
+  box-sizing: border-box;
+  max-width: min(calc(100vw - 2rem), 36rem);
+  min-height: 44px;
+  padding: 12px 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 125px;
+  background: #ffffff;
+  border: 1px solid #e1e1e1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.district-sheet-top-pill-text {
+  min-width: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: normal;
+  color: rgba(0, 0, 0, 0.6);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.district-bottom-sheet {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  /* Fill dock to bottom of screen; scroll lives inside .district-sheet-scroll-area */
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: calc(100% - 2.75rem);
   padding: 0;
   border-radius: 28px 28px 0 0;
   background: #ffffff;
@@ -2215,7 +2945,8 @@ a {
   width: min(1120px, 100%);
   margin-left: auto;
   margin-right: auto;
-  padding: 1rem 1rem 1.5rem;
+  /* Extra top padding (scalable) below overlapping divot so content is not tight to the sheet top */
+  padding: calc(clamp(1.25rem, 2.5vw + 0.75rem, 2.25rem) + 14px) 1rem 1.5rem;
   padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
 }
 
@@ -2248,17 +2979,9 @@ a {
   position: absolute;
   inset: 0;
   top: 0;
-  z-index: 24;
+  z-index: 27;
   border: 0;
   background: transparent;
-}
-
-.district-sheet-handle {
-  width: 4rem;
-  height: 0.38rem;
-  margin: 0 auto 0.5rem;
-  border-radius: 999px;
-  background: rgba(23, 50, 77, 0.12);
 }
 
 .district-sheet-action-row {
@@ -2295,21 +3018,27 @@ a {
 }
 
 .district-bottom-sheet .district-portrait {
-  width: 12.5rem;
-  height: 12.5rem;
+  width: 11rem;
+  height: 11rem;
   border-radius: 999px;
   overflow: hidden;
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  border: 1px solid #e3e3e3;
   background: #e5e7eb;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
 }
 
 .district-bottom-sheet .district-portrait img {
   width: 100%;
   height: 100%;
+  min-width: 100%;
+  min-height: 100%;
   object-fit: cover;
+  object-position: center center;
+  display: block;
+  flex-shrink: 0;
 }
 
 .district-bottom-sheet .district-portrait span {
@@ -2335,27 +3064,80 @@ a {
   text-align: left;
 }
 
-.district-bottom-sheet .district-about-block h2 {
+/* About label: same size as body copy; weight distinguishes hierarchy */
+.district-bottom-sheet .district-about-heading {
+  margin: 0;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: normal;
+  color: #000000;
+}
+
+/* Body: Schibsted Grotesk Regular 14px, rgba(0,0,0,0.8) */
+.district-bottom-sheet .district-about-body {
+  margin: 0.25rem 0 0;
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: normal;
+  color: rgba(0, 0, 0, 0.8);
+  max-width: 46.875rem;
+}
+
+.district-bottom-sheet .district-about-body--collapsed {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
+.district-bottom-sheet .district-about-toggle {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1d865e;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  cursor: pointer;
+}
+
+.district-bottom-sheet .district-about-toggle:hover {
+  color: #166a4a;
+}
+
+.district-bottom-sheet .district-about-toggle:focus-visible {
+  outline: 2px solid #1d865e;
+  outline-offset: 2px;
+}
+
+/* Legacy h2/p inside sheet (about uses .district-about-heading / .district-about-body) */
+.district-bottom-sheet .district-about-block h2:not(.district-about-heading) {
   margin: 0;
   font-size: 0.875rem;
   font-weight: 400;
   color: #111827;
 }
 
-.district-bottom-sheet .district-about-block p {
+.district-bottom-sheet .district-about-block p:not(.district-about-body) {
   margin: 0.5rem 0 0;
   font-size: 0.9375rem;
   line-height: 1.6;
   color: #4b5563;
 }
 
+/* Figma: John Lee • District 12 — Public Sans Bold 48px */
 .district-profile-copy h1 {
   margin: 0;
-  color: #111827;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-  font-size: clamp(2.25rem, 4.2vw, 2.5rem);
-  font-weight: 400;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  color: #000000;
+  line-height: normal;
+  letter-spacing: normal;
+  font-size: clamp(1.75rem, 5vw, 3rem);
+  font-weight: 700;
 }
 
 .district-bottom-sheet .district-contact-grid {
@@ -2377,6 +3159,10 @@ a {
   padding: 0;
 }
 
+.district-bottom-sheet .district-contact-grid > div {
+  min-width: 0;
+}
+
 .district-bottom-sheet .district-contact-grid dd {
   overflow-wrap: anywhere;
 }
@@ -2388,21 +3174,63 @@ a {
   text-decoration: none;
 }
 
+/* Website / Phone / Email labels — same font size as values (14px); weight for hierarchy */
 .district-bottom-sheet .district-contact-grid dt {
   margin: 0;
-  color: #111827;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  color: #000000;
   font-size: 0.875rem;
-  font-weight: 400;
+  font-weight: 600;
+  line-height: normal;
   text-transform: none;
   letter-spacing: normal;
 }
 
-.district-bottom-sheet .district-contact-grid dd {
-  margin: 0.35rem 0 0;
-  color: #4b5563;
-  font-size: 0.9375rem;
-  line-height: 1.45;
+/* Figma: Website & Phone values — Public Sans Regular 14px */
+.district-bottom-sheet .district-contact-grid dd.district-contact-value-web {
+  margin: 0.25rem 0 0;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  color: rgba(0, 0, 0, 0.8);
+  font-size: 0.875rem;
   font-weight: 400;
+  line-height: normal;
+}
+
+/* Figma: Email value — Schibsted Grotesk Regular 14px */
+.district-bottom-sheet .district-contact-grid dd.district-contact-value-email {
+  margin: 0.25rem 0 0;
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+  color: rgba(0, 0, 0, 0.8);
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: normal;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Website URL: same as phone until hover/focus — then link styling */
+.district-bottom-sheet .district-contact-grid dd.district-contact-value-web a {
+  color: rgba(0, 0, 0, 0.8);
+  text-decoration: none;
+}
+
+.district-bottom-sheet .district-contact-grid dd.district-contact-value-web a:hover,
+.district-bottom-sheet .district-contact-grid dd.district-contact-value-web a:focus-visible {
+  color: #1d4ed8;
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+.district-bottom-sheet .district-contact-grid dd.district-contact-value-email a {
+  display: block;
+  color: rgba(0, 0, 0, 0.8);
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .district-impact-panel {
@@ -2413,6 +3241,204 @@ a {
 .district-recent-panel {
   margin-top: 2.75rem;
   padding: 0;
+}
+
+/* Council sheet: profile + recent projects each use 80% of sheet width (centered). */
+.district-bottom-sheet .district-profile-panel,
+.district-bottom-sheet .district-recent-panel {
+  width: 80%;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+}
+
+.district-bottom-sheet .recent-projects-container {
+  width: 100%;
+  max-width: none;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Recent Projects — Figma: ~16px, regular weight */
+.district-overview-recent-heading {
+  margin: 0 0 1.25rem;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.55);
+  line-height: normal;
+}
+
+.district-overview-projects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Figma node 1726:1917 — district recent project cards (16px TB / 24px LR, responsive) */
+.district-overview-project-card {
+  border: 1px solid #e3e3e3;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  box-sizing: border-box;
+  padding-block: clamp(0.875rem, 0.65rem + 0.9vw, 1rem);
+  padding-inline: clamp(1rem, 0.55rem + 2.8vw, 1.5rem);
+}
+
+.district-overview-project-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0;
+}
+
+.district-overview-project-card__open {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+
+.district-overview-project-card__top .district-overview-project-card__open--titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.district-overview-project-card__open--rest {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.65rem 0 0;
+  margin: 0;
+}
+
+.district-overview-project-card__open:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+}
+
+.district-overview-project-card__title {
+  display: block;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #333333;
+}
+
+.district-overview-project-card__subtitle {
+  display: block;
+  margin: 0.35rem 0 0;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.125rem);
+  font-weight: 400;
+  line-height: 1.3;
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.district-overview-project-card__top-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.district-overview-project-card__external-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem;
+  border-radius: 6px;
+  color: #333333;
+  text-decoration: none;
+}
+
+.district-overview-project-card__external-link:hover,
+.district-overview-project-card__external-link:focus-visible {
+  color: #1d4ed8;
+  outline: none;
+}
+
+.district-overview-project-card__external-icon {
+  display: block;
+}
+
+.district-overview-project-card__badge {
+  padding: 0.35rem 0.75rem;
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+.district-overview-project-card__badge--completed {
+  background: #dcf5e4;
+  color: #1f7a4d;
+}
+
+.district-overview-project-card__badge--planned {
+  background: #ffe8cc;
+  color: #9a5f00;
+}
+
+.district-overview-project-card__badge--in_progress {
+  background: #fff4e0;
+  color: #8b6914;
+}
+
+.district-overview-project-card__badge--default {
+  background: #e8e8e8;
+  color: #5a5a5a;
+}
+
+.district-overview-project-card__description {
+  margin: 0;
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.district-overview-project-card__rule {
+  height: 1px;
+  margin: 0.85rem 0 0.75rem;
+  background: #e3e3e3;
+}
+
+.district-overview-project-card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.district-overview-project-card__meta-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.district-overview-project-card__meta-label {
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.district-overview-project-card__meta-value {
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  color: #000000;
+  text-align: right;
 }
 
 .district-impact-grid {
@@ -2687,16 +3713,16 @@ a {
 }
 
 @media (max-width: 960px) {
-  .landing-comments {
-    display: none;
-  }
-
-  .project-details-panel {
+  .project-sidebar-host {
     top: auto;
     left: 1rem;
     right: 1rem;
     bottom: 1rem;
     width: auto;
+    max-width: none;
+  }
+
+  .project-details-panel.project-sidebar-panel {
     max-height: 56vh;
     border: 1px solid rgba(23, 50, 77, 0.08);
     border-right: 1px solid rgba(23, 50, 77, 0.08);
@@ -2714,8 +3740,8 @@ a {
   }
 
   .district-bottom-sheet .district-portrait {
-    width: min(12.5rem, 70vw);
-    height: min(12.5rem, 70vw);
+    width: min(11rem, 62vw);
+    height: min(11rem, 62vw);
   }
 
   .district-profile-header {
@@ -2758,57 +3784,103 @@ a {
     font-size: 0.52rem;
   }
 
+  .landing-comment {
+    max-width: min(calc(100vw - 2rem), 100%);
+  }
+
+  .landing-comment--grey {
+    right: min(8%, 4rem);
+  }
+
   .landing-pin {
-    filter: saturate(0.8);
-  }
-
-  .landing-pin-desktop {
-    display: none;
-  }
-
-  .landing-pin-mobile {
-    display: block;
+    filter: saturate(0.82);
   }
 }
 
 @media (max-width: 640px) {
   .top-nav {
     min-height: 4.85rem;
-    padding: 0.85rem 1rem;
-  }
-
-  .brand-copy {
-    display: none;
+    padding: 0.85rem max(0.75rem, var(--top-nav-side-inset));
   }
 
   .top-nav-links {
     gap: 0.95rem;
   }
 
-  .landing-hero,
   .map-demo-screen,
   .district-overview-route {
     padding-left: 0;
     padding-right: 0;
+    /* Align with shorter mobile top-nav; flex parent fills 100dvh */
+    padding-top: 4.85rem;
   }
 
-  .landing-centerpiece p {
-    font-size: 1.02rem;
+  /* First value in each max() is the minimum side gutter (keeps content from touching edges on narrow phones). */
+  .landing-hero-content {
+    padding-left: max(2rem, 6vw, env(safe-area-inset-left, 0px));
+    padding-right: max(2rem, 6vw, env(safe-area-inset-right, 0px));
+  }
+
+  .landing-centerpiece {
+    width: 100%;
+    max-width: 100%;
+    font-size: clamp(0.8125rem, 2.4vw + 0.35rem, 1.5rem);
   }
 
   .landing-search {
-    grid-template-columns: 1fr;
-    border-radius: 26px;
-    padding: 0.9rem;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: nowrap;
+    border-radius: 999px;
+    width: 100%;
+    max-width: 100%;
+    padding: 0.55em 0.5em 0.55em 0.8em;
+  }
+
+  .landing-search-field {
+    flex: 1;
+    min-width: 0;
+    width: auto;
   }
 
   .landing-search-icon {
-    display: none;
+    display: inline-flex;
   }
 
-  .landing-links {
-    flex-direction: column;
-    gap: 0.6rem;
+  .landing-search-button {
+    width: auto;
+    min-height: 2.4em;
+  }
+
+  .landing-comment {
+    max-width: calc(100vw - 1rem);
+    opacity: 0.82;
+  }
+
+  .landing-comment--blue {
+    top: 17%;
+    left: 8%;
+  }
+
+  .landing-comment--grey {
+    top: 22%;
+    right: 4%;
+    left: auto;
+  }
+
+  .landing-comment--green {
+    top: auto;
+    bottom: 12%;
+    left: 6%;
+  }
+
+  .landing-hero-ellipse img {
+    width: min(62vw, 22.5rem);
+    max-width: min(58vmin, 340px);
+  }
+
+  .landing-hero-ellipse::before {
+    background-size: 64% 60%;
   }
 
   .map-district-pill-shell,
@@ -2842,35 +3914,207 @@ a {
     bottom: 15rem;
   }
 
+  .district-sheet-dock {
+    --district-dock-nav-offset: 4.85rem;
+    --district-dock-top-gap: max(env(safe-area-inset-top, 0px), clamp(0.65rem, 2vw + 0.5rem, 2rem));
+  }
+
   .district-bottom-sheet {
     width: 100%;
-    bottom: 0;
-    max-height: calc(100vh - 8.5rem);
   }
 
   .district-sheet-scroll-area {
-    padding: 0.9rem 0.9rem 1.25rem;
+    padding-top: calc(clamp(1rem, 2.2vw + 0.65rem, 2rem) + 12px);
+    padding-right: max(1.5rem, env(safe-area-inset-right, 0px));
     padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+    padding-left: max(1.5rem, env(safe-area-inset-left, 0px));
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .district-bottom-sheet .district-profile-panel,
+  .district-bottom-sheet .district-recent-panel {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .district-profile-panel {
+    justify-items: center;
+    text-align: center;
+    padding: 0.15rem 0 0;
+  }
+
+  .district-profile-copy {
+    justify-self: stretch;
+    width: 100%;
+    max-width: 100%;
+    text-align: left;
+  }
+
+  .district-profile-header {
+    text-align: left;
+  }
+
+  .district-bottom-sheet .district-contact-grid {
+    text-align: left;
+  }
+
+  /* District sheet copy not covered by project-card scaling above */
+  .district-sheet-top-pill {
+    min-height: 40px;
+    padding: 10px 14px;
+  }
+
+  .district-sheet-top-pill-text {
+    font-size: clamp(0.8125rem, 0.72rem + 0.4vw, 0.9375rem);
+  }
+
+  .district-overview-recent-heading {
+    font-size: clamp(0.8125rem, 0.7rem + 0.45vw, 0.9375rem);
+    margin-bottom: 1rem;
+  }
+
+  .district-bottom-sheet .district-contact-grid dt {
+    font-size: clamp(0.75rem, 0.66rem + 0.35vw, 0.8125rem);
+  }
+
+  .district-bottom-sheet .district-contact-grid dd.district-contact-value-web,
+  .district-bottom-sheet .district-contact-grid dd.district-contact-value-email {
+    font-size: clamp(0.75rem, 0.66rem + 0.35vw, 0.8125rem);
+  }
+
+  .district-bottom-sheet .district-about-heading,
+  .district-bottom-sheet .district-about-body,
+  .district-bottom-sheet .district-about-toggle,
+  .district-bottom-sheet .district-about-block h2:not(.district-about-heading) {
+    font-size: clamp(0.75rem, 0.66rem + 0.35vw, 0.8125rem);
+  }
+
+  .district-bottom-sheet .district-about-block p:not(.district-about-body) {
+    font-size: clamp(0.8125rem, 0.72rem + 0.35vw, 0.875rem);
+    line-height: 1.5;
+  }
+
+  .district-bottom-sheet .recent-projects-container .status-message {
+    font-size: clamp(0.7rem, 0.62rem + 0.35vw, 0.8125rem);
+  }
+
+  .district-bottom-sheet .district-profile-body .status-message {
+    font-size: clamp(0.7rem, 0.62rem + 0.35vw, 0.8125rem);
+  }
+
+  .district-bottom-sheet .district-portrait span {
+    font-size: clamp(1.35rem, 4.5vw + 0.5rem, 1.55rem);
+  }
+
+  .district-overview-project-card {
+    padding-block: clamp(0.65rem, 0.55rem + 0.55vw, 0.8125rem);
+    padding-inline: clamp(0.65rem, 0.42rem + 1.8vw, 0.9rem);
+  }
+
+  /* Recent project cards: status top-right, document link stacked below (DOM: link then badge → column-reverse) */
+  .district-overview-project-card__title {
+    font-size: clamp(0.78rem, 0.68rem + 1.1vw, 0.95rem);
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .district-overview-project-card__subtitle {
+    font-size: clamp(0.6875rem, 0.63rem + 0.35vw, 0.78125rem);
+    margin-top: 0.22rem;
+    line-height: 1.25;
+  }
+
+  .district-overview-project-card__top {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+
+  .district-overview-project-card__top-actions {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: 0.3rem;
+    margin-top: 0;
+  }
+
+  .district-overview-project-card__badge {
+    padding: 0.22rem 0.5rem;
+    font-size: 0.6875rem;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .district-overview-project-card__external-link {
+    padding: 0.06rem;
+    flex-shrink: 0;
+    line-height: 0;
+  }
+
+  .district-overview-project-card__external-icon {
+    width: 13px;
+    height: 13px;
+  }
+
+  .district-overview-project-card__description {
+    font-size: 0.75rem;
+    line-height: 1.42;
+  }
+
+  .district-overview-project-card__rule {
+    margin: 0.55rem 0 0.45rem;
+  }
+
+  .district-overview-project-card__meta {
+    gap: clamp(0.2rem, 0.5vw, 0.35rem);
+  }
+
+  .district-overview-project-card__meta-label,
+  .district-overview-project-card__meta-value {
+    font-size: clamp(0.65625rem, 0.58rem + 0.45vw, 0.75rem);
+    line-height: 1.25;
+  }
+
+  .district-overview-project-card__meta-row {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: clamp(0.45rem, 2.5vw, 0.75rem);
+    flex-wrap: nowrap;
+    min-width: 0;
+  }
+
+  .district-overview-project-card__meta-label {
+    flex-shrink: 0;
+  }
+
+  .district-overview-project-card__meta-value {
+    text-align: right;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .district-open-map-fixed {
     bottom: max(0.85rem, env(safe-area-inset-bottom));
     width: min(45vw, calc((100vw - 1.5rem) / 2));
     max-width: 45%;
-    font-size: 1.05rem;
-  }
-
-  .district-profile-panel {
-    padding: 0.15rem 0 0;
+    font-size: clamp(0.875rem, 0.78rem + 0.4vw, 1rem);
+    padding: 0.72rem 1.05rem;
   }
 
   .district-bottom-sheet .district-portrait {
-    width: min(11rem, 72vw);
-    height: min(11rem, 72vw);
-  }
-
-  .district-bottom-sheet .district-portrait span {
-    font-size: 1.65rem;
+    width: min(9.75rem, 68vw);
+    height: min(9.75rem, 68vw);
   }
 
   .district-profile-copy h1 {
@@ -2940,30 +4184,77 @@ a {
     border-radius: 18px;
   }
 
-  .landing-pin {
-    opacity: calc(var(--pin-opacity) * 0.22);
+}
+
+@media (max-width: 520px) {
+  .landing-shell .landing-search-icon {
+    display: none;
   }
 
-  .landing-comment {
-    width: clamp(7.5rem, 22vw, 10.5rem);
+  .landing-shell .landing-search {
+    padding-left: 1.3em;
   }
 
-  .landing-comment-bubble-text {
-    font-size: 0.68rem;
+  .landing-search-button {
+    position: relative;
+    width: max(2.65em, 2.75rem);
+    height: max(2.65em, 2.75rem);
+    min-width: max(2.65em, 2.75rem);
+    min-height: max(2.65em, 2.75rem);
+    padding: 0;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
   }
 
-  .landing-comment--green .landing-comment-bubble-text {
-    font-size: 0.62rem;
+  .landing-search-button-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .landing-search-button-icon-wrap {
+    display: inline-flex;
+  }
+
+  .district-sheet-top-pill {
+    max-width: calc(100vw - 1.25rem);
+  }
+}
+
+@media (max-width: 360px) {
+  .landing-shell .landing-comment-bubble-text {
+    white-space: normal;
+    text-align: center;
+  }
+
+  .landing-shell .landing-comment-bubble {
+    justify-content: center;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .landing-hero::before,
-  .landing-hero .landing-pin,
+  .landing-map-layer,
+  .landing-hero-ellipse,
   .landing-hero .landing-centerpiece h1,
-  .landing-hero .landing-centerpiece p,
+  .landing-hero .landing-tagline,
   .landing-hero .landing-search,
   .landing-hero .landing-search-results button {
+    animation: none !important;
+  }
+
+  /* Fade-in keyframes use opacity; without animation, keep the wash visible. */
+  .landing-hero-ellipse {
+    opacity: 0.7 !important;
+  }
+
+  .landing-hero .landing-pin {
     animation: none !important;
   }
 
