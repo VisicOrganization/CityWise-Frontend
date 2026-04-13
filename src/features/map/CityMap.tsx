@@ -8,7 +8,9 @@ import Map, {
   type ViewState,
 } from "react-map-gl/maplibre";
 
+import { useCouncilMemberBios } from "../districts/useCouncilMemberBios";
 import { useDistrictProfile } from "../districts/useDistrictProfile";
+import { formatPersonNameForDisplay } from "../../shared/formatPersonName";
 import { findDistrictFeature, getFeatureBounds, type DistrictBoundaryCollection } from "../../shared/map/districtBoundaries";
 import { districtFillLayer, districtHighlightLayer, districtOutlineLayer } from "../../shared/map/districtLayers";
 import type { MapMarker, MarkerCategory } from "../../shared/map/mapTypes";
@@ -106,15 +108,27 @@ export function CityMap({
   const [lastVisibleDistrictId, setLastVisibleDistrictId] = useState<number | null>(null);
   const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [pillPortraitFailed, setPillPortraitFailed] = useState(false);
 
   const { profile: districtProfile } = useDistrictProfile(activeDistrictId);
+  const { biosByDistrict } = useCouncilMemberBios();
   const activeDistrict = activeDistrictId != null;
   const displayedDistrictId = activeDistrictId ?? lastVisibleDistrictId;
-  const displayedName =
-    districtProfile?.name ??
-    (displayedDistrictId != null ? `District ${displayedDistrictId}` : "District");
+  const bio = activeDistrictId != null ? biosByDistrict?.get(activeDistrictId) : undefined;
+  const councilNameRaw = (bio?.name?.trim() || districtProfile?.name?.trim() || "") || "";
+  const displayedName = councilNameRaw
+    ? formatPersonNameForDisplay(councilNameRaw)
+    : displayedDistrictId != null
+      ? `District ${displayedDistrictId}`
+      : "District";
   const displayedLabel =
     displayedDistrictId != null ? `District ${displayedDistrictId}` : "";
+  const portraitSrc = (bio?.profilePic?.trim() || districtProfile?.profile_pic?.trim() || "").trim() || null;
+  const initials = displayedName
+    .split(" ")
+    .map((part) => part[0])
+    .filter(Boolean)
+    .join("");
 
   useEffect(() => {
     if (activeDistrictId) {
@@ -127,6 +141,10 @@ export function CityMap({
       setIsInfoOpen(false);
     }
   }, [districtOverviewOpen]);
+
+  useEffect(() => {
+    setPillPortraitFailed(false);
+  }, [portraitSrc, activeDistrictId]);
 
   useLayoutEffect(() => {
     if (activeDistrictId == null) {
@@ -285,11 +303,25 @@ export function CityMap({
           aria-hidden={activeDistrict && !districtOverviewOpen ? undefined : true}
           tabIndex={activeDistrict && !districtOverviewOpen ? 0 : -1}
         >
-          <span className="map-district-avatar">
-            {displayedName.split(" ").map((part) => part[0]).join("")}
+          <span className="map-district-avatar" aria-hidden="true">
+            {portraitSrc && !pillPortraitFailed ? (
+              <img
+                src={portraitSrc}
+                alt=""
+                className="map-district-avatar-img"
+                onError={() => setPillPortraitFailed(true)}
+              />
+            ) : (
+              <span className="map-district-avatar-initials">{initials}</span>
+            )}
           </span>
-          <span>
-            {`${displayedName} • ${displayedLabel}`}
+          <span className="map-district-pill-copy">
+            <span className="map-district-pill-name">{displayedName}</span>
+            <span className="map-district-pill-sep" aria-hidden="true">
+              {" "}
+              •{" "}
+            </span>
+            <span className="map-district-pill-district">{displayedLabel}</span>
           </span>
         </button>
       </div>

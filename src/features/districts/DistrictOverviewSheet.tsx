@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { getProjectDetail } from "../../shared/api/client";
 import { normalizeCouncilWebsiteUrl } from "../../shared/data/councilMemberBio";
+import { formatPersonNameForDisplay } from "../../shared/formatPersonName";
 import { primaryHttpDocumentUrlFromDetail } from "../../shared/map/projectDocuments";
 import { RecentProjects } from "./RecentProjects";
 import { useCouncilMemberBios } from "./useCouncilMemberBios";
@@ -171,7 +172,10 @@ export function DistrictOverviewSheet({
   }, [response]);
 
   const bio = biosByDistrict?.get(districtId);
-  const representative = bio?.name ?? profile?.name ?? `District ${districtId}`;
+  const representativeRaw = (bio?.name?.trim() || profile?.name?.trim() || "") || "";
+  const representative = representativeRaw
+    ? formatPersonNameForDisplay(representativeRaw)
+    : `District ${districtId}`;
   const title = `District ${districtId}`;
 
   const displayEmail = bio?.email?.trim() ? bio.email.trim() : null;
@@ -184,6 +188,7 @@ export function DistrictOverviewSheet({
   const initials = representative
     .split(" ")
     .map((part) => part[0])
+    .filter(Boolean)
     .join("");
 
   const topPillText = (focusLabel?.trim() || `District ${districtId}`).trim();
