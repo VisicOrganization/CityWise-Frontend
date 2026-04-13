@@ -2,17 +2,10 @@ import { createPortal } from "react-dom";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import type { ProjectDetail } from "../../shared/api/contracts";
-import { formatPersonNameForDisplay } from "../../shared/formatPersonName";
+import { formatName } from "../../shared/formatPersonName";
 import { primaryHttpDocumentUrlFromDetail } from "../../shared/map/projectDocuments";
 import type { MapMarker } from "../../shared/map/mapTypes";
-import {
-  BallotIcon,
-  ChartLineIcon,
-  CloseIcon,
-  ExternalLinkIcon,
-  SidebarCollapseIcon,
-  SidebarExpandIcon,
-} from "../../shared/ui/visicIcons";
+import { CloseIcon, ExternalLinkIcon } from "../../shared/ui/visicIcons";
 import { formatProjectDateLong, formatUsNumericDate } from "./projectDetails/formatProjectDate";
 import { MiniHorizontalTimeline } from "./projectDetails/MiniHorizontalTimeline";
 import {
@@ -24,6 +17,13 @@ import { VerticalTimelineView } from "./projectDetails/VerticalTimelineView";
 import { StatusBadge } from "./projectDetails/StatusBadge";
 import { ExpandedProjectDetailLayout } from "./projectDetails/ExpandedProjectDetailLayout";
 import { SidebarVoteTallyValue, sidebarHasVoteTallyDisplay } from "./projectDetails/sidebarVoteTally";
+import { useMobileProjectSidebarLayout } from "./useMobileProjectSidebarLayout";
+
+/** Public-folder SVGs (Vite: use URL string, not import from `/images`). */
+const SIDEBAR_TIMELINE_ICON_SRC = "/images/timeline-icon.svg";
+const SIDEBAR_VOTING_ICON_SRC = "/images/voting-icon.svg";
+const SIDEBAR_EXPAND_ICON_SRC = "/expand-icon.svg";
+const SIDEBAR_COLLAPSE_ICON_SRC = "/collapse-icon.svg";
 
 function normalizeVoteGroup(vote: string | null): "Yes" | "No" | "Absent" {
   const normalized = vote?.trim().toLowerCase();
@@ -105,6 +105,81 @@ interface ProjectDetailsPanelProps {
 
 const VOTE_POPOVER_GAP_PX = 8;
 
+function VotingRecordPopoverContent({
+  voteTally,
+  voteRows,
+  primaryMoverId,
+  votingRecordFooter,
+  onClose,
+}: {
+  voteTally: { yes: number; no: number; absent: number };
+  voteRows: { Yes: VoteRow[]; No: VoteRow[]; Absent: VoteRow[] };
+  primaryMoverId: number | null;
+  votingRecordFooter: string | null;
+  onClose: () => void;
+}) {
+  return (
+    <>
+      <div className="voting-popover-header-row">
+        <div className="voting-popover-heading">
+          <strong className="voting-popover-title">Voting Record</strong>
+          <span className="voting-popover-tally" aria-label="Vote tally">
+            <span className="voting-popover-tally-paren">(</span>
+            <span className="voting-popover-tally-yes">{voteTally.yes}</span>
+            <span className="voting-popover-tally-sep"> · </span>
+            <span className="voting-popover-tally-no">{voteTally.no}</span>
+            <span className="voting-popover-tally-sep"> · </span>
+            <span className="voting-popover-tally-absent">{voteTally.absent}</span>
+            <span className="voting-popover-tally-paren">)</span>
+          </span>
+        </div>
+        <button type="button" className="voting-popover-close" aria-label="Close voting record" onClick={onClose}>
+          <CloseIcon width={16} height={16} />
+        </button>
+      </div>
+      <div className="voting-popover-divider" aria-hidden="true" />
+
+      {(["Yes", "No", "Absent"] as const).map((sectionKey, sectionIndex) => (
+        <div key={sectionKey}>
+          <section
+            className={`voting-popover-section voting-popover-section--${sectionKey.toLowerCase()}`}
+            aria-label={`${sectionKey} votes`}
+          >
+            <h4 className="voting-popover-section-label">{sectionKey}</h4>
+            {voteRows[sectionKey].length > 0 ? (
+              <ul className="voting-popover-name-list">
+                {voteRows[sectionKey].map((row, rowIndex) => {
+                  const highlightYes =
+                    sectionKey === "Yes" &&
+                    (row.memberId === primaryMoverId || (primaryMoverId == null && rowIndex === 0));
+                  return (
+                    <li
+                      key={row.key}
+                      className={
+                        highlightYes ? "voting-popover-name voting-popover-name--highlight" : "voting-popover-name"
+                      }
+                    >
+                      <span className="voting-popover-name-text">{formatName(row.name)}</span>
+                      {row.districtId != null ? (
+                        <span className="voting-popover-district"> ({row.districtId})</span>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="voting-popover-empty">None</p>
+            )}
+          </section>
+          {sectionIndex < 2 ? <div className="voting-popover-divider" aria-hidden="true" /> : null}
+        </div>
+      ))}
+
+      {votingRecordFooter ? <footer className="voting-popover-footer">{votingRecordFooter}</footer> : null}
+    </>
+  );
+}
+
 export function ProjectDetailsPanel({
   marker,
   detail,
@@ -122,11 +197,18 @@ export function ProjectDetailsPanel({
   } | null>(null);
   const [timelineViewOpen, setTimelineViewOpen] = useState(false);
   const [sidebarWidthExpanded, setSidebarWidthExpanded] = useState(false);
+  const isMobileLayout = useMobileProjectSidebarLayout();
 
   useEffect(() => {
     setTimelineViewOpen(false);
     setSidebarWidthExpanded(false);
   }, [detail?.project.id]);
+
+  useEffect(() => {
+    if (isMobileLayout) {
+      setSidebarWidthExpanded(false);
+    }
+  }, [isMobileLayout]);
 
   useEffect(() => {
     if (sidebarWidthExpanded) {
@@ -187,7 +269,7 @@ export function ProjectDetailsPanel({
   const primaryMoverId = detail?.movers?.primary?.[0]?.id ?? null;
 
   const updateVotePopoverPlacement = useCallback(() => {
-    if (!isVotingPopoverOpen || !detail) {
+    if (!isVotingPopoverOpen || !detail || isMobileLayout) {
       setVotePopoverPlacement(null);
       return;
     }
@@ -214,7 +296,7 @@ export function ProjectDetailsPanel({
     }
 
     setVotePopoverPlacement({ top, left, maxHeight });
-  }, [isVotingPopoverOpen, detail, sidebarWidthExpanded]);
+  }, [isVotingPopoverOpen, detail, sidebarWidthExpanded, isMobileLayout]);
 
   useLayoutEffect(() => {
     updateVotePopoverPlacement();
@@ -278,21 +360,12 @@ export function ProjectDetailsPanel({
     });
   }, [detail]);
 
-  /** Figma: no placeholder when summary empty — omit body copy entirely */
-  const overviewSummary = useMemo((): string | null => {
-    if (!detail) {
-      return null;
-    }
-    const main = (detail.project.about ?? detail.project.summary)?.trim();
-    return main && main.length > 0 ? main : null;
-  }, [detail]);
-
   const externalUrl = primaryHttpDocumentUrlFromDetail(detail);
   const category = categoryLine(marker, detail);
   const categoryAccent = useMemo(() => categoryAccentBarColor(marker), [marker]);
 
-  const votingRecordDialog =
-    isVotingPopoverOpen && detail && votePopoverPlacement
+  const votingRecordPortal =
+    !isMobileLayout && isVotingPopoverOpen && detail && votePopoverPlacement
       ? createPortal(
           <div
             className="voting-popover project-sidebar-voting-popover voting-popover--portal"
@@ -307,73 +380,21 @@ export function ProjectDetailsPanel({
               maxHeight: votePopoverPlacement.maxHeight,
             }}
           >
-            <div className="voting-popover-header-row">
-              <div className="voting-popover-heading">
-                <strong className="voting-popover-title">Voting Record</strong>
-                <span className="voting-popover-tally" aria-label="Vote tally">
-                  <span className="voting-popover-tally-paren">(</span>
-                  <span className="voting-popover-tally-yes">{voteTally.yes}</span>
-                  <span className="voting-popover-tally-sep"> · </span>
-                  <span className="voting-popover-tally-no">{voteTally.no}</span>
-                  <span className="voting-popover-tally-sep"> · </span>
-                  <span className="voting-popover-tally-absent">{voteTally.absent}</span>
-                  <span className="voting-popover-tally-paren">)</span>
-                </span>
-              </div>
-              <button
-                type="button"
-                className="voting-popover-close"
-                aria-label="Close voting record"
-                onClick={() => setIsVotingPopoverOpen(false)}
-              >
-                <CloseIcon width={16} height={16} />
-              </button>
-            </div>
-            <div className="voting-popover-divider" aria-hidden="true" />
-
-            {(["Yes", "No", "Absent"] as const).map((sectionKey, sectionIndex) => (
-              <div key={sectionKey}>
-                <section
-                  className={`voting-popover-section voting-popover-section--${sectionKey.toLowerCase()}`}
-                  aria-label={`${sectionKey} votes`}
-                >
-                  <h4 className="voting-popover-section-label">{sectionKey}</h4>
-                  {voteRows[sectionKey].length > 0 ? (
-                    <ul className="voting-popover-name-list">
-                      {voteRows[sectionKey].map((row, rowIndex) => {
-                        const highlightYes =
-                          sectionKey === "Yes" &&
-                          (row.memberId === primaryMoverId || (primaryMoverId == null && rowIndex === 0));
-                        return (
-                          <li
-                            key={row.key}
-                            className={
-                              highlightYes
-                                ? "voting-popover-name voting-popover-name--highlight"
-                                : "voting-popover-name"
-                            }
-                          >
-                            <span className="voting-popover-name-text">{formatPersonNameForDisplay(row.name)}</span>
-                            {row.districtId != null ? (
-                              <span className="voting-popover-district"> ({row.districtId})</span>
-                            ) : null}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  ) : (
-                    <p className="voting-popover-empty">None</p>
-                  )}
-                </section>
-                {sectionIndex < 2 ? <div className="voting-popover-divider" aria-hidden="true" /> : null}
-              </div>
-            ))}
-
-            {votingRecordFooter ? <footer className="voting-popover-footer">{votingRecordFooter}</footer> : null}
+            <VotingRecordPopoverContent
+              voteTally={voteTally}
+              voteRows={voteRows}
+              primaryMoverId={primaryMoverId}
+              votingRecordFooter={votingRecordFooter}
+              onClose={() => setIsVotingPopoverOpen(false)}
+            />
           </div>,
           document.body,
         )
       : null;
+
+  const showTimelinePanel = Boolean(detail && timelineViewOpen && verticalTimelineItems.length > 0);
+  const showInlineVotingPanel = Boolean(isMobileLayout && isVotingPopoverOpen && detail);
+  const sidebarAuxExpanded = Boolean(showTimelinePanel || showInlineVotingPanel);
 
   return (
     <>
@@ -388,11 +409,7 @@ export function ProjectDetailsPanel({
         <div
           className={`project-sidebar-inner${
             sidebarWidthExpanded ? " project-sidebar-inner--saas-expanded" : ""
-          }${
-            detail && timelineViewOpen && verticalTimelineItems.length > 0
-              ? " project-sidebar-inner--timeline-expanded"
-              : ""
-          }`}
+          }${sidebarAuxExpanded ? " project-sidebar-inner--timeline-expanded" : ""}`}
         >
           {sidebarWidthExpanded ? (
             detail ? (
@@ -400,8 +417,6 @@ export function ProjectDetailsPanel({
                 detail={detail}
                 title={title}
                 category={category}
-                categoryAccent={categoryAccent}
-                overviewSummary={overviewSummary}
                 externalUrl={externalUrl}
                 status={status}
                 voteRows={voteRows}
@@ -420,7 +435,14 @@ export function ProjectDetailsPanel({
                   aria-label="Collapse project panel"
                   onClick={() => setSidebarWidthExpanded(false)}
                 >
-                  <SidebarCollapseIcon width={18} height={18} />
+                  <img
+                    className="project-sidebar-edge-icon-img"
+                    src={SIDEBAR_COLLAPSE_ICON_SRC}
+                    alt=""
+                    width={18}
+                    height={18}
+                    decoding="async"
+                  />
                 </button>
                 <p className="project-expanded-loading-msg">
                   {isLoading ? "Loading backend project data…" : errorMessage ?? "Project data is not available yet."}
@@ -435,77 +457,122 @@ export function ProjectDetailsPanel({
                 aria-hidden="true"
               />
 
-              <div className="project-sidebar-figma-scroll">
+              <div className="project-sidebar-figma-main">
+                <div className="project-sidebar-figma-scroll">
                 <header className="project-sidebar-header">
                   <div className="project-sidebar-title-band">
-                    <h2 className="project-sidebar-title">{title}</h2>
+                    <div className="project-sidebar-title-cluster">
+                      <h2 className="project-sidebar-title">
+                        {title}
+                        {externalUrl ? (
+                          <>
+                            {" "}
+                            <a
+                              className="project-title-external-link"
+                              href={externalUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              aria-label="Open primary project document in a new tab"
+                            >
+                              <ExternalLinkIcon width={16} height={16} />
+                            </a>
+                          </>
+                        ) : null}
+                      </h2>
+                    </div>
                     <div className="project-sidebar-status-column">
                       <StatusBadge status={status} project={detail?.project ?? null} />
                       <div className="project-sidebar-tool-row">
-                        {externalUrl ? (
-                          <a
-                            className="project-sidebar-tool-btn project-sidebar-tool-btn--32"
-                            href={externalUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            aria-label="Open primary project document in a new tab"
-                          >
-                            <ExternalLinkIcon width={18} height={18} />
-                          </a>
-                        ) : (
-                          <button
-                            type="button"
-                            className="project-sidebar-tool-btn project-sidebar-tool-btn--32"
-                            disabled
-                            aria-label="No external document link available for this project"
-                            aria-disabled="true"
-                          >
-                            <ExternalLinkIcon width={18} height={18} />
-                          </button>
-                        )}
                         {detail && horizontalMilestones.length > 0 ? (
+                          <span className="project-sidebar-tool-btn-with-hint">
+                            <button
+                              type="button"
+                              className={`project-sidebar-tool-btn project-sidebar-tool-btn--32 ${timelineViewOpen ? "is-active" : ""}`}
+                              aria-label="Timeline view"
+                              aria-expanded={timelineViewOpen}
+                              aria-controls="project-vertical-timeline-panel"
+                              onClick={() => {
+                                setIsVotingPopoverOpen(false);
+                                setTimelineViewOpen((v) => !v);
+                              }}
+                            >
+                              <img
+                                className="project-sidebar-header-icon-img"
+                                src={SIDEBAR_TIMELINE_ICON_SRC}
+                                alt=""
+                                width={18}
+                                height={18}
+                                decoding="async"
+                              />
+                            </button>
+                            <span className="project-sidebar-tool-btn-hint" aria-hidden="true">
+                              Timeline View
+                            </span>
+                          </span>
+                        ) : null}
+                        <span className="project-sidebar-tool-btn-with-hint">
                           <button
+                            ref={voteButtonRef}
                             type="button"
-                            className={`project-sidebar-tool-btn project-sidebar-tool-btn--32 ${timelineViewOpen ? "is-active" : ""}`}
-                            aria-label="Timeline view"
-                            aria-expanded={timelineViewOpen}
-                            aria-controls="project-vertical-timeline-panel"
+                            className={`project-sidebar-tool-btn project-sidebar-tool-btn--32 ${isVotingPopoverOpen ? "is-active" : ""}`}
+                            aria-label="Toggle voting record"
+                            aria-expanded={isVotingPopoverOpen}
+                            disabled={!detail}
                             onClick={() => {
-                              setIsVotingPopoverOpen(false);
-                              setTimelineViewOpen((v) => !v);
+                              setTimelineViewOpen(false);
+                              setIsVotingPopoverOpen((current) => !current);
                             }}
                           >
-                            <ChartLineIcon width={18} height={18} />
+                            <img
+                              className="project-sidebar-header-icon-img"
+                              src={SIDEBAR_VOTING_ICON_SRC}
+                              alt=""
+                              width={18}
+                              height={18}
+                              decoding="async"
+                            />
                           </button>
-                        ) : null}
-                        <button
-                          ref={voteButtonRef}
-                          type="button"
-                          className={`project-sidebar-tool-btn project-sidebar-tool-btn--32 ${isVotingPopoverOpen ? "is-active" : ""}`}
-                          aria-label="Toggle voting record"
-                          aria-expanded={isVotingPopoverOpen}
-                          disabled={!detail}
-                          onClick={() => {
-                            setTimelineViewOpen(false);
-                            setIsVotingPopoverOpen((current) => !current);
-                          }}
-                        >
-                          <BallotIcon width={18} height={18} />
-                        </button>
+                          <span className="project-sidebar-tool-btn-hint" aria-hidden="true">
+                            Voting Record
+                          </span>
+                        </span>
                       </div>
                     </div>
                   </div>
                   <p className="project-sidebar-category">{category}</p>
                 </header>
 
-                {detail && timelineViewOpen && verticalTimelineItems.length > 0 ? (
+                {showTimelinePanel ? (
                   <div
                     id="project-vertical-timeline-panel"
                     className="project-sidebar-timeline-expanded"
                     role="region"
                     aria-label="Project timeline"
                   >
-                    <VerticalTimelineView items={verticalTimelineItems} />
+                    <VerticalTimelineView
+                      items={verticalTimelineItems}
+                      onOverviewClick={() => {
+                        setTimelineViewOpen(false);
+                        setIsVotingPopoverOpen(false);
+                      }}
+                    />
+                  </div>
+                ) : showInlineVotingPanel ? (
+                  <div
+                    id="project-voting-record-panel"
+                    className="project-sidebar-voting-expanded"
+                    role="region"
+                    aria-label="Voting record"
+                  >
+                    <div className="voting-popover voting-popover--inline">
+                      <VotingRecordPopoverContent
+                        voteTally={voteTally}
+                        voteRows={voteRows}
+                        primaryMoverId={primaryMoverId}
+                        votingRecordFooter={votingRecordFooter}
+                        onClose={() => setIsVotingPopoverOpen(false)}
+                      />
+                    </div>
                   </div>
                 ) : (
                   <>
@@ -518,7 +585,6 @@ export function ProjectDetailsPanel({
                       <h3 id="project-overview-heading" className="project-sidebar-section-title">
                         Project Overview
                       </h3>
-                      {overviewSummary ? <p className="project-sidebar-overview-summary">{overviewSummary}</p> : null}
                       {detail &&
                       (detail.project.district_id != null ||
                         detail.project.meeting_date ||
@@ -557,7 +623,7 @@ export function ProjectDetailsPanel({
                         <div className="project-sidebar-movers">
                           <h4 className="project-sidebar-movers-label">Primary Movers:</h4>
                           <p className="project-sidebar-movers-text">
-                            {detail.movers.primary.map((m) => formatPersonNameForDisplay(m.name)).join(", ")}
+                            {detail.movers.primary.map((m) => formatName(m.name)).join(", ")}
                           </p>
                         </div>
                       ) : null}
@@ -565,7 +631,7 @@ export function ProjectDetailsPanel({
                         <div className="project-sidebar-movers">
                           <h4 className="project-sidebar-movers-label">Secondary Movers:</h4>
                           <p className="project-sidebar-movers-text">
-                            {detail.movers.secondary.map((m) => formatPersonNameForDisplay(m.name)).join(", ")}
+                            {detail.movers.secondary.map((m) => formatName(m.name)).join(", ")}
                           </p>
                         </div>
                       ) : null}
@@ -593,12 +659,13 @@ export function ProjectDetailsPanel({
                     ) : null}
                   </>
                 )}
-              </div>
+                </div>
 
-              <div className="project-sidebar-footer-cta">
-                <button type="button" className="project-sidebar-explore-map" onClick={onExploreMap}>
-                  Explore Map
-                </button>
+                <div className="project-sidebar-footer-cta">
+                  <button type="button" className="project-sidebar-explore-map" onClick={onExploreMap}>
+                    Explore Map
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -613,7 +680,14 @@ export function ProjectDetailsPanel({
               aria-pressed={false}
               onClick={() => setSidebarWidthExpanded(true)}
             >
-              <SidebarExpandIcon width={20} height={20} />
+              <img
+                className="project-sidebar-edge-icon-img"
+                src={SIDEBAR_EXPAND_ICON_SRC}
+                alt=""
+                width={18}
+                height={18}
+                decoding="async"
+              />
             </button>
             <button
               type="button"
@@ -621,12 +695,19 @@ export function ProjectDetailsPanel({
               aria-label="Close project panel"
               onClick={onExploreMap}
             >
-              <CloseIcon width={20} height={20} />
+              <img
+                className="project-sidebar-edge-icon-img"
+                src={SIDEBAR_COLLAPSE_ICON_SRC}
+                alt=""
+                width={18}
+                height={18}
+                decoding="async"
+              />
             </button>
           </div>
         ) : null}
       </div>
-      {votingRecordDialog}
+      {votingRecordPortal}
     </>
   );
 }
