@@ -17,25 +17,42 @@ const baseCard = {
 };
 
 describe("buildProjectMarkers", () => {
-  it("creates one marker per resolved project with coordinates from geocoding", () => {
+  it("creates one marker per project using backend geocode coordinates", () => {
     const markers = buildProjectMarkers([
       {
-        card: {
-          ...baseCard,
-          id: "25-0358",
-          title: "Council File 25-0358",
+        ...baseCard,
+        id: "25-0358",
+        title: "Council File 25-0358",
+        address_info: {
+          project_title: "Council File 25-0358",
+          primary_address: "123 Main Street",
+          addresses: ["123 Main Street"],
+          places: [],
+          topics: [],
+          segments: [],
+          geocode: {
+            longitude: -118.4,
+            latitude: 34.05,
+            provider: "test",
+          },
         },
-        longitude: -118.4,
-        latitude: 34.05,
       },
       {
-        card: {
-          ...baseCard,
-          id: "25-0400",
-          title: "Council File 25-0400",
+        ...baseCard,
+        id: "25-0400",
+        title: "Council File 25-0400",
+        address_info: {
+          project_title: "Council File 25-0400",
+          primary_address: "123 Main Street",
+          addresses: ["123 Main Street"],
+          places: [],
+          topics: [],
+          segments: [],
+          geocode: {
+            longitude: -118.41,
+            latitude: 34.06,
+          },
         },
-        longitude: -118.41,
-        latitude: 34.06,
       },
     ]);
 
@@ -47,5 +64,26 @@ describe("buildProjectMarkers", () => {
     expect(markers[0].latitude).toBe(34.05);
     expect(markers[1].longitude).toBe(-118.41);
     expect(markers[1].latitude).toBe(34.06);
+  });
+
+  it("skips projects without backend geocode coordinates", () => {
+    const markers = buildProjectMarkers([
+      {
+        ...baseCard,
+        id: "25-0501",
+        title: "Council File 25-0501",
+        address_info: {
+          project_title: "Council File 25-0501",
+          primary_address: "123 Main Street",
+          addresses: ["123 Main Street"],
+          places: [],
+          topics: [],
+          segments: [],
+          geocode: null,
+        },
+      },
+    ]);
+
+    expect(markers).toHaveLength(0);
   });
 });

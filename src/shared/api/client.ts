@@ -37,6 +37,7 @@ export async function getDistrictProjects(
   const url = new URL(`/districts/${districtId}/projects`, API_BASE_URL);
   url.searchParams.set("page", String(page));
   url.searchParams.set("page_size", String(pageSize));
+  url.searchParams.set("has_geocode", "true");
 
   const response = await fetch(url);
   if (!response.ok) {

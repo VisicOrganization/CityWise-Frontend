@@ -3,17 +3,11 @@ import { useEffect, useState } from "react";
 import { getDistrictProjects, getDistricts } from "../../shared/api/client";
 import type { DistrictProjectCard } from "../../shared/api/contracts";
 import { loadDistrictBoundaries, type DistrictBoundaryCollection } from "../../shared/map/districtBoundaries";
-import {
-  geocodeStreetAddress,
-  NOMINATIM_REQUEST_INTERVAL_MS,
-  sleep,
-} from "../../shared/map/geocodeAddress";
 import type { MapMarker } from "../../shared/map/mapTypes";
-import { getPrimaryStreetForGeocoding } from "../../shared/map/projectAddress";
-import { buildProjectMarkers, type ProjectMarkerInput } from "./projectMarkers";
+import { buildProjectMarkers } from "./projectMarkers";
 
 /** Map demo loads a small sample per district to limit API and geocoding work. */
-const MAP_PROJECTS_PER_DISTRICT = 3;
+const MAP_PROJECTS_PER_DISTRICT = 30;
 
 let cachedBoundariesPromise: Promise<DistrictBoundaryCollection> | null = null;
 let cachedProjectCardsPromise: Promise<DistrictProjectCard[]> | null = null;
@@ -125,59 +119,7 @@ export function useMapData(): UseMapDataState {
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-
-    async function resolveMarkers() {
-      if (projectCards.length === 0) {
-        setProjectMarkers([]);
-        return;
-      }
-
-      const streetToCards = new Map<string, DistrictProjectCard[]>();
-      for (const card of projectCards) {
-        const street = getPrimaryStreetForGeocoding(card);
-        if (!street) {
-          continue;
-        }
-        const list = streetToCards.get(street) ?? [];
-        list.push(card);
-        streetToCards.set(street, list);
-      }
-
-      const uniqueStreets = [...streetToCards.keys()];
-      const resolved: ProjectMarkerInput[] = [];
-
-      for (let i = 0; i < uniqueStreets.length; i++) {
-        if (cancelled) {
-          return;
-        }
-        if (i > 0) {
-          await sleep(NOMINATIM_REQUEST_INTERVAL_MS);
-        }
-        const street = uniqueStreets[i];
-        const coords = await geocodeStreetAddress(street);
-        if (cancelled || !coords) {
-          continue;
-        }
-        for (const card of streetToCards.get(street) ?? []) {
-          resolved.push({
-            card,
-            longitude: coords.longitude,
-            latitude: coords.latitude,
-          });
-        }
-      }
-
-      if (!cancelled) {
-        setProjectMarkers(buildProjectMarkers(resolved));
-      }
-    }
-
-    void resolveMarkers();
-
-    return () => {
-      cancelled = true;
-    };
+    setProjectMarkers(buildProjectMarkers(projectCards));
   }, [projectCards]);
 
   return { boundaries, projectCards, projectMarkers };

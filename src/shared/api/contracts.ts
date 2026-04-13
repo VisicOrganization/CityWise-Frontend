@@ -1,3 +1,9 @@
+export interface ProjectGeocode {
+  latitude: number;
+  longitude: number;
+  provider?: string;
+}
+
 export interface ProjectAddressInfo {
   project_title: string;
   primary_address: string | null;
@@ -5,6 +11,7 @@ export interface ProjectAddressInfo {
   places: string[];
   topics: string[];
   segments: string[];
+  geocode: ProjectGeocode | null;
 }
 
 /** Populated on district list when backend includes full parsed title (same shape as project detail). */
