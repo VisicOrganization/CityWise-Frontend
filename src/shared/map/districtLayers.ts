@@ -66,7 +66,7 @@ export const districtHighlightLayer: Omit<FillLayerSpecification, "source"> = {
   filter: ["==", ["get", "District"], -1],
   paint: {
     "fill-color": "#f97316",
-    "fill-opacity": 0.38,
+    "fill-opacity": 0.5,
   },
 };
 

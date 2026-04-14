@@ -88,6 +88,15 @@ a {
   font-weight: 700;
 }
 
+.brand-name {
+  color: #1d865e;
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 1.22rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
 .brand-pin {
   display: inline-flex;
   align-items: center;
@@ -122,7 +131,7 @@ a {
   color: #258f69;
   text-decoration: none;
   font-weight: 600;
-  font-size: 1.125rem;
+  font-size: 1.0125rem;
   line-height: 1.35;
   transition:
     color 0.18s ease,
@@ -219,12 +228,12 @@ a {
 }
 
 .landing-shell .top-nav-links a.active {
-  color: #1d865e;
+  color: #000000;
 }
 
 .landing-shell .top-nav-links a.active:hover {
-  color: #145a3f;
-  text-decoration-color: rgba(29, 134, 94, 0.5);
+  color: #111111;
+  text-decoration-color: rgba(0, 0, 0, 0.35);
 }
 
 .landing-hero {
@@ -312,6 +321,64 @@ a {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes landing-comment-float {
+  0% {
+    transform: translate(0, 0);
+  }
+
+  25% {
+    transform: translate(18px, -12px);
+  }
+
+  50% {
+    transform: translate(-14px, 16px);
+  }
+
+  75% {
+    transform: translate(11px, 24px);
+  }
+
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes map-district-pill-swap {
+  from {
+    opacity: 0.72;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes district-sheet-enter-from-bottom {
+  from {
+    opacity: 0;
+    transform: translateY(100vh);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes district-sheet-exit-to-bottom {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(100vh);
   }
 }
 
@@ -419,12 +486,17 @@ a {
 }
 
 .landing-comment {
+  --landing-comment-float-duration: 20s;
+  --landing-comment-float-delay: 0s;
   position: absolute;
   width: max-content;
   max-width: min(calc(100vw - 1.5rem), 100%);
   opacity: 0.88;
   user-select: none;
   font-size: clamp(0.65rem, 0.28rem + 1.35vw, 0.875rem);
+  animation: landing-comment-float var(--landing-comment-float-duration) ease-in-out
+    var(--landing-comment-float-delay) infinite;
+  will-change: transform;
 }
 
 .landing-comment-bubble {
@@ -485,17 +557,23 @@ a {
 .landing-comment--blue {
   top: 20.2%;
   left: 27.4%;
+  --landing-comment-float-duration: 22s;
+  --landing-comment-float-delay: -4s;
 }
 
 .landing-comment--grey {
   top: 26%;
   right: 14%;
   left: auto;
+  --landing-comment-float-duration: 26s;
+  --landing-comment-float-delay: -9s;
 }
 
 .landing-comment--green {
   top: 84.1%;
   left: 17.85%;
+  --landing-comment-float-duration: 30s;
+  --landing-comment-float-delay: -14s;
 }
 
 .landing-centerpiece {
@@ -550,7 +628,7 @@ a {
   border-radius: 999px;
   background: #ffffff;
   border: 1px solid #e1e1e1;
-  box-shadow: none;
+  box-shadow: 0 7px 14px -11px rgba(0, 0, 0, 0.62);
   font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
   font-size: clamp(0.8125rem, 0.16rem + 1.9vw, 1.0625rem);
   line-height: 1.25;
@@ -559,7 +637,9 @@ a {
 
 .landing-search:focus-within {
   border-color: rgba(29, 134, 94, 0.35);
-  box-shadow: 0 0 0 1px rgba(29, 134, 94, 0.12);
+  box-shadow:
+    0 0 0 1px rgba(29, 134, 94, 0.12),
+    0 7px 14px -11px rgba(0, 0, 0, 0.62);
 }
 
 .landing-search-icon {
@@ -634,6 +714,11 @@ a {
   font-weight: 600;
   line-height: 1.2;
   box-shadow: none;
+  transition: background-color 160ms ease-out;
+}
+
+.landing-search-button:hover {
+  background: #176e4d;
 }
 
 .landing-search-button-text {
@@ -768,6 +853,7 @@ a {
   line-height: 1.25;
   cursor: pointer;
   text-align: left;
+  animation: map-district-pill-swap 220ms ease-out both;
 }
 
 .map-district-pill:focus-visible {
@@ -3587,6 +3673,13 @@ a {
   min-height: 0;
   overflow: visible;
   pointer-events: none;
+  animation: district-sheet-enter-from-bottom 620ms cubic-bezier(0.2, 0.9, 0.2, 1) both;
+  will-change: transform, opacity;
+}
+
+.district-sheet-dock.is-closing {
+  animation: district-sheet-exit-to-bottom 620ms cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+  pointer-events: none;
 }
 
 .district-sheet-dock .district-bottom-sheet,
@@ -3618,6 +3711,12 @@ a {
   border: 1px solid #e1e1e1;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
   overflow: hidden;
+  cursor: pointer;
+}
+
+.district-sheet-top-pill:focus-visible {
+  outline: 2px solid rgba(29, 134, 94, 0.65);
+  outline-offset: 3px;
 }
 
 .district-sheet-top-pill-text {
@@ -3859,7 +3958,7 @@ a {
 .district-bottom-sheet .district-contact-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem 1.5rem;
+  gap: 1rem 0.75rem;
   margin: 1rem 0 0;
 }
 
@@ -3921,9 +4020,9 @@ a {
   font-weight: 400;
   line-height: normal;
   min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 /* Website URL: same as phone until hover/focus — then link styling */
@@ -3944,9 +4043,9 @@ a {
   color: rgba(0, 0, 0, 0.8);
   text-decoration: underline;
   text-underline-offset: 0.12em;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .district-impact-panel {
@@ -4002,6 +4101,18 @@ a {
   box-sizing: border-box;
   padding-block: clamp(0.875rem, 0.65rem + 0.9vw, 1rem);
   padding-inline: clamp(1rem, 0.55rem + 2.8vw, 1.5rem);
+  transition:
+    transform 160ms ease-out,
+    box-shadow 160ms ease-out;
+}
+
+.district-overview-project-card:hover {
+  transform: scale(1.01);
+  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.district-overview-project-card:focus-within {
+  transform: scale(1.01);
 }
 
 .district-overview-project-card__top {
@@ -4611,7 +4722,7 @@ a {
   }
 
   .map-district-pill-shell.is-hidden {
-    transform: translateX(-50%) translateY(-10px);
+    transform: translateX(-50%) translateY(100vh);
   }
 
   .map-search-dock {
@@ -4981,5 +5092,24 @@ a {
   .landing-hero .landing-comment-bubble {
     animation: none !important;
     opacity: 1;
+  }
+
+  .landing-hero .landing-comment {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .map-district-pill-shell {
+    transition: none !important;
+  }
+
+  .map-district-pill,
+  .district-sheet-dock {
+    animation: none !important;
+  }
+
+  .district-overview-project-card {
+    transition: none !important;
+    transform: none !important;
   }
 }

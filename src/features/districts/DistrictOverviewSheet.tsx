@@ -69,6 +69,7 @@ function projectStatusVariant(status: string): "completed" | "planned" | "in_pro
 
 interface DistrictOverviewSheetProps {
   districtId: number;
+  isClosing?: boolean;
   onOpenMap: () => void;
   /** Shown in the top pill (e.g. searched address); falls back to “District {id}”. */
   focusLabel?: string | null;
@@ -132,6 +133,7 @@ function DistrictAboutSection({ text }: { text: string }) {
 
 export function DistrictOverviewSheet({
   districtId,
+  isClosing = false,
   onOpenMap,
   focusLabel = null,
   onSelectProjectOnMap,
@@ -194,15 +196,20 @@ export function DistrictOverviewSheet({
   const topPillText = (focusLabel?.trim() || `District ${districtId}`).trim();
 
   return (
-    <div className="district-sheet-dock">
+    <div className={`district-sheet-dock${isClosing ? " is-closing" : ""}`}>
       <div className="district-sheet-top-pill-shell">
-        <div className="district-sheet-top-pill font-schibsted" role="status">
+        <button
+          type="button"
+          className="district-sheet-top-pill font-schibsted"
+          aria-label="Return to map from district overview"
+          onClick={onOpenMap}
+        >
           <span className="district-sheet-top-pill-text">{topPillText}</span>
-        </div>
+        </button>
       </div>
       <section
         className="district-bottom-sheet district-bottom-sheet--scroll font-schibsted"
-        aria-label="District overview"
+        aria-label={isClosing ? "District overview closing" : "District overview"}
         onClick={(event) => event.stopPropagation()}
       >
         <div className="district-sheet-scroll-area">
