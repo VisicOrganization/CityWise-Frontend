@@ -490,6 +490,16 @@ export function CityMap({
           </div>
         </>
       )}
+
+      <a
+        className="map-feedback-button"
+        href="https://forms.gle/kqi9Ex3VA47HhoC28"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Open CityWise feedback form in a new tab"
+      >
+        Give us your feedback!
+      </a>
     </div>
   );
 }

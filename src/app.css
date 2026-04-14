@@ -1030,6 +1030,37 @@ a {
   gap: 0.7rem;
 }
 
+.map-feedback-button {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid #e3e3e3;
+  background: rgba(255, 247, 214, 0.98);
+  box-shadow: 0 8px 20px rgba(23, 50, 77, 0.2);
+  color: #17324d;
+  font-family: "Schibsted Grotesk", "Public Sans", "Segoe UI", sans-serif;
+  font-size: clamp(0.8125rem, 0.7rem + 0.35vw, 0.925rem);
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.map-feedback-button:hover {
+  background: #fff3c9;
+}
+
+.map-feedback-button:focus-visible {
+  outline: 2px solid rgba(29, 134, 94, 0.7);
+  outline-offset: 2px;
+}
+
 /* Figma map chrome: stacked pills, no compass (District Map 1506:5435) */
 .map-control-stack--figma {
   top: 1.5rem;
@@ -1651,12 +1682,7 @@ a {
 
 /* Figma 1099:2521 — flat rectangle, flush with sidebar top (no radius) */
 .project-sidebar-category-bar {
-  flex-shrink: 0;
-  box-sizing: border-box;
-  width: 100%;
-  height: 24px;
-  min-height: 24px;
-  border-radius: 0;
+  display: none;
 }
 
 .project-sidebar-figma-main {
@@ -4817,7 +4843,14 @@ a {
   .map-control-stack {
     top: auto;
     right: 1rem;
-    bottom: 1rem;
+    bottom: calc(max(0.75rem, env(safe-area-inset-bottom, 0px)) + 3.35rem);
+  }
+
+  .map-feedback-button {
+    right: max(0.75rem, env(safe-area-inset-right, 0px));
+    bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+    min-height: 2.35rem;
+    padding: 0.45rem 0.85rem;
   }
 
   .map-figma-flyout {
