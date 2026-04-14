@@ -302,15 +302,15 @@ export function DistrictOverviewSheet({
           </section>
         </div>
 
-        {!isLoading ? (
-          <button
-            type="button"
-            className="district-open-map-fixed font-schibsted"
-            onClick={onOpenMap}
-          >
-            Open Map
-          </button>
-        ) : null}
+        <button
+          type="button"
+          className="district-open-map-fixed font-schibsted"
+          onClick={onOpenMap}
+          disabled={isLoading}
+          aria-disabled={isLoading}
+        >
+          Open Map
+        </button>
       </section>
     </div>
   );
