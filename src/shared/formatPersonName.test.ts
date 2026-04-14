@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { formatPersonNameForDisplay } from "./formatPersonName";
+import { formatName, formatPersonNameForDisplay } from "./formatPersonName";
+
+describe("formatName", () => {
+  it("matches formatPersonNameForDisplay", () => {
+    expect(formatName("TRACI PARK")).toBe("Traci Park");
+    expect(formatName("  heather hutt  ")).toBe("Heather Hutt");
+  });
+});
 
 describe("formatPersonNameForDisplay", () => {
   it("title-cases each word", () => {

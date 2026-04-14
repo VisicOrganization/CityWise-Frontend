@@ -26,3 +26,6 @@ export function formatPersonNameForDisplay(name: string): string {
     )
     .join(" ");
 }
+
+/** Alias for display title-casing (e.g. council members, movers). */
+export const formatName = formatPersonNameForDisplay;
