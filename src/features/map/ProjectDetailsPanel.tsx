@@ -195,6 +195,7 @@ export function ProjectDetailsPanel({
   errorMessage,
   onExploreMap,
 }: ProjectDetailsPanelProps) {
+  const MOBILE_SIDEBAR_CLOSE_ANIMATION_MS = 620;
   const sidebarRef = useRef<HTMLElement>(null);
   const voteButtonRef = useRef<HTMLButtonElement>(null);
   const [isVotingPopoverOpen, setIsVotingPopoverOpen] = useState(false);
@@ -205,6 +206,7 @@ export function ProjectDetailsPanel({
   } | null>(null);
   const [timelineViewOpen, setTimelineViewOpen] = useState(false);
   const [sidebarWidthExpanded, setSidebarWidthExpanded] = useState(false);
+  const [mobileSidebarClosing, setMobileSidebarClosing] = useState(false);
   const isMobileLayout = useMobileProjectSidebarLayout();
 
   useEffect(() => {
@@ -224,6 +226,23 @@ export function ProjectDetailsPanel({
       setTimelineViewOpen(false);
     }
   }, [sidebarWidthExpanded]);
+
+  useEffect(() => {
+    if (!isMobileLayout && mobileSidebarClosing) {
+      setMobileSidebarClosing(false);
+    }
+  }, [isMobileLayout, mobileSidebarClosing]);
+
+  const handleCloseProjectSidebar = useCallback(() => {
+    if (!isMobileLayout || mobileSidebarClosing) {
+      onExploreMap();
+      return;
+    }
+    setMobileSidebarClosing(true);
+    window.setTimeout(() => {
+      onExploreMap();
+    }, MOBILE_SIDEBAR_CLOSE_ANIMATION_MS);
+  }, [isMobileLayout, mobileSidebarClosing, onExploreMap]);
 
   const title = detail?.project.title ?? marker?.label ?? "Project details";
   const summary = detail?.project.summary ?? marker?.summary ?? "";
@@ -402,13 +421,15 @@ export function ProjectDetailsPanel({
       : null;
 
   const showTimelinePanel = Boolean(detail && timelineViewOpen && verticalTimelineItems.length > 0);
-  const showInlineVotingPanel = Boolean(isMobileLayout && isVotingPopoverOpen && detail);
-  const sidebarAuxExpanded = Boolean(showTimelinePanel || showInlineVotingPanel);
+  const showInlineVotingModal = Boolean(isMobileLayout && isVotingPopoverOpen && detail);
+  const sidebarAuxExpanded = Boolean(showTimelinePanel);
 
   return (
     <>
       <div
-        className={`project-sidebar-host${sidebarWidthExpanded ? " project-sidebar-host--expanded" : ""}`}
+        className={`project-sidebar-host${sidebarWidthExpanded ? " project-sidebar-host--expanded" : ""}${
+          isMobileLayout && !sidebarWidthExpanded ? " project-sidebar-host--mobile-enter" : ""
+        }${mobileSidebarClosing ? " project-sidebar-host--mobile-closing" : ""}`}
       >
         <aside
           ref={sidebarRef}
@@ -468,6 +489,16 @@ export function ProjectDetailsPanel({
               />
 
               <div className="project-sidebar-figma-main">
+                {isMobileLayout ? (
+                  <button
+                    type="button"
+                    className="project-sidebar-mobile-close"
+                    aria-label="Close project overview"
+                    onClick={handleCloseProjectSidebar}
+                  >
+                    <CloseIcon width={16} height={16} />
+                  </button>
+                ) : null}
                 <div className="project-sidebar-figma-scroll">
                 <header className="project-sidebar-header">
                   <div className="project-sidebar-title-band">
@@ -567,23 +598,6 @@ export function ProjectDetailsPanel({
                       }}
                     />
                   </div>
-                ) : showInlineVotingPanel ? (
-                  <div
-                    id="project-voting-record-panel"
-                    className="project-sidebar-voting-expanded"
-                    role="region"
-                    aria-label="Voting record"
-                  >
-                    <div className="voting-popover voting-popover--inline">
-                      <VotingRecordPopoverContent
-                        voteTally={voteTally}
-                        voteRows={voteRows}
-                        primaryMoverId={primaryMoverId}
-                        votingRecordFooter={votingRecordFooter}
-                        onClose={() => setIsVotingPopoverOpen(false)}
-                      />
-                    </div>
-                  </div>
                 ) : (
                   <>
                     {isLoading ? <p className="project-sidebar-status">Loading backend project data…</p> : null}
@@ -672,11 +686,34 @@ export function ProjectDetailsPanel({
                 </div>
 
                 <div className="project-sidebar-footer-cta">
-                  <button type="button" className="project-sidebar-explore-map" onClick={onExploreMap}>
+                  <button type="button" className="project-sidebar-explore-map" onClick={handleCloseProjectSidebar}>
                     Explore Map
                   </button>
                 </div>
               </div>
+              {showInlineVotingModal ? (
+                <div
+                  className="project-sidebar-voting-modal-backdrop"
+                  role="presentation"
+                  onClick={() => setIsVotingPopoverOpen(false)}
+                >
+                  <div
+                    className="project-sidebar-voting-modal"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Voting record"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <VotingRecordPopoverContent
+                      voteTally={voteTally}
+                      voteRows={voteRows}
+                      primaryMoverId={primaryMoverId}
+                      votingRecordFooter={votingRecordFooter}
+                      onClose={() => setIsVotingPopoverOpen(false)}
+                    />
+                  </div>
+                </div>
+              ) : null}
             </div>
           )}
         </div>
@@ -703,7 +740,7 @@ export function ProjectDetailsPanel({
               type="button"
               className="project-sidebar-edge-btn project-sidebar-edge-btn--close"
               aria-label="Close project panel"
-              onClick={onExploreMap}
+              onClick={handleCloseProjectSidebar}
             >
               <img
                 className="project-sidebar-edge-icon-img"

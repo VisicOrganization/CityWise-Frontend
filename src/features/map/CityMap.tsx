@@ -104,16 +104,20 @@ export function CityMap({
   onOpenDistrictOverview,
   onDistrictSelect,
 }: CityMapProps) {
+  const DISTRICT_PILL_SWAP_MS = 140;
   const mapRef = useRef<MapRef>(null);
   const [viewState, setViewState] = useState(DEFAULT_VIEW_STATE);
   const lastDistrictFocusRef = useRef<number | null>(null);
   const lastHandledRefocusSignalRef = useRef(0);
+  const lastPillDistrictIdRef = useRef<number | null>(null);
+  const pillSwapTimeoutRef = useRef<number | null>(null);
   const [lastVisibleDistrictId, setLastVisibleDistrictId] = useState<number | null>(null);
   const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null);
   const [searchDismissSignal, setSearchDismissSignal] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [pillPortraitFailed, setPillPortraitFailed] = useState(false);
+  const [isDistrictPillVisible, setIsDistrictPillVisible] = useState(true);
 
   const { profile: districtProfile } = useDistrictProfile(activeDistrictId);
   const { biosByDistrict } = useCouncilMemberBios();
@@ -151,6 +155,43 @@ export function CityMap({
   useEffect(() => {
     setPillPortraitFailed(false);
   }, [portraitSrc, activeDistrictId]);
+
+  useEffect(() => {
+    return () => {
+      if (pillSwapTimeoutRef.current != null) {
+        window.clearTimeout(pillSwapTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (activeDistrictId == null) {
+      lastPillDistrictIdRef.current = null;
+      setIsDistrictPillVisible(false);
+      if (pillSwapTimeoutRef.current != null) {
+        window.clearTimeout(pillSwapTimeoutRef.current);
+        pillSwapTimeoutRef.current = null;
+      }
+      return;
+    }
+
+    const previousDistrictId = lastPillDistrictIdRef.current;
+    lastPillDistrictIdRef.current = activeDistrictId;
+
+    if (previousDistrictId == null || previousDistrictId === activeDistrictId) {
+      setIsDistrictPillVisible(true);
+      return;
+    }
+
+    setIsDistrictPillVisible(false);
+    if (pillSwapTimeoutRef.current != null) {
+      window.clearTimeout(pillSwapTimeoutRef.current);
+    }
+    pillSwapTimeoutRef.current = window.setTimeout(() => {
+      setIsDistrictPillVisible(true);
+      pillSwapTimeoutRef.current = null;
+    }, DISTRICT_PILL_SWAP_MS);
+  }, [activeDistrictId]);
 
   useLayoutEffect(() => {
     const shouldForceRefocus = districtRefocusSignal !== lastHandledRefocusSignalRef.current;
@@ -332,10 +373,11 @@ export function CityMap({
       </Map>
 
       <div
-        className={`map-district-pill-shell ${activeDistrict && !districtOverviewOpen ? "is-visible" : "is-hidden"}`}
+        className={`map-district-pill-shell ${
+          activeDistrict && !districtOverviewOpen && isDistrictPillVisible ? "is-visible" : "is-hidden"
+        }`}
       >
         <button
-          key={activeDistrictId ?? "none"}
           type="button"
           className="map-district-pill"
           onClick={() => {

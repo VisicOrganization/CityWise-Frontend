@@ -348,13 +348,11 @@ a {
 
 @keyframes map-district-pill-swap {
   from {
-    opacity: 0.72;
-    transform: translateY(6px);
+    opacity: 0.65;
   }
 
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
@@ -801,9 +799,9 @@ a {
 .map-district-pill-shell,
 .district-route-pill {
   position: absolute;
-  top: 1rem;
+  top: calc(max(env(safe-area-inset-top, 0px), 0px) + 1rem);
   left: 50%;
-  z-index: 6;
+  z-index: 8;
   transform: translateX(-50%);
 }
 
@@ -821,8 +819,8 @@ a {
 
 .map-district-pill-shell {
   transition:
-    opacity 180ms ease,
-    transform 220ms ease;
+    opacity 90ms ease-out,
+    transform 120ms ease-out;
 }
 
 .map-district-pill-shell.is-visible {
@@ -853,7 +851,7 @@ a {
   line-height: 1.25;
   cursor: pointer;
   text-align: left;
-  animation: map-district-pill-swap 220ms ease-out both;
+  animation: none;
 }
 
 .map-district-pill:focus-visible {
@@ -902,6 +900,10 @@ a {
 .map-district-pill-sep {
   color: rgba(0, 0, 0, 0.45);
   font-weight: 500;
+}
+
+.map-district-pill-name {
+  font: inherit;
 }
 
 .map-district-pill-district {
@@ -993,8 +995,28 @@ a {
     width: min(26rem, calc(100vw - 2rem));
   }
 
-  .map-district-pill-shell {
-    top: 5.25rem;
+  .map-district-pill-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.1rem;
+  }
+
+  .map-district-pill-sep {
+    display: none;
+  }
+
+  .map-district-pill-name {
+    display: block;
+    font-size: 1.02rem;
+    font-weight: 600;
+    line-height: 1.15;
+  }
+
+  .map-district-pill-district {
+    display: block;
+    font-size: 0.84rem;
+    line-height: 1.2;
   }
 }
 
@@ -1618,6 +1640,7 @@ a {
 
 /* Shell: category bar is sharp full-width; white body below gets rounded top corners */
 .project-sidebar-figma-surface {
+  position: relative;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -1640,11 +1663,59 @@ a {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
+  position: relative;
   min-height: 0;
   overflow: hidden;
   background: #ffffff;
   border-top-left-radius: 25px;
   border-top-right-radius: 25px;
+}
+
+.project-sidebar-mobile-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #e3e3e3;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #6b7280;
+  box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+
+.project-sidebar-voting-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.38);
+}
+
+.project-sidebar-voting-modal {
+  width: min(100%, 34rem);
+  max-height: min(92%, 44rem);
+  padding: 0;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow:
+    0 14px 30px rgba(15, 23, 42, 0.22),
+    0 6px 14px rgba(15, 23, 42, 0.16);
+  overflow-y: auto;
+}
+
+.project-sidebar-voting-modal .voting-popover-header-row,
+.project-sidebar-voting-modal .voting-popover-section,
+.project-sidebar-voting-modal .voting-popover-footer {
+  background: #ffffff;
 }
 
 .project-sidebar-category-bar--expanded {
@@ -4604,6 +4675,17 @@ a {
 }
 
 @media (max-width: 640px) {
+  .project-sidebar-host--mobile-enter {
+    animation: district-sheet-enter-from-bottom 620ms cubic-bezier(0.2, 0.9, 0.2, 1) both;
+    will-change: transform, opacity;
+  }
+
+  .project-sidebar-host--mobile-closing {
+    animation: district-sheet-exit-to-bottom 620ms cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+    pointer-events: none;
+    will-change: transform, opacity;
+  }
+
   .top-nav {
     min-height: 4.85rem;
     padding: 0.85rem max(0.75rem, var(--top-nav-side-inset));
@@ -4722,7 +4804,7 @@ a {
   }
 
   .map-district-pill-shell.is-hidden {
-    transform: translateX(-50%) translateY(100vh);
+    transform: translateX(-50%) translateY(-10px);
   }
 
   .map-search-dock {
@@ -4736,6 +4818,15 @@ a {
     top: auto;
     right: 1rem;
     bottom: 1rem;
+  }
+
+  .map-figma-flyout {
+    top: auto;
+    bottom: 0.4rem;
+    max-width: min(18rem, calc(100vw - 5rem));
+    max-height: calc(100dvh - 2.5rem);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .maplibregl-ctrl-top-right,

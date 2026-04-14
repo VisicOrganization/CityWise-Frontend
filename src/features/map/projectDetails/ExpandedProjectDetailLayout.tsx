@@ -356,7 +356,6 @@ export function ExpandedProjectDetailLayout({
             decoding="async"
           />
         </button>
-
         <div className="project-expanded-sheet-scroll">
           <ProjectHeader
             detail={detail}
