@@ -114,6 +114,7 @@ export function CityMap({
   const [lastVisibleDistrictId, setLastVisibleDistrictId] = useState<number | null>(null);
   const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null);
   const [searchDismissSignal, setSearchDismissSignal] = useState(0);
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [pillPortraitFailed, setPillPortraitFailed] = useState(false);
@@ -374,7 +375,9 @@ export function CityMap({
 
       <div
         className={`map-district-pill-shell ${
-          activeDistrict && !districtOverviewOpen && isDistrictPillVisible ? "is-visible" : "is-hidden"
+          activeDistrict && !districtOverviewOpen && isDistrictPillVisible && !isSearchExpanded
+            ? "is-visible"
+            : "is-hidden"
         }`}
       >
         <button
@@ -415,7 +418,7 @@ export function CityMap({
       {districtOverviewOpen ? null : (
         <>
           <div className="map-search-dock">
-            <MapAddressSearch dismissSignal={searchDismissSignal} />
+            <MapAddressSearch dismissSignal={searchDismissSignal} onExpandedChange={setIsSearchExpanded} />
           </div>
 
           <div className="map-control-stack map-control-stack--figma" aria-label="Map controls">

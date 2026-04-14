@@ -11,9 +11,11 @@ import { searchAddresses, type GeocodeSearchResult } from "../../shared/map/geoc
 interface MapAddressSearchProps {
   /** Increment when the map background is clicked so the expanded search closes. */
   dismissSignal: number;
+  /** Emits whether the search UI is currently expanded. */
+  onExpandedChange?: (expanded: boolean) => void;
 }
 
-export function MapAddressSearch({ dismissSignal }: MapAddressSearchProps) {
+export function MapAddressSearch({ dismissSignal, onExpandedChange }: MapAddressSearchProps) {
   const [, setSearchParams] = useSearchParams();
   const [expanded, setExpanded] = useState(false);
   const [query, setQuery] = useState("");
@@ -25,6 +27,10 @@ export function MapAddressSearch({ dismissSignal }: MapAddressSearchProps) {
     }
     setExpanded(false);
   }, [dismissSignal]);
+
+  useEffect(() => {
+    onExpandedChange?.(expanded);
+  }, [expanded, onExpandedChange]);
 
   useEffect(() => {
     let ignore = false;
