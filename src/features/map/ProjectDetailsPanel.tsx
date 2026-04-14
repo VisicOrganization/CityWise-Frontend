@@ -244,7 +244,15 @@ export function ProjectDetailsPanel({
     }, MOBILE_SIDEBAR_CLOSE_ANIMATION_MS);
   }, [isMobileLayout, mobileSidebarClosing, onExploreMap]);
 
-  const title = detail?.project.title ?? marker?.label ?? "Project details";
+  const rawTitle = detail?.project.title ?? marker?.label ?? "Project details";
+  const title = useMemo(() => {
+    const slashIndex = rawTitle.indexOf("/");
+    if (slashIndex < 0) {
+      return rawTitle;
+    }
+    const beforeSlash = rawTitle.slice(0, slashIndex).trim();
+    return beforeSlash.length > 0 ? beforeSlash : rawTitle;
+  }, [rawTitle]);
   const summary = detail?.project.summary ?? marker?.summary ?? "";
   const status = detail?.project.status ?? "loading";
 
