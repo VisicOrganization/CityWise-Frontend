@@ -4,6 +4,8 @@ import type { VerticalTimelineItem } from "./timelineMilestones";
 
 export interface VerticalTimelineViewProps {
   items: VerticalTimelineItem[];
+  /** Return to the main project overview (sidebar default). */
+  onOverviewClick: () => void;
 }
 
 function DescriptionText({
@@ -28,14 +30,21 @@ function DescriptionText({
   return <span className="project-v-timeline-desc">{text}</span>;
 }
 
-export function VerticalTimelineView({ items }: VerticalTimelineViewProps) {
+export function VerticalTimelineView({ items, onOverviewClick }: VerticalTimelineViewProps) {
   if (items.length === 0) {
     return null;
   }
 
   return (
     <div className="project-v-timeline" role="region" aria-label="Project timeline overview">
-      <h3 className="project-v-timeline-overview-heading">Overview</h3>
+      <button
+        type="button"
+        className="project-v-timeline-overview-heading"
+        onClick={onOverviewClick}
+        aria-label="Back to project overview"
+      >
+        Overview
+      </button>
 
       <div className="project-v-timeline-inner">
         <div className="project-v-timeline-line" aria-hidden="true" />

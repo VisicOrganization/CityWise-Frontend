@@ -4,6 +4,8 @@ export interface MapMarker {
   id: string;
   category: MarkerCategory;
   label: string;
+  /** Short description for map hover card (from project card summary). */
+  summary: string;
   longitude: number;
   latitude: number;
   districtId: number | null;

@@ -26,6 +26,7 @@ export function buildProjectMarkers(cards: DistrictProjectCard[]): MapMarker[] {
     kind: "project" as const,
     category: categoryFromProject(card),
     label: card.title,
+    summary: card.summary ?? "",
       longitude: geocode.longitude,
       latitude: geocode.latitude,
     }];

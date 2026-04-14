@@ -2,7 +2,7 @@ import { useEffect, useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { searchAddresses, type GeocodeSearchResult } from "../../shared/map/geocodeSearch";
-import { findDistrictIdForPoint, loadDistrictBoundaries } from "../../shared/map/districtBoundaries";
+import { navigateToMapFromAddressSearch } from "../../shared/map/mapNavigateFromAddressSearch";
 import { AppShell } from "../../shared/ui/AppShell";
 import { SearchIcon } from "../../shared/ui/visicIcons";
 
@@ -57,40 +57,6 @@ export function LandingPage() {
     };
   }, [query]);
 
-  async function navigateToMapWithDistrict(queryLabel: string, selectedResult?: GeocodeSearchResult) {
-    const trimmedQuery = queryLabel.trim();
-    if (!trimmedQuery) {
-      navigate("/map");
-      return;
-    }
-
-    let primaryResult = selectedResult;
-    if (!primaryResult) {
-      const nextResults = await searchAddresses(trimmedQuery);
-      primaryResult = nextResults[0];
-    }
-
-    const nextParams = new URLSearchParams();
-
-    if (primaryResult) {
-      nextParams.set("focusLat", String(primaryResult.latitude));
-      nextParams.set("focusLng", String(primaryResult.longitude));
-      nextParams.set("focusLabel", trimmedQuery);
-      try {
-        const boundaries = await loadDistrictBoundaries();
-        const districtId = findDistrictIdForPoint(boundaries, primaryResult.longitude, primaryResult.latitude);
-        if (districtId !== null) {
-          nextParams.set("districtFocus", String(districtId));
-          nextParams.set("showDistrictProfile", "1");
-        }
-      } catch {
-        // Keep search flow resilient when boundaries lookup fails.
-      }
-    }
-
-    navigate(`/map?${nextParams.toString()}`);
-  }
-
   async function handleSearch() {
     const trimmedQuery = query.trim();
     if (!trimmedQuery) {
@@ -99,7 +65,7 @@ export function LandingPage() {
     }
 
     try {
-      await navigateToMapWithDistrict(trimmedQuery);
+      await navigateToMapFromAddressSearch(navigate, trimmedQuery);
     } catch {
       navigate("/map");
     }
@@ -193,7 +159,7 @@ export function LandingPage() {
                       type="button"
                       onClick={() => {
                         setQuery(result.label);
-                        void navigateToMapWithDistrict(result.label, result);
+                        void navigateToMapFromAddressSearch(navigate, result.label, result);
                       }}
                     >
                       {result.label}
