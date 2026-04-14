@@ -201,7 +201,7 @@ export function DistrictOverviewSheet({
         <button
           type="button"
           className="district-sheet-top-pill font-schibsted"
-          aria-label="Close district overview"
+          aria-label="Return to map from district overview"
           onClick={onOpenMap}
         >
           <span className="district-sheet-top-pill-text">{topPillText}</span>
@@ -209,7 +209,7 @@ export function DistrictOverviewSheet({
       </div>
       <section
         className="district-bottom-sheet district-bottom-sheet--scroll font-schibsted"
-        aria-label="District overview"
+        aria-label={isClosing ? "District overview closing" : "District overview"}
         onClick={(event) => event.stopPropagation()}
       >
         <div className="district-sheet-scroll-area">
