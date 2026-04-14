@@ -82,6 +82,14 @@ function categoryAccentBarColor(marker: MapMarker | null): string {
 }
 
 function categoryLine(marker: MapMarker | null, detail: ProjectDetail | null): string {
+  const topicParts = detail?.address_info?.topics
+    ?.map((topic) => topic.trim())
+    .filter((topic) => topic.length > 0);
+  if (topicParts && topicParts.length > 0) {
+    const unique = Array.from(new Set(topicParts));
+    return unique.slice(0, 2).join(" & ");
+  }
+
   const base =
     marker?.category === "housing"
       ? "Housing"
@@ -218,6 +226,7 @@ export function ProjectDetailsPanel({
   }, [sidebarWidthExpanded]);
 
   const title = detail?.project.title ?? marker?.label ?? "Project details";
+  const summary = detail?.project.summary ?? marker?.summary ?? "";
   const status = detail?.project.status ?? "loading";
 
   const voteRows = useMemo(() => {
@@ -417,6 +426,7 @@ export function ProjectDetailsPanel({
                 detail={detail}
                 title={title}
                 category={category}
+                summary={summary}
                 externalUrl={externalUrl}
                 status={status}
                 voteRows={voteRows}

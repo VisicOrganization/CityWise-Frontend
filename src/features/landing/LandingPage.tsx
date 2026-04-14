@@ -140,6 +140,7 @@ export function LandingPage() {
                   type="text"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
+                  autoFocus
                   aria-label="Search address"
                   placeholder="Enter your address to search..."
                 />

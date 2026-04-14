@@ -81,6 +81,8 @@ interface CityMapProps {
   activeDistrictId: number | null;
   /** Geocoded address from landing; used to zoom before district GeoJSON is ready, and as fallback. */
   addressFocusPoint?: { latitude: number; longitude: number } | null;
+  /** Increments when map should re-center on current district. */
+  districtRefocusSignal?: number;
   /** Hides the floating district pill (e.g. while the district overview sheet is open — avoids a second “divot”). */
   districtOverviewOpen?: boolean;
   onMarkerSelect: (marker: MapMarker) => void;
@@ -95,6 +97,7 @@ export function CityMap({
   activeMarkerId,
   activeDistrictId,
   addressFocusPoint = null,
+  districtRefocusSignal = 0,
   districtOverviewOpen = false,
   onMarkerSelect,
   onMapBackgroundClick,
@@ -104,6 +107,7 @@ export function CityMap({
   const mapRef = useRef<MapRef>(null);
   const [viewState, setViewState] = useState(DEFAULT_VIEW_STATE);
   const lastDistrictFocusRef = useRef<number | null>(null);
+  const lastHandledRefocusSignalRef = useRef(0);
   const [lastVisibleDistrictId, setLastVisibleDistrictId] = useState<number | null>(null);
   const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null);
   const [searchDismissSignal, setSearchDismissSignal] = useState(0);
@@ -149,6 +153,12 @@ export function CityMap({
   }, [portraitSrc, activeDistrictId]);
 
   useLayoutEffect(() => {
+    const shouldForceRefocus = districtRefocusSignal !== lastHandledRefocusSignalRef.current;
+    if (shouldForceRefocus) {
+      lastHandledRefocusSignalRef.current = districtRefocusSignal;
+      lastDistrictFocusRef.current = null;
+    }
+
     if (activeDistrictId == null) {
       lastDistrictFocusRef.current = null;
       if (addressFocusPoint) {
@@ -212,7 +222,7 @@ export function CityMap({
         zoom: Math.max(current.zoom, 12.8),
       }));
     }
-  }, [activeDistrictId, boundaries, addressFocusPoint]);
+  }, [activeDistrictId, boundaries, addressFocusPoint, districtRefocusSignal]);
 
   function handleZoom(delta: number) {
     const map = mapRef.current?.getMap();
@@ -311,9 +321,9 @@ export function CityMap({
                     height={48}
                     draggable={false}
                   />
-                  <span className="map-marker-side-title" style={{ color: titleColor }}>
+                  {/* <span className="map-marker-side-title" style={{ color: titleColor }}>
                     {marker.label}
-                  </span>
+                  </span> */}
                 </span>
               </button>
             </Marker>
@@ -325,6 +335,7 @@ export function CityMap({
         className={`map-district-pill-shell ${activeDistrict && !districtOverviewOpen ? "is-visible" : "is-hidden"}`}
       >
         <button
+          key={activeDistrictId ?? "none"}
           type="button"
           className="map-district-pill"
           onClick={() => {

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { DistrictOverviewSheet } from "../districts/DistrictOverviewSheet";
@@ -9,12 +9,17 @@ import { ProjectDetailsPanel } from "./ProjectDetailsPanel";
 import { useMapData } from "./useMapData";
 import { useProjectDetail } from "./useProjectDetail";
 
+const DISTRICT_SHEET_ANIMATION_MS = 620;
+
 
 export function MapPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeMarker, setActiveMarker] = useState<MapMarker | null>(null);
   const [activeDistrictId, setActiveDistrictId] = useState<number | null>(null);
   const [isProjectSidebarOpen, setIsProjectSidebarOpen] = useState(true);
+  const [districtRefocusSignal, setDistrictRefocusSignal] = useState(0);
+  const [isDistrictOverviewClosing, setIsDistrictOverviewClosing] = useState(false);
+  const districtOverviewCloseTimeoutRef = useRef<number | null>(null);
   const districtFocusId = useMemo(() => {
     const districtFocusValue = searchParams.get("districtFocus");
     if (!districtFocusValue) {
@@ -26,6 +31,7 @@ export function MapPage() {
   }, [searchParams]);
   const districtProfileIntent = searchParams.get("showDistrictProfile");
   const shouldShowDistrictProfile = districtFocusId !== null && districtProfileIntent !== "0";
+  const shouldRenderDistrictOverview = districtFocusId !== null && (shouldShowDistrictProfile || isDistrictOverviewClosing);
   const addressFocusPoint = useMemo(() => {
     const latRaw = searchParams.get("focusLat");
     const lngRaw = searchParams.get("focusLng");
@@ -63,6 +69,24 @@ export function MapPage() {
     }
   }, [districtFocusId]);
 
+  useEffect(() => {
+    if (shouldShowDistrictProfile) {
+      setIsDistrictOverviewClosing(false);
+      if (districtOverviewCloseTimeoutRef.current !== null) {
+        window.clearTimeout(districtOverviewCloseTimeoutRef.current);
+        districtOverviewCloseTimeoutRef.current = null;
+      }
+    }
+  }, [shouldShowDistrictProfile]);
+
+  useEffect(() => {
+    return () => {
+      if (districtOverviewCloseTimeoutRef.current !== null) {
+        window.clearTimeout(districtOverviewCloseTimeoutRef.current);
+      }
+    };
+  }, []);
+
   async function handleMarkerSelect(marker: MapMarker) {
     setActiveMarker(marker);
     setActiveDistrictId(marker.districtId);
@@ -94,6 +118,19 @@ export function MapPage() {
     setDistrictFocus(districtId);
   }
 
+  function closeDistrictOverview() {
+    if (districtFocusId === null || isDistrictOverviewClosing) {
+      return;
+    }
+
+    setIsDistrictOverviewClosing(true);
+    districtOverviewCloseTimeoutRef.current = window.setTimeout(() => {
+      setDistrictFocus(districtFocusId, false);
+      setIsDistrictOverviewClosing(false);
+      districtOverviewCloseTimeoutRef.current = null;
+    }, DISTRICT_SHEET_ANIMATION_MS);
+  }
+
   function handleSelectProjectFromDistrictOverview(projectId: string) {
     const marker = projectMarkers.find((m) => m.kind === "project" && m.projectId === projectId) ?? null;
     if (!marker) {
@@ -113,6 +150,7 @@ export function MapPage() {
           markers={projectMarkers}
           activeMarkerId={activeMarker?.id ?? null}
           activeDistrictId={activeDistrictId}
+          districtRefocusSignal={districtRefocusSignal}
           addressFocusPoint={addressFocusPoint}
           districtOverviewOpen={Boolean(districtFocusId && shouldShowDistrictProfile)}
           onMarkerSelect={(marker) => {
@@ -135,18 +173,22 @@ export function MapPage() {
             onExploreMap={() => setIsProjectSidebarOpen(false)}
           />
         ) : null}
-        {(districtFocusId && shouldShowDistrictProfile) ? (
+        {districtFocusId !== null && shouldRenderDistrictOverview ? (
           <>
             <button
               type="button"
               className="district-sheet-dismiss-layer"
               aria-label="Close district overview"
-              onClick={() => setDistrictFocus(districtFocusId, false)}
+              onClick={closeDistrictOverview}
             />
             <DistrictOverviewSheet
               districtId={districtFocusId}
+              isClosing={isDistrictOverviewClosing}
               focusLabel={districtSheetFocusLabel}
-              onOpenMap={() => setDistrictFocus(districtFocusId, false)}
+              onOpenMap={() => {
+                setDistrictRefocusSignal((current) => current + 1);
+                closeDistrictOverview();
+              }}
               onSelectProjectOnMap={handleSelectProjectFromDistrictOverview}
             />
           </>
