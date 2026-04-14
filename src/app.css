@@ -86,6 +86,7 @@ a {
   color: #1c9a69;
   text-decoration: none;
   font-weight: 700;
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
 }
 
 .brand-pin {
@@ -103,13 +104,23 @@ a {
   object-fit: contain;
 }
 
-.brand-mark--logo-only {
-  gap: 0;
+.brand-mark--wordmark {
+  gap: 0.55rem;
 }
 
-.brand-mark--logo-only .brand-pin {
+.brand-mark--wordmark .brand-pin {
   width: 1.75rem;
   height: 2.45rem;
+  flex-shrink: 0;
+}
+
+.brand-wordmark {
+  font-size: calc(1.125rem * 0.9);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: inherit;
+  white-space: nowrap;
 }
 
 .top-nav-links {
@@ -122,7 +133,7 @@ a {
   color: #258f69;
   text-decoration: none;
   font-weight: 600;
-  font-size: 1.125rem;
+  font-size: calc(1.125rem * 0.9);
   line-height: 1.35;
   transition:
     color 0.18s ease,
@@ -219,12 +230,12 @@ a {
 }
 
 .landing-shell .top-nav-links a.active {
-  color: #1d865e;
+  color: #000000;
 }
 
 .landing-shell .top-nav-links a.active:hover {
-  color: #145a3f;
-  text-decoration-color: rgba(29, 134, 94, 0.5);
+  color: #1a1a1a;
+  text-decoration-color: rgba(0, 0, 0, 0.35);
 }
 
 .landing-hero {
@@ -312,6 +323,63 @@ a {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes landing-comment-float-blue {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  25% {
+    transform: translate3d(16px, -12px, 0);
+  }
+
+  50% {
+    transform: translate3d(22px, 10px, 0);
+  }
+
+  75% {
+    transform: translate3d(-12px, 14px, 0);
+  }
+}
+
+@keyframes landing-comment-float-grey {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  20% {
+    transform: translate3d(-18px, 12px, 0);
+  }
+
+  45% {
+    transform: translate3d(14px, 24px, 0);
+  }
+
+  70% {
+    transform: translate3d(26px, -14px, 0);
+  }
+}
+
+@keyframes landing-comment-float-green {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  30% {
+    transform: translate3d(14px, 18px, 0);
+  }
+
+  55% {
+    transform: translate3d(-22px, 8px, 0);
+  }
+
+  80% {
+    transform: translate3d(10px, -20px, 0);
   }
 }
 
@@ -425,6 +493,7 @@ a {
   opacity: 0.88;
   user-select: none;
   font-size: clamp(0.65rem, 0.28rem + 1.35vw, 0.875rem);
+  will-change: transform;
 }
 
 .landing-comment-bubble {
@@ -485,17 +554,23 @@ a {
 .landing-comment--blue {
   top: 20.2%;
   left: 27.4%;
+  animation: landing-comment-float-blue 24s ease-in-out infinite;
+  animation-delay: 0.5s;
 }
 
 .landing-comment--grey {
   top: 26%;
   right: 14%;
   left: auto;
+  animation: landing-comment-float-grey 29s ease-in-out infinite;
+  animation-delay: -7s;
 }
 
 .landing-comment--green {
   top: 84.1%;
   left: 17.85%;
+  animation: landing-comment-float-green 26s ease-in-out infinite;
+  animation-delay: -13s;
 }
 
 .landing-centerpiece {
@@ -550,7 +625,10 @@ a {
   border-radius: 999px;
   background: #ffffff;
   border: 1px solid #e1e1e1;
-  box-shadow: none;
+  box-shadow:
+    0 0 1px rgba(23, 50, 77, 0.14),
+    0 0 18px rgba(23, 50, 77, 0.16),
+    0 0 8px rgba(0, 0, 0, 0.08);
   font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
   font-size: clamp(0.8125rem, 0.16rem + 1.9vw, 1.0625rem);
   line-height: 1.25;
@@ -559,7 +637,11 @@ a {
 
 .landing-search:focus-within {
   border-color: rgba(29, 134, 94, 0.35);
-  box-shadow: 0 0 0 1px rgba(29, 134, 94, 0.12);
+  box-shadow:
+    0 0 1px rgba(23, 50, 77, 0.16),
+    0 0 22px rgba(23, 50, 77, 0.2),
+    0 0 10px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(29, 134, 94, 0.12);
 }
 
 .landing-search-icon {
@@ -634,6 +716,14 @@ a {
   font-weight: 600;
   line-height: 1.2;
   box-shadow: none;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.landing-search-button:hover {
+  background: #186f50;
+  border-color: #3d856f;
 }
 
 .landing-search-button-text {
@@ -992,6 +1082,19 @@ a {
   overflow: hidden;
   border-radius: 18px;
   box-shadow: 0 14px 30px rgba(23, 50, 77, 0.14);
+}
+
+/* Searched-address marker (landing → map); CityWise logo + same hover/label behavior as .demo-marker */
+.map-address-search-pin.demo-marker {
+  filter: drop-shadow(0 3px 6px rgba(23, 50, 77, 0.28));
+  cursor: pointer;
+}
+
+.map-address-search-pin.demo-marker img {
+  display: block;
+  width: clamp(2.15rem, 5.2vw, 2.65rem);
+  height: auto;
+  object-fit: contain;
 }
 
 .demo-marker {
@@ -2854,6 +2957,18 @@ a {
  * --district-dock-top-gap: scalable air under nav (~Figma ~40px rhythm at mid viewports).
  * Bottom: flush to screen (map hidden below sheet); only safe-area inset on notched devices.
  */
+@keyframes district-sheet-slide-up {
+  from {
+    opacity: 0.994;
+    transform: translate3d(0, min(92vh, 48rem), 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .district-sheet-dock {
   --district-dock-nav-offset: 5.25rem;
   --district-dock-top-gap: max(env(safe-area-inset-top, 0px), clamp(0.75rem, 2.25vw + 0.75rem, 2.5rem));
@@ -2876,6 +2991,11 @@ a {
 .district-sheet-dock .district-bottom-sheet,
 .district-sheet-dock .district-sheet-top-pill-shell {
   pointer-events: auto;
+}
+
+.district-sheet-dock .district-sheet-top-pill-shell,
+.district-sheet-dock .district-bottom-sheet {
+  animation: district-sheet-slide-up 0.62s cubic-bezier(0.25, 0.9, 0.32, 1) both;
 }
 
 /*
@@ -3142,8 +3262,9 @@ a {
 
 .district-bottom-sheet .district-contact-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem 1.5rem;
+  /* Phone column slightly narrower + tighter column gap so email fits one line more often */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.72fr) minmax(0, 1.28fr);
+  gap: 1rem 0.45rem;
   margin: 1rem 0 0;
 }
 
@@ -3203,11 +3324,8 @@ a {
   color: rgba(0, 0, 0, 0.8);
   font-size: 0.875rem;
   font-weight: 400;
-  line-height: normal;
+  line-height: 1.35;
   min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* Website URL: same as phone until hover/focus — then link styling */
@@ -3224,13 +3342,12 @@ a {
 }
 
 .district-bottom-sheet .district-contact-grid dd.district-contact-value-email a {
-  display: block;
+  display: inline;
   color: rgba(0, 0, 0, 0.8);
   text-decoration: underline;
   text-underline-offset: 0.12em;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .district-impact-panel {
@@ -3286,6 +3403,26 @@ a {
   box-sizing: border-box;
   padding-block: clamp(0.875rem, 0.65rem + 0.9vw, 1rem);
   padding-inline: clamp(1rem, 0.55rem + 2.8vw, 1.5rem);
+  transform-origin: center;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .district-overview-project-card:hover {
+    transform: scale(1.018);
+    box-shadow:
+      0 4px 14px rgba(23, 50, 77, 0.1),
+      1px 2px 6px rgba(0, 0, 0, 0.12);
+  }
+}
+
+.district-overview-project-card:focus-within {
+  transform: scale(1.018);
+  box-shadow:
+    0 4px 14px rgba(23, 50, 77, 0.1),
+    1px 2px 6px rgba(0, 0, 0, 0.12);
 }
 
 .district-overview-project-card__top {
@@ -4249,6 +4386,11 @@ a {
     animation: none !important;
   }
 
+  .district-sheet-dock .district-sheet-top-pill-shell,
+  .district-sheet-dock .district-bottom-sheet {
+    animation: none !important;
+  }
+
   /* Fade-in keyframes use opacity; without animation, keep the wash visible. */
   .landing-hero-ellipse {
     opacity: 0.7 !important;
@@ -4258,8 +4400,22 @@ a {
     animation: none !important;
   }
 
+  .landing-hero .landing-comment {
+    animation: none !important;
+  }
+
   .landing-hero .landing-comment-bubble {
     animation: none !important;
     opacity: 1;
+  }
+
+  .district-overview-project-card {
+    transition: none;
+  }
+
+  .district-overview-project-card:hover,
+  .district-overview-project-card:focus-within {
+    transform: none;
+    box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.25);
   }
 }

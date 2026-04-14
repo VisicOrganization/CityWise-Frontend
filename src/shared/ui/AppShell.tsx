@@ -11,14 +11,17 @@ export function AppShell({ children, className, overlay }: AppShellProps) {
   return (
     <div className={`app-shell ${className ?? ""}`.trim()}>
       <header className="top-nav">
-        <Link to="/" className="brand-mark brand-mark--logo-only" aria-label="CityWise home">
+        <Link to="/" className="brand-mark brand-mark--wordmark" aria-label="CityWise home">
           <span className="brand-pin">
             <img src="/brand/visic-logo.png" alt="" />
           </span>
+          <span className="brand-wordmark">CityWise</span>
         </Link>
 
         <nav className="top-nav-links" aria-label="Primary navigation">
-          <NavLink to="/">Home</NavLink>
+          <NavLink to="/" end>
+            Home
+          </NavLink>
           <NavLink to="/map">Map</NavLink>
           {/* <NavLink to="/about">About</NavLink> */}
         </nav>

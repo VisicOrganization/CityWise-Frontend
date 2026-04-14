@@ -114,6 +114,7 @@ export function MapPage() {
           activeMarkerId={activeMarker?.id ?? null}
           activeDistrictId={activeDistrictId}
           addressFocusPoint={addressFocusPoint}
+          addressFocusLabel={districtSheetFocusLabel}
           districtOverviewOpen={Boolean(districtFocusId && shouldShowDistrictProfile)}
           onMarkerSelect={(marker) => {
             void handleMarkerSelect(marker);

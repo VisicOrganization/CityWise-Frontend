@@ -176,6 +176,7 @@ export function LandingPage() {
                   onChange={(event) => setQuery(event.target.value)}
                   aria-label="Search address"
                   placeholder="Enter your address to search..."
+                  autoFocus
                 />
               </div>
               <button type="submit" className="landing-search-button">

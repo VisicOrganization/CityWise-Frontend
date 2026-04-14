@@ -82,6 +82,8 @@ interface CityMapProps {
   activeDistrictId: number | null;
   /** Geocoded address from landing; used to zoom before district GeoJSON is ready, and as fallback. */
   addressFocusPoint?: { latitude: number; longitude: number } | null;
+  /** Query / focus label for the searched address (accessibility + tooltip). */
+  addressFocusLabel?: string | null;
   /** Hides the floating district pill (e.g. while the district overview sheet is open — avoids a second “divot”). */
   districtOverviewOpen?: boolean;
   onMarkerSelect: (marker: MapMarker) => void;
@@ -96,6 +98,7 @@ export function CityMap({
   activeMarkerId,
   activeDistrictId,
   addressFocusPoint = null,
+  addressFocusLabel = null,
   districtOverviewOpen = false,
   onMarkerSelect,
   onMapBackgroundClick,
@@ -105,8 +108,11 @@ export function CityMap({
   const [viewState, setViewState] = useState(DEFAULT_VIEW_STATE);
   /** Last district we auto-framed (zoom + center); used to avoid resetting zoom when switching districts or when boundaries refetch. */
   const lastDistrictFocusRef = useRef<number | null>(null);
+  /** Previous `districtOverviewOpen` (layout phase); detect sheet close to re-fit the map to the district. */
+  const prevDistrictOverviewOpenRef = useRef<boolean | null>(null);
   const [lastVisibleDistrictId, setLastVisibleDistrictId] = useState<number | null>(null);
   const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null);
+  const [addressFocusPinHovered, setAddressFocusPinHovered] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [pillPortraitFailed, setPillPortraitFailed] = useState(false);
 
@@ -146,7 +152,26 @@ export function CityMap({
     setPillPortraitFailed(false);
   }, [portraitSrc, activeDistrictId]);
 
+  useEffect(() => {
+    if (!addressFocusPoint) {
+      setAddressFocusPinHovered(false);
+    }
+  }, [addressFocusPoint]);
+
   useLayoutEffect(() => {
+    const prevOverviewOpen = prevDistrictOverviewOpenRef.current;
+    prevDistrictOverviewOpenRef.current = districtOverviewOpen;
+    const districtOverviewJustClosed = prevOverviewOpen === true && !districtOverviewOpen;
+
+    if (districtOverviewJustClosed && activeDistrictId != null) {
+      lastDistrictFocusRef.current = null;
+    }
+
+    /* While the council member sheet is open, avoid driving the camera (sheet covers the map). */
+    if (districtOverviewOpen) {
+      return;
+    }
+
     if (activeDistrictId == null) {
       lastDistrictFocusRef.current = null;
       if (addressFocusPoint) {
@@ -210,7 +235,7 @@ export function CityMap({
         zoom: Math.max(current.zoom, 12.8),
       }));
     }
-  }, [activeDistrictId, boundaries, addressFocusPoint]);
+  }, [activeDistrictId, boundaries, addressFocusPoint, districtOverviewOpen]);
 
   function handleMapClick(event: MapLayerMouseEvent) {
     onMapBackgroundClick();
@@ -249,7 +274,18 @@ export function CityMap({
         {districtOverviewOpen ? null : <NavigationControl position="top-right" />}
         {boundaries ? (
           <Source id="district-boundaries" type="geojson" data={boundaries}>
-            <Layer {...districtFillLayer} />
+            <Layer
+              {...districtFillLayer}
+              {...(activeDistrictId != null
+                ? {
+                    filter: ["!=", ["get", "District"], activeDistrictId] as [
+                      "!=",
+                      ["get", string],
+                      number,
+                    ],
+                  }
+                : {})}
+            />
             <Layer {...districtOutlineLayer} />
             {activeDistrictId != null ? <Layer {...buildHighlightLayer(activeDistrictId)} /> : null}
           </Source>
@@ -286,6 +322,38 @@ export function CityMap({
             </Marker>
           );
         })}
+        {addressFocusPoint ? (
+          <Marker
+            longitude={addressFocusPoint.longitude}
+            latitude={addressFocusPoint.latitude}
+            anchor="bottom"
+            style={{ zIndex: addressFocusPinHovered ? 7 : 6 }}
+          >
+            <button
+              type="button"
+              className={`map-address-search-pin demo-marker ${addressFocusPinHovered ? "marker-active" : ""}`}
+              aria-label={addressFocusLabel?.trim() || "Your searched address"}
+              onMouseEnter={() => setAddressFocusPinHovered(true)}
+              onMouseLeave={() => setAddressFocusPinHovered(false)}
+              onFocus={() => setAddressFocusPinHovered(true)}
+              onBlur={() => setAddressFocusPinHovered(false)}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <img
+                src={`${import.meta.env.BASE_URL}CityWiseLogoNoBG.png`}
+                alt=""
+                width={40}
+                height={48}
+                decoding="async"
+              />
+              {addressFocusPinHovered ? (
+                <span className="demo-marker-label">
+                  {addressFocusLabel?.trim() || "Searched address"}
+                </span>
+              ) : null}
+            </button>
+          </Marker>
+        ) : null}
       </Map>
 
       <div

@@ -60,13 +60,14 @@ export const districtOutlineLayer: Omit<LineLayerSpecification, "source"> = {
   },
 };
 
+/** Solid orange for the active district (not blended with per-district fill — base layer excludes it). */
 export const districtHighlightLayer: Omit<FillLayerSpecification, "source"> = {
   id: "district-highlight",
   type: "fill",
   filter: ["==", ["get", "District"], -1],
   paint: {
     "fill-color": "#f97316",
-    "fill-opacity": 0.38,
+    "fill-opacity": districtFillOpacityExpression,
   },
 };
 
