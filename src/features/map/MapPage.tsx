@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { usePostHog } from "@posthog/react";
 
 import { DistrictOverviewSheet } from "../districts/DistrictOverviewSheet";
 import type { MapMarker } from "../../shared/map/mapTypes";
@@ -13,6 +14,7 @@ const DISTRICT_SHEET_ANIMATION_MS = 620;
 
 
 export function MapPage() {
+  const posthog = usePostHog();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeMarker, setActiveMarker] = useState<MapMarker | null>(null);
   const [activeDistrictId, setActiveDistrictId] = useState<number | null>(null);
@@ -88,6 +90,13 @@ export function MapPage() {
   }, []);
 
   async function handleMarkerSelect(marker: MapMarker) {
+    posthog?.capture("project_marker_clicked", {
+      project_id: marker.kind === "project" ? marker.projectId : undefined,
+      marker_id: marker.id,
+      district_id: marker.districtId,
+      category: marker.category,
+      label: marker.label,
+    });
     setActiveMarker(marker);
     setActiveDistrictId(marker.districtId);
     setIsProjectSidebarOpen(true);
@@ -113,6 +122,7 @@ export function MapPage() {
   }
 
   function openDistrictOverview(districtId: number) {
+    posthog?.capture("district_overview_opened", { district_id: districtId });
     setActiveMarker(null);
     resetProjectDetail();
     setDistrictFocus(districtId);

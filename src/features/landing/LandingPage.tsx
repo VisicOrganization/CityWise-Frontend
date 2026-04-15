@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
+import { usePostHog } from "@posthog/react";
 
 import { searchAddresses, type GeocodeSearchResult } from "../../shared/map/geocodeSearch";
 import { navigateToMapFromAddressSearch } from "../../shared/map/mapNavigateFromAddressSearch";
@@ -26,6 +27,7 @@ const LANDING_PIN_OPACITY = 0.30;
 
 export function LandingPage() {
   const navigate = useNavigate();
+  const posthog = usePostHog();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<GeocodeSearchResult[]>([]);
 
@@ -59,6 +61,7 @@ export function LandingPage() {
 
   async function handleSearch() {
     const trimmedQuery = query.trim();
+    posthog?.capture("address_searched", { query: trimmedQuery, has_query: Boolean(trimmedQuery) });
     if (!trimmedQuery) {
       navigate("/map");
       return;
@@ -158,6 +161,7 @@ export function LandingPage() {
                       key={result.id}
                       type="button"
                       onClick={() => {
+                        posthog?.capture("address_suggestion_selected", { label: result.label });
                         setQuery(result.label);
                         void navigateToMapFromAddressSearch(navigate, result.label, result);
                       }}

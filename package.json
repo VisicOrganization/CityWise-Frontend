@@ -12,8 +12,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@posthog/react": "^1.9.0",
     "@tailwindcss/vite": "^4.2.2",
     "maplibre-gl": "5.9.0",
+    "posthog-js": "^1.369.0",
     "react": "19.1.1",
     "react-dom": "19.1.1",
     "react-map-gl": "8.1.0",

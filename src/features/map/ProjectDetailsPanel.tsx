@@ -1,5 +1,6 @@
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { usePostHog } from "@posthog/react";
 
 import type { ProjectDetail } from "../../shared/api/contracts";
 import { formatName } from "../../shared/formatPersonName";
@@ -194,6 +195,7 @@ export function ProjectDetailsPanel({
   errorMessage,
   onExploreMap,
 }: ProjectDetailsPanelProps) {
+  const posthog = usePostHog();
   const MOBILE_SIDEBAR_CLOSE_ANIMATION_MS = 620;
   const sidebarRef = useRef<HTMLElement>(null);
   const voteButtonRef = useRef<HTMLButtonElement>(null);
@@ -517,6 +519,11 @@ export function ProjectDetailsPanel({
                             href={externalUrl}
                             target="_blank"
                             rel="noopener noreferrer"
+                            onClick={() => posthog?.capture("project_external_link_clicked", {
+                              project_id: detail?.project.id,
+                              project_title: title,
+                              url: externalUrl,
+                            })}
                           >
                             {title}
                           </a>
@@ -532,6 +539,11 @@ export function ProjectDetailsPanel({
                               target="_blank"
                               rel="noopener noreferrer"
                               aria-label="Open primary project document in a new tab"
+                              onClick={() => posthog?.capture("project_external_link_clicked", {
+                                project_id: detail?.project.id,
+                                project_title: title,
+                                url: externalUrl,
+                              })}
                             >
                               <ExternalLinkIcon width={16} height={16} />
                             </a>
@@ -552,7 +564,15 @@ export function ProjectDetailsPanel({
                               aria-controls="project-vertical-timeline-panel"
                               onClick={() => {
                                 setIsVotingPopoverOpen(false);
-                                setTimelineViewOpen((v) => !v);
+                                setTimelineViewOpen((v) => {
+                                  if (!v) {
+                                    posthog?.capture("timeline_view_opened", {
+                                      project_id: detail?.project.id,
+                                      project_title: title,
+                                    });
+                                  }
+                                  return !v;
+                                });
                               }}
                             >
                               <img
@@ -579,7 +599,15 @@ export function ProjectDetailsPanel({
                             disabled={!detail}
                             onClick={() => {
                               setTimelineViewOpen(false);
-                              setIsVotingPopoverOpen((current) => !current);
+                              setIsVotingPopoverOpen((current) => {
+                                if (!current) {
+                                  posthog?.capture("voting_record_opened", {
+                                    project_id: detail?.project.id,
+                                    project_title: title,
+                                  });
+                                }
+                                return !current;
+                              });
                             }}
                           >
                             <img
@@ -743,7 +771,13 @@ export function ProjectDetailsPanel({
               className="project-sidebar-edge-btn project-sidebar-edge-btn--expand"
               aria-label="Expand project panel"
               aria-pressed={false}
-              onClick={() => setSidebarWidthExpanded(true)}
+              onClick={() => {
+                posthog?.capture("project_panel_expanded", {
+                  project_id: detail?.project.id,
+                  project_title: title,
+                });
+                setSidebarWidthExpanded(true);
+              }}
             >
               <img
                 className="project-sidebar-edge-icon-img"
