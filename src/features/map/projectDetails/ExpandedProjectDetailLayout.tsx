@@ -85,7 +85,18 @@ function ProjectHeader({
       <div className="project-sidebar-title-band" style={{ alignItems: "flex-start", justifyContent: "space-between" }}>
         <div className="project-sidebar-title-cluster" style={{ minWidth: 0 }}>
           <h1 className="project-sidebar-title">
-            {title}
+            {externalUrl ? (
+              <a
+                href={externalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "inherit", textDecoration: "none" }}
+              >
+                {title}
+              </a>
+            ) : (
+              title
+            )}
             {externalUrl ? (
               <>
                 {" "}

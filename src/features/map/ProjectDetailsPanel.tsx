@@ -511,7 +511,18 @@ export function ProjectDetailsPanel({
                   <div className="project-sidebar-title-band">
                     <div className="project-sidebar-title-cluster">
                       <h2 className="project-sidebar-title">
-                        {title}
+                        {externalUrl ? (
+                          <a
+                            href={externalUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: "inherit", textDecoration: "none" }}
+                          >
+                            {title}
+                          </a>
+                        ) : (
+                          title
+                        )}
                         {externalUrl ? (
                           <>
                             {" "}

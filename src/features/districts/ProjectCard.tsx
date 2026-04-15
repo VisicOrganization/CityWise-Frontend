@@ -68,14 +68,21 @@ export function ProjectCard({
     return (
       <article className={`district-overview-project-card ${className}`.trim()}>
         <div className="district-overview-project-card__top">
-          <button
-            type="button"
-            className="district-overview-project-card__open district-overview-project-card__open--titles"
-            onClick={() => onOpenOnMap?.()}
-          >
-            <span className="district-overview-project-card__title">{title}</span>
+          <div className="district-overview-project-card__open district-overview-project-card__open--titles">
+            {titleHref ? (
+              <a
+                href={titleHref}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="district-overview-project-card__title"
+              >
+                {title}
+              </a>
+            ) : (
+              <span className="district-overview-project-card__title">{title}</span>
+            )}
             <span className="district-overview-project-card__subtitle">{subtitle}</span>
-          </button>
+          </div>
           <div className="district-overview-project-card__top-actions">
             {externalUrl ? (
               <a
