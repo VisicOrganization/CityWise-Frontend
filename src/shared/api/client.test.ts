@@ -22,6 +22,7 @@ describe("api client", () => {
           items: [
             {
               id: "25-0358",
+              url: "https://cityclerk.lacity.org/council-file/25-0358",
               title: "Council File 25-0358",
               summary: "Wildfire recovery motion.",
               status: "planned",
@@ -60,6 +61,7 @@ describe("api client", () => {
     expect(requestUrl.searchParams.get("page")).toBe("2");
     expect(requestUrl.searchParams.get("page_size")).toBe("5");
     expect(requestUrl.searchParams.get("has_geocode")).toBe("true");
+    expect(response.items[0]?.url).toBe("https://cityclerk.lacity.org/council-file/25-0358");
     expect(response.items[0]?.address_info?.geocode).toEqual({
       latitude: 34.05,
       longitude: -118.25,
@@ -74,6 +76,7 @@ describe("api client", () => {
           project: {
             id: "25-0358",
             source_council_file_id: "25-0358",
+            url: null,
             title: "Council File 25-0358",
             summary: "Wildfire recovery motion.",
             status: "planned",
@@ -115,6 +118,7 @@ describe("api client", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
     expect(requestUrl.pathname).toBe("/projects/25-0358");
+    expect(response.project.url).toBeNull();
     expect(response.address_info?.geocode).toBeNull();
   });
 });

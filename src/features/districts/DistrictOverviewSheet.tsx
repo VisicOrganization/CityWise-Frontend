@@ -1,8 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { getProjectDetail } from "../../shared/api/client";
 import { normalizeCouncilWebsiteUrl } from "../../shared/data/councilMemberBio";
 import { formatPersonNameForDisplay } from "../../shared/formatPersonName";
-import { primaryHttpDocumentUrlFromDetail } from "../../shared/map/projectDocuments";
 import { RecentProjects } from "./RecentProjects";
 import { useCouncilMemberBios } from "./useCouncilMemberBios";
 import { useDistrictProfile } from "./useDistrictProfile";
@@ -141,37 +139,6 @@ export function DistrictOverviewSheet({
   const { profile, error: profileError } = useDistrictProfile(districtId);
   const { biosByDistrict } = useCouncilMemberBios();
   const { response, error, isLoading } = useDistrictProjects(districtId, 1, PAGE_SIZE);
-  const [projectDocUrls, setProjectDocUrls] = useState<Record<string, string | null>>({});
-
-  useEffect(() => {
-    const items = response?.items;
-    if (!items || items.length === 0) {
-      setProjectDocUrls({});
-      return;
-    }
-
-    let cancelled = false;
-    const ids = items.map((p) => p.id);
-
-    void Promise.all(
-      ids.map(async (id) => {
-        try {
-          const detail = await getProjectDetail(id);
-          return [id, primaryHttpDocumentUrlFromDetail(detail)] as const;
-        } catch {
-          return [id, null] as const;
-        }
-      }),
-    ).then((pairs) => {
-      if (!cancelled) {
-        setProjectDocUrls(Object.fromEntries(pairs));
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [response]);
 
   const bio = biosByDistrict?.get(districtId);
   const representativeRaw = (bio?.name?.trim() || profile?.name?.trim() || "") || "";
@@ -292,7 +259,7 @@ export function DistrictOverviewSheet({
                   description: project.summary,
                   startDate: formatDate(project.start_date),
                   completedStatus: formatCompletion(project.status, project.last_changed_date),
-                  externalUrl: projectDocUrls[project.id] ?? null,
+                  externalUrl: project.url ?? null,
                   onOpenOnMap: () => onSelectProjectOnMap(project.id),
                 })) ?? []
               }

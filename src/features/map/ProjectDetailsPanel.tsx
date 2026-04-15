@@ -3,7 +3,6 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 
 import type { ProjectDetail } from "../../shared/api/contracts";
 import { formatName } from "../../shared/formatPersonName";
-import { primaryHttpDocumentUrlFromDetail } from "../../shared/map/projectDocuments";
 import type { MapMarker } from "../../shared/map/mapTypes";
 import { CloseIcon, ExternalLinkIcon } from "../../shared/ui/visicIcons";
 import { formatProjectDateLong, formatUsNumericDate } from "./projectDetails/formatProjectDate";
@@ -396,7 +395,7 @@ export function ProjectDetailsPanel({
     });
   }, [detail]);
 
-  const externalUrl = primaryHttpDocumentUrlFromDetail(detail);
+  const externalUrl = detail?.project.url ?? null;
   const category = categoryLine(marker, detail);
   const categoryAccent = useMemo(() => categoryAccentBarColor(marker), [marker]);
 
