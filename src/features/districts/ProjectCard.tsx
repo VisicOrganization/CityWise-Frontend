@@ -70,16 +70,26 @@ export function ProjectCard({
         <div className="district-overview-project-card__top">
           <div className="district-overview-project-card__open district-overview-project-card__open--titles">
             {titleHref ? (
-              <a
-                href={titleHref}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="district-overview-project-card__title district-overview-project-card__title-link"
-              >
-                {title}
-              </a>
+              <span className="cw-hover-tooltip-anchor">
+                <a
+                  href={titleHref}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="district-overview-project-card__title district-overview-project-card__title-link"
+                >
+                  {title}
+                </a>
+                <span className="cw-hover-tooltip-bubble" role="tooltip">
+                  Click to view original council file
+                </span>
+              </span>
             ) : (
-              <span className="district-overview-project-card__title">{title}</span>
+              <span className="cw-hover-tooltip-anchor">
+                <span className="district-overview-project-card__title">{title}</span>
+                <span className="cw-hover-tooltip-bubble" role="tooltip">
+                  Click to view original council file
+                </span>
+              </span>
             )}
             <span className="district-overview-project-card__subtitle">{subtitle}</span>
           </div>

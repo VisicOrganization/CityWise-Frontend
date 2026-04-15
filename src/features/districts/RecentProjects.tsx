@@ -17,10 +17,19 @@ export function RecentProjects({ projects, isLoading, error, layoutVariant = "de
 
   const listClass =
     layoutVariant === "districtOverview" ? "projects-list district-overview-projects-list" : "projects-list flex flex-col gap-5";
+  const subtitleClass =
+    layoutVariant === "districtOverview"
+      ? "district-overview-recent-subtitle"
+      : "recent-projects-subtitle mb-4 text-sm font-normal text-gray-500";
 
   return (
     <div className="recent-projects-container font-schibsted mx-auto w-[90%] max-w-[1100px] pb-6">
       <h2 className={headingClass}>Recent Projects</h2>
+      <p className={subtitleClass}>
+        Click on a project to learn more.
+        <br />
+        Click on a title to view the original council file
+      </p>
 
       {isLoading ? <p className="status-message font-normal">Loading district projects…</p> : null}
       {error ? <p className="status-message error-message font-normal">{error}</p> : null}

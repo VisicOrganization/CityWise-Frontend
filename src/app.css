@@ -1128,6 +1128,15 @@ a {
   color: #1d865e;
 }
 
+.map-figma-filter-label {
+  display: inline-block;
+  font-family: "Schibsted Grotesk", "Public Sans", "Segoe UI", sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
 .map-figma-flyout {
   position: absolute;
   top: 0;
@@ -1162,6 +1171,66 @@ a {
   padding-left: 1.1rem;
   color: rgba(23, 50, 77, 0.72);
   font-size: 0.875rem;
+}
+
+.map-figma-flyout--district-filter {
+  min-width: 18.5rem;
+}
+
+.map-district-filter-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+.map-district-filter-action-btn {
+  flex: 1 1 0;
+  min-height: 1.9rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid rgba(23, 50, 77, 0.18);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #17324d;
+  font-family: "Schibsted Grotesk", "Public Sans", "Segoe UI", sans-serif;
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.map-district-filter-action-btn:hover {
+  background: #f8f9fb;
+}
+
+.map-district-filter-action-btn:focus-visible {
+  outline: 2px solid rgba(29, 134, 94, 0.65);
+  outline-offset: 2px;
+}
+
+.map-district-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem 0.75rem;
+  margin-top: 0.85rem;
+}
+
+.map-district-filter-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  color: rgba(23, 50, 77, 0.9);
+  font-size: 0.8rem;
+  line-height: 1.2;
+  cursor: pointer;
+  user-select: none;
+}
+
+.map-district-filter-option input[type="checkbox"] {
+  width: 0.92rem;
+  height: 0.92rem;
+  margin: 0;
+  accent-color: #1d865e;
+  cursor: pointer;
 }
 
 /* Map address search — Figma 1099:2109 (400px bar + dropdown) */
@@ -1320,6 +1389,35 @@ a {
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
 }
 
+.map-marker-district-badge {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% - 1px);
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 50%;
+  transform: translateX(-50%) translateY(-2px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border: 1px solid #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+  color: #17324d;
+  font-family: "Public Sans", "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.map-marker-district-badge.is-active {
+  background: #f4cd45;
+  border-color: #f4cd45;
+  color: #17324d;
+}
+
 .map-marker-side-title {
   position: absolute;
   left: calc(100% + 8px);
@@ -1369,6 +1467,63 @@ a {
   border-color: #ffffff transparent transparent transparent;
   filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.08));
 }
+
+.cw-hover-tooltip-anchor {
+  position: relative;
+  display: inline-flex;
+}
+
+.cw-hover-tooltip-anchor--block {
+  display: block;
+}
+
+.cw-hover-tooltip-bubble {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%) translateY(2px);
+  z-index: 12;
+  max-width: min(17.5rem, calc(100vw - 2rem));
+  padding: 0.45rem 0.6rem;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid rgba(227, 227, 227, 0.95);
+  box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
+  color: rgba(23, 50, 77, 0.86);
+  font-family: "Schibsted Grotesk", "Public Sans", "Segoe UI", sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.25;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 110ms ease,
+    transform 110ms ease,
+    visibility 110ms ease;
+}
+
+.cw-hover-tooltip-bubble::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 0;
+  height: 0;
+  transform: translateX(-50%);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #ffffff;
+}
+
+.cw-hover-tooltip-anchor:hover .cw-hover-tooltip-bubble,
+.cw-hover-tooltip-anchor:focus-within .cw-hover-tooltip-bubble {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
 
 .map-marker-hover-title {
   display: block;
@@ -4192,6 +4347,15 @@ a {
   line-height: normal;
 }
 
+.district-overview-recent-subtitle {
+  margin: -0.6rem 0 1rem;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.4;
+  color: rgba(0, 0, 0, 0.62);
+}
+
 .district-overview-projects-list {
   display: flex;
   flex-direction: column;
@@ -4200,11 +4364,12 @@ a {
 
 /* Figma node 1726:1917 — district recent project cards (16px TB / 24px LR, responsive) */
 .district-overview-project-card {
+  position: relative;
   border: 1px solid #e3e3e3;
   border-radius: 20px;
   background: #ffffff;
   box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.25);
-  overflow: hidden;
+  overflow: visible;
   box-sizing: border-box;
   padding-block: clamp(0.875rem, 0.65rem + 0.9vw, 1rem);
   padding-inline: clamp(1rem, 0.55rem + 2.8vw, 1.5rem);
@@ -4214,11 +4379,13 @@ a {
 }
 
 .district-overview-project-card:hover {
+  z-index: 8;
   transform: scale(1.01);
   box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .district-overview-project-card:focus-within {
+  z-index: 8;
   transform: scale(1.01);
 }
 
@@ -4879,6 +5046,10 @@ a {
     max-height: calc(100dvh - 2.5rem);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+  }
+
+  .map-figma-flyout--district-filter {
+    max-width: min(19.25rem, calc(100vw - 4.5rem));
   }
 
   .maplibregl-ctrl-top-right,

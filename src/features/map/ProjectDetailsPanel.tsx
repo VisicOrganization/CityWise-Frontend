@@ -4,6 +4,7 @@ import { usePostHog } from "@posthog/react";
 
 import type { ProjectDetail } from "../../shared/api/contracts";
 import { formatName } from "../../shared/formatPersonName";
+import { formatProjectTitleForDisplay } from "../../shared/formatProjectTitleForDisplay";
 import type { MapMarker } from "../../shared/map/mapTypes";
 import { CloseIcon, ExternalLinkIcon } from "../../shared/ui/visicIcons";
 import { formatProjectDateLong, formatUsNumericDate } from "./projectDetails/formatProjectDate";
@@ -246,14 +247,7 @@ export function ProjectDetailsPanel({
   }, [isMobileLayout, mobileSidebarClosing, onExploreMap]);
 
   const rawTitle = detail?.project.title ?? marker?.label ?? "Project details";
-  const title = useMemo(() => {
-    const slashIndex = rawTitle.indexOf("/");
-    if (slashIndex < 0) {
-      return rawTitle;
-    }
-    const beforeSlash = rawTitle.slice(0, slashIndex).trim();
-    return beforeSlash.length > 0 ? beforeSlash : rawTitle;
-  }, [rawTitle]);
+  const title = useMemo(() => formatProjectTitleForDisplay(rawTitle), [rawTitle]);
   const summary = detail?.project.summary ?? marker?.summary ?? "";
   const status = detail?.project.status ?? "loading";
 
@@ -514,19 +508,24 @@ export function ProjectDetailsPanel({
                     <div className="project-sidebar-title-cluster">
                       <h2 className="project-sidebar-title">
                         {externalUrl ? (
-                          <a
-                            className="project-title-link"
-                            href={externalUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={() => posthog?.capture("project_external_link_clicked", {
-                              project_id: detail?.project.id,
-                              project_title: title,
-                              url: externalUrl,
-                            })}
-                          >
-                            {title}
-                          </a>
+                          <span className="cw-hover-tooltip-anchor">
+                            <a
+                              className="project-title-link"
+                              href={externalUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={() => posthog?.capture("project_external_link_clicked", {
+                                project_id: detail?.project.id,
+                                project_title: title,
+                                url: externalUrl,
+                              })}
+                            >
+                              {title}
+                            </a>
+                            <span className="cw-hover-tooltip-bubble" role="tooltip">
+                              Click to view original council file
+                            </span>
+                          </span>
                         ) : (
                           title
                         )}

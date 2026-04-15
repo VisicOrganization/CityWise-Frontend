@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { usePostHog } from "@posthog/react";
 import Map, {
   Layer,
@@ -8,17 +8,19 @@ import Map, {
   type MapRef,
   type ViewState,
 } from "react-map-gl/maplibre";
+import type { FilterSpecification, StyleSpecification } from "maplibre-gl";
 
 import { MapAddressSearch } from "./MapAddressSearch";
 import { useCouncilMemberBios } from "../districts/useCouncilMemberBios";
 import { useDistrictProfile } from "../districts/useDistrictProfile";
 import { formatPersonNameForDisplay } from "../../shared/formatPersonName";
+import { formatProjectTitleForDisplay } from "../../shared/formatProjectTitleForDisplay";
 import { findDistrictFeature, getFeatureBounds, type DistrictBoundaryCollection } from "../../shared/map/districtBoundaries";
-import { districtFillLayer, districtHighlightLayer, districtOutlineLayer } from "../../shared/map/districtLayers";
+import { districtFillLayer, districtFillOpacityExpression, districtHighlightLayer, districtOutlineLayer } from "../../shared/map/districtLayers";
 import type { MapMarker, MarkerCategory } from "../../shared/map/mapTypes";
 import { InfoIcon } from "../../shared/ui/visicIcons";
 
-const LIGHT_BASE_MAP_STYLE = {
+const LIGHT_BASE_MAP_STYLE: StyleSpecification = {
   version: 8,
   sources: {
     raster: {
@@ -46,12 +48,12 @@ const LIGHT_BASE_MAP_STYLE = {
       },
     },
   ],
-} as const;
+};
 
 const PIN_SRC: Record<MarkerCategory, string> = {
   housing: "/images/pins/brown-pin.svg",
-  transit: "/images/pins/blue-pin.svg",
-  parks: "/images/pins/green-pin.svg",
+  transit: "/images/pins/brown-pin.svg",
+  parks: "/images/pins/brown-pin.svg",
 };
 
 const PIN_TITLE_COLOR: Record<MarkerCategory, string> = {
@@ -66,13 +68,52 @@ const DEFAULT_VIEW_STATE: ViewState = {
   zoom: 8.8,
   bearing: 0,
   pitch: 0,
+  padding: { top: 0, right: 0, bottom: 0, left: 0 },
 };
+
+const DEFAULT_DISTRICT_IDS = Array.from({ length: 15 }, (_, index) => index + 1);
 
 function buildHighlightLayer(activeDistrictId: number) {
   return {
     ...districtHighlightLayer,
     filter: ["==", ["get", "District"], activeDistrictId] as ["==", ["get", string], number],
   } satisfies typeof districtHighlightLayer;
+}
+
+function buildDistrictFillLayer(selectedDistrictIds: number[]) {
+  const selectedDistrictFilter: FilterSpecification =
+    selectedDistrictIds.length > 0
+      ? (["match", ["get", "District"], selectedDistrictIds, true, false] as FilterSpecification)
+      : false;
+
+  return {
+    ...districtFillLayer,
+    id: "district-fill-selected",
+    filter: selectedDistrictFilter,
+  } satisfies typeof districtFillLayer;
+}
+
+function buildDistrictFillDimLayer() {
+  return {
+    ...districtFillLayer,
+    id: "district-fill-dim",
+    paint: {
+      ...districtFillLayer.paint,
+      "fill-opacity": [
+        "interpolate",
+        ["linear"],
+        ["zoom"],
+        7,
+        0.42 * 0.35,
+        9.5,
+        0.28 * 0.35,
+        12,
+        0.16 * 0.35,
+        14.5,
+        0.08 * 0.35,
+      ],
+    },
+  } satisfies typeof districtFillLayer;
 }
 
 interface CityMapProps {
@@ -119,8 +160,13 @@ export function CityMap({
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [isDistrictFilterOpen, setIsDistrictFilterOpen] = useState(false);
   const [pillPortraitFailed, setPillPortraitFailed] = useState(false);
   const [isDistrictPillVisible, setIsDistrictPillVisible] = useState(true);
+  const [selectedDistrictIds, setSelectedDistrictIds] = useState<Set<number>>(
+    () => new Set(DEFAULT_DISTRICT_IDS),
+  );
+  const hasInitializedDistrictFilterRef = useRef(false);
 
   const { profile: districtProfile } = useDistrictProfile(activeDistrictId);
   const { biosByDistrict } = useCouncilMemberBios();
@@ -141,6 +187,20 @@ export function CityMap({
     .map((part) => part[0])
     .filter(Boolean)
     .join("");
+  const availableDistrictIds = useMemo(() => {
+    const ids = new Set<number>();
+    markers.forEach((marker) => {
+      if (marker.districtId != null) {
+        ids.add(marker.districtId);
+      }
+    });
+    return (ids.size > 0 ? [...ids] : DEFAULT_DISTRICT_IDS).sort((a, b) => a - b);
+  }, [markers]);
+  const visibleMarkers = useMemo(
+    () => markers.filter((marker) => marker.districtId != null && selectedDistrictIds.has(marker.districtId)),
+    [markers, selectedDistrictIds],
+  );
+  const selectedDistrictIdList = useMemo(() => [...selectedDistrictIds], [selectedDistrictIds]);
 
   const setMapInstance = useCallback((instance: MapRef | null) => {
     mapRef.current = instance;
@@ -157,8 +217,27 @@ export function CityMap({
     if (districtOverviewOpen) {
       setIsInfoOpen(false);
       setIsMenuOpen(false);
+      setIsDistrictFilterOpen(false);
     }
   }, [districtOverviewOpen]);
+
+  useEffect(() => {
+    if (!hasInitializedDistrictFilterRef.current && availableDistrictIds.length > 0) {
+      setSelectedDistrictIds(new Set(availableDistrictIds));
+      hasInitializedDistrictFilterRef.current = true;
+    }
+  }, [availableDistrictIds]);
+
+  useEffect(() => {
+    if (!activeMarkerId) {
+      return;
+    }
+
+    const markerIsVisible = visibleMarkers.some((marker) => marker.id === activeMarkerId);
+    if (!markerIsVisible) {
+      onMapBackgroundClick();
+    }
+  }, [activeMarkerId, onMapBackgroundClick, visibleMarkers]);
 
   useEffect(() => {
     setPillPortraitFailed(false);
@@ -315,13 +394,14 @@ export function CityMap({
       >
         {boundaries ? (
           <Source id="district-boundaries" type="geojson" data={boundaries}>
-            <Layer {...districtFillLayer} />
+            <Layer {...buildDistrictFillDimLayer()} />
+            <Layer {...buildDistrictFillLayer(selectedDistrictIdList)} />
             <Layer {...districtOutlineLayer} />
             {activeDistrictId != null ? <Layer {...buildHighlightLayer(activeDistrictId)} /> : null}
           </Source>
         ) : null}
 
-        {markers.map((marker) => {
+        {visibleMarkers.map((marker) => {
           const showHoverCard = hoveredMarkerId === marker.id;
           const markerZIndex = activeMarkerId === marker.id ? 4 : showHoverCard ? 6 : 1;
           const titleColor = PIN_TITLE_COLOR[marker.category];
@@ -352,13 +432,19 @@ export function CityMap({
                 <span className="map-marker-pin-anchor">
                   {showHoverCard ? (
                     <span className="map-marker-hover-card" role="tooltip">
-                      <span className="map-marker-hover-title">{marker.label}</span>
+                      <span className="map-marker-hover-title">{formatProjectTitleForDisplay(marker.label)}</span>
                       {marker.summary.trim() ? (
                         <p className="map-marker-hover-summary">{marker.summary}</p>
                       ) : null}
                       <span className="map-marker-hover-cta">Click to learn more.</span>
                     </span>
                   ) : null}
+                  <span
+                    className={`map-marker-district-badge ${activeMarkerId === marker.id ? "is-active" : ""}`.trim()}
+                    aria-hidden
+                  >
+                    {marker.districtId ?? ""}
+                  </span>
                   <img
                     className="map-marker-pin-img"
                     src={pinSrc}
@@ -436,6 +522,7 @@ export function CityMap({
                   onClick={() => {
                     setIsMenuOpen((current) => !current);
                     setIsInfoOpen(false);
+                    setIsDistrictFilterOpen(false);
                   }}
                 >
                   <img src="/menu-icon.svg" alt="" width={18} height={12} />
@@ -449,9 +536,26 @@ export function CityMap({
                   onClick={() => {
                     setIsInfoOpen((current) => !current);
                     setIsMenuOpen(false);
+                    setIsDistrictFilterOpen(false);
                   }}
                 >
                   <InfoIcon className="map-figma-info-icon" width={18} height={18} aria-hidden />
+                </button>
+                <span className="map-control-pill-rule" aria-hidden="true" />
+                <button
+                  type="button"
+                  className={`map-figma-ctrl-btn ${isDistrictFilterOpen ? "is-active" : ""}`}
+                  aria-label="Filter projects by district"
+                  aria-expanded={isDistrictFilterOpen}
+                  onClick={() => {
+                    setIsDistrictFilterOpen((current) => !current);
+                    setIsMenuOpen(false);
+                    setIsInfoOpen(false);
+                  }}
+                >
+                  <span className="map-figma-filter-label" aria-hidden>
+                    CD
+                  </span>
                 </button>
               </div>
 
@@ -491,6 +595,54 @@ export function CityMap({
                     <li>Click markers to open project details.</li>
                     <li>Click a district boundary to update the district overview pill.</li>
                   </ul>
+                </div>
+              ) : null}
+
+              {isDistrictFilterOpen ? (
+                <div className="map-figma-flyout map-figma-flyout--district-filter" aria-label="District project filters">
+                  <div className="map-utility-header">
+                    <strong>District filters</strong>
+                    <span>Pins</span>
+                  </div>
+                  <p>Select council districts to show project pins on the map.</p>
+                  <div className="map-district-filter-actions" role="group" aria-label="District filter quick actions">
+                    <button
+                      type="button"
+                      className="map-district-filter-action-btn"
+                      onClick={() => setSelectedDistrictIds(new Set(availableDistrictIds))}
+                    >
+                      Select all
+                    </button>
+                    <button
+                      type="button"
+                      className="map-district-filter-action-btn"
+                      onClick={() => setSelectedDistrictIds(new Set<number>())}
+                    >
+                      Deselect all
+                    </button>
+                  </div>
+                  <div className="map-district-filter-grid">
+                    {availableDistrictIds.map((districtId) => (
+                      <label key={districtId} className="map-district-filter-option">
+                        <input
+                          type="checkbox"
+                          checked={selectedDistrictIds.has(districtId)}
+                          onChange={() => {
+                            setSelectedDistrictIds((current) => {
+                              const next = new Set(current);
+                              if (next.has(districtId)) {
+                                next.delete(districtId);
+                              } else {
+                                next.add(districtId);
+                              }
+                              return next;
+                            });
+                          }}
+                        />
+                        <span>{`District ${districtId}`}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
               ) : null}
             </div>

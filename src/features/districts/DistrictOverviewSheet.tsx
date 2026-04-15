@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { usePostHog } from "@posthog/react";
 import { normalizeCouncilWebsiteUrl } from "../../shared/data/councilMemberBio";
 import { formatPersonNameForDisplay } from "../../shared/formatPersonName";
+import { formatProjectTitleForDisplay } from "../../shared/formatProjectTitleForDisplay";
 import { RecentProjects } from "./RecentProjects";
 import { useCouncilMemberBios } from "./useCouncilMemberBios";
 import { useDistrictProfile } from "./useDistrictProfile";
@@ -261,7 +262,7 @@ export function DistrictOverviewSheet({
               projects={
                 response?.items.map((project) => ({
                   id: project.id,
-                  title: project.title,
+                  title: formatProjectTitleForDisplay(project.title),
                   titleHref: project.url ?? null,
                   statusLabel: formatStatus(project.status),
                   statusVariant: projectStatusVariant(project.status),
