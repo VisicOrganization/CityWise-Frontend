@@ -74,7 +74,7 @@ export function ProjectCard({
                 href={titleHref}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="district-overview-project-card__title"
+                className="district-overview-project-card__title district-overview-project-card__title-link"
               >
                 {title}
               </a>

@@ -87,10 +87,10 @@ function ProjectHeader({
           <h1 className="project-sidebar-title">
             {externalUrl ? (
               <a
+                className="project-title-link"
                 href={externalUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: "inherit", textDecoration: "none" }}
               >
                 {title}
               </a>
