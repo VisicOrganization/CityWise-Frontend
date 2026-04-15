@@ -331,6 +331,7 @@ export function CityMap({
               longitude={marker.longitude}
               latitude={marker.latitude}
               anchor="bottom"
+              subpixelPositioning
               style={{ zIndex: markerZIndex }}
             >
               <button
