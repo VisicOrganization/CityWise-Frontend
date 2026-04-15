@@ -13,12 +13,13 @@ import { resetMapDataCacheForTests } from "./useMapData";
 vi.mock("react-map-gl/maplibre", () => ({
   default: React.forwardRef(function MockMap(
     { children, onClick }: { children?: ReactNode; onClick?: (event: unknown) => void },
-    ref: React.ForwardedRef<{ getMap: () => { getZoom: () => number; easeTo: () => void } } | null>,
+    ref: React.ForwardedRef<{ getMap: () => { getZoom: () => number; easeTo: () => void; jumpTo: () => void } } | null>,
   ) {
     React.useImperativeHandle(ref, () => ({
       getMap: () => ({
         getZoom: () => 10,
         easeTo: vi.fn(),
+        jumpTo: vi.fn(),
       }),
     }));
     return (

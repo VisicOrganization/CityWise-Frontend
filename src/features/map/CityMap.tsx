@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import Map, {
   Layer,
   Marker,
@@ -106,7 +106,7 @@ export function CityMap({
 }: CityMapProps) {
   const DISTRICT_PILL_SWAP_MS = 140;
   const mapRef = useRef<MapRef>(null);
-  const [viewState, setViewState] = useState(DEFAULT_VIEW_STATE);
+  const [isMapReady, setIsMapReady] = useState(false);
   const lastDistrictFocusRef = useRef<number | null>(null);
   const lastHandledRefocusSignalRef = useRef(0);
   const lastPillDistrictIdRef = useRef<number | null>(null);
@@ -139,6 +139,11 @@ export function CityMap({
     .map((part) => part[0])
     .filter(Boolean)
     .join("");
+
+  const setMapInstance = useCallback((instance: MapRef | null) => {
+    mapRef.current = instance;
+    setIsMapReady(Boolean(instance));
+  }, []);
 
   useEffect(() => {
     if (activeDistrictId) {
@@ -195,6 +200,11 @@ export function CityMap({
   }, [activeDistrictId]);
 
   useLayoutEffect(() => {
+    const map = mapRef.current?.getMap();
+    if (!map || !isMapReady) {
+      return;
+    }
+
     const shouldForceRefocus = districtRefocusSignal !== lastHandledRefocusSignalRef.current;
     if (shouldForceRefocus) {
       lastHandledRefocusSignalRef.current = districtRefocusSignal;
@@ -204,12 +214,10 @@ export function CityMap({
     if (activeDistrictId == null) {
       lastDistrictFocusRef.current = null;
       if (addressFocusPoint) {
-        setViewState((current) => ({
-          ...current,
-          longitude: addressFocusPoint.longitude,
-          latitude: addressFocusPoint.latitude,
-          zoom: Math.max(current.zoom, 12.8),
-        }));
+        map.jumpTo({
+          center: [addressFocusPoint.longitude, addressFocusPoint.latitude],
+          zoom: Math.max(map.getZoom(), 12.8),
+        });
       }
       return;
     }
@@ -227,11 +235,9 @@ export function CityMap({
 
         if (isSwitchingDistrict) {
           lastDistrictFocusRef.current = activeDistrictId;
-          setViewState((current) => ({
-            ...current,
-            longitude: centerLng,
-            latitude: centerLat,
-          }));
+          map.jumpTo({
+            center: [centerLng, centerLat],
+          });
           return;
         }
 
@@ -246,25 +252,21 @@ export function CityMap({
         const focusZoom = Math.max(9.8, Math.min(13.6, Math.min(horizontalZoom, verticalZoom)));
 
         lastDistrictFocusRef.current = activeDistrictId;
-        setViewState((current) => ({
-          ...current,
-          longitude: centerLng,
-          latitude: centerLat,
+        map.jumpTo({
+          center: [centerLng, centerLat],
           zoom: focusZoom,
-        }));
+        });
         return;
       }
     }
 
     if (addressFocusPoint) {
-      setViewState((current) => ({
-        ...current,
-        longitude: addressFocusPoint.longitude,
-        latitude: addressFocusPoint.latitude,
-        zoom: Math.max(current.zoom, 12.8),
-      }));
+      map.jumpTo({
+        center: [addressFocusPoint.longitude, addressFocusPoint.latitude],
+        zoom: Math.max(map.getZoom(), 12.8),
+      });
     }
-  }, [activeDistrictId, boundaries, addressFocusPoint, districtRefocusSignal]);
+  }, [activeDistrictId, boundaries, addressFocusPoint, districtRefocusSignal, isMapReady]);
 
   function handleZoom(delta: number) {
     const map = mapRef.current?.getMap();
@@ -301,9 +303,8 @@ export function CityMap({
   return (
     <div className="city-demo-map">
       <Map
-        ref={mapRef}
-        {...viewState}
-        onMove={(event) => setViewState(event.viewState)}
+        ref={setMapInstance}
+        initialViewState={DEFAULT_VIEW_STATE}
         onClick={handleMapClick}
         interactiveLayerIds={["district-fill"]}
         mapStyle={LIGHT_BASE_MAP_STYLE}
@@ -330,6 +331,7 @@ export function CityMap({
               longitude={marker.longitude}
               latitude={marker.latitude}
               anchor="bottom"
+              subpixelPositioning
               style={{ zIndex: markerZIndex }}
             >
               <button
