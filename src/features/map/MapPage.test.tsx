@@ -123,6 +123,7 @@ const districtProjectsResponseByDistrict = {
     items: [
       {
         id: "25-0358",
+        url: "https://cityclerk.lacity.org/council-file/25-0358",
         title: "Council File 25-0358",
         summary: "Wildfire recovery motion.",
         status: "planned",
@@ -150,6 +151,7 @@ const districtProjectsResponseByDistrict = {
       },
       {
         id: "25-0400",
+        url: null,
         title: "Council File 25-0400",
         summary: "Transit corridor updates.",
         status: "in progress",
@@ -186,6 +188,7 @@ const districtProjectsResponseByDistrict = {
     items: [
       {
         id: "25-0501",
+        url: "https://cityclerk.lacity.org/council-file/25-0501",
         title: "Council File 25-0501",
         summary: "Community park expansion.",
         status: "planned",
@@ -308,6 +311,7 @@ function defaultFetchMock(input: string | URL | Request) {
           project: {
             id: projectId,
             source_council_file_id: projectId,
+            url: `https://cityclerk.lacity.org/council-file/${projectId}`,
             title: `Council File ${projectId}`,
             summary: "Mock summary for tests.",
             status: "planned",
@@ -585,6 +589,7 @@ describe("mock app routes", () => {
               project: {
                 id: "25-0358",
                 source_council_file_id: "25-0358",
+                url: "https://cityclerk.lacity.org/council-file/25-0358",
                 title: "Council File 25-0358",
                 summary: "Wildfire recovery motion.",
                 status: "planned",
@@ -654,6 +659,7 @@ describe("mock app routes", () => {
               project: {
                 id: "25-0358",
                 source_council_file_id: "25-0358",
+                url: "https://cityclerk.lacity.org/council-file/25-0358",
                 title: "Council File 25-0358",
                 summary: "Wildfire recovery motion.",
                 status: "planned",
@@ -731,7 +737,25 @@ describe("mock app routes", () => {
       "href",
       "mailto:jordan.alvarez.bios@lacity.org",
     );
+    const projectLinks = screen.getAllByLabelText("Open project document in new tab");
+    expect(projectLinks).toHaveLength(1);
+    expect(projectLinks[0]).toHaveAttribute("href", "https://cityclerk.lacity.org/council-file/25-0358");
+    expect(fetchMock.mock.calls.filter(([input]) => String(input).includes("/projects/"))).toHaveLength(1);
     expect(screen.queryByTestId("demo-map")).toBeInTheDocument();
+  });
+
+  it("loads district overview links from district project cards without per-project detail fetches", async () => {
+    render(
+      <MemoryRouter initialEntries={["/map?districtFocus=11&showDistrictProfile=1"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByLabelText("District overview")).toBeInTheDocument();
+    const projectLinks = screen.getAllByLabelText("Open project document in new tab");
+    expect(projectLinks).toHaveLength(1);
+    expect(projectLinks[0]).toHaveAttribute("href", "https://cityclerk.lacity.org/council-file/25-0358");
+    expect(fetchMock.mock.calls.filter(([input]) => String(input).includes("/projects/"))).toHaveLength(0);
   });
 
   it("closes the district overview when clicking outside the sheet", async () => {
@@ -794,6 +818,7 @@ describe("mock app routes", () => {
               project: {
                 id: "25-0358",
                 source_council_file_id: "25-0358",
+                url: "https://cityclerk.lacity.org/council-file/25-0358",
                 title: "Council File 25-0358",
                 summary: "Wildfire recovery motion.",
                 status: "planned",
@@ -865,7 +890,10 @@ describe("mock app routes", () => {
     await user.click(screen.getByLabelText("Council File 25-0358"));
 
     expect(await screen.findByLabelText("Project details")).toBeInTheDocument();
-    expect(await screen.findByRole("heading", { name: "Council File 25-0358" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Open primary project document in a new tab")).toHaveAttribute(
+      "href",
+      "https://cityclerk.lacity.org/council-file/25-0358",
+    );
     expect(
       await screen.findByText(formatPersonNameForDisplay("TRACI PARK")),
     ).toBeInTheDocument();

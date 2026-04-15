@@ -17,6 +17,7 @@ export interface ProjectAddressInfo {
 /** Populated on district list when backend includes full parsed title (same shape as project detail). */
 export interface DistrictProjectCard {
   id: string;
+  url: string | null;
   title: string;
   summary: string;
   status: string;
@@ -82,6 +83,7 @@ export interface ProjectDetail {
   project: {
     id: string;
     source_council_file_id: string;
+    url: string | null;
     title: string;
     summary: string;
     status: string;
