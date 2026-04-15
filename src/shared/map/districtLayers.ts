@@ -1,7 +1,7 @@
-import type { FillLayerSpecification, LineLayerSpecification, StyleSpecification } from "maplibre-gl";
+import type { ExpressionSpecification, FillLayerSpecification, LineLayerSpecification, StyleSpecification } from "maplibre-gl";
 
 
-const districtColors = [
+const districtColors: Array<number | string> = [
   1, "#e76f51",
   2, "#f4a261",
   3, "#e9c46a",
@@ -17,14 +17,32 @@ const districtColors = [
   13, "#06d6a0",
   14, "#118ab2",
   15, "#8338ec",
-] as const;
+];
+
+export const districtColorById: Record<number, string> = {
+  1: "#e76f51",
+  2: "#f4a261",
+  3: "#e9c46a",
+  4: "#90be6d",
+  5: "#43aa8b",
+  6: "#4d908e",
+  7: "#577590",
+  8: "#277da1",
+  9: "#9b5de5",
+  10: "#f15bb5",
+  11: "#ef476f",
+  12: "#ff7f51",
+  13: "#06d6a0",
+  14: "#118ab2",
+  15: "#8338ec",
+};
 
 export const districtColorExpression = [
   "match",
   ["get", "District"],
   ...districtColors,
   "#90b4ce",
-] as const;
+] as unknown as ExpressionSpecification;
 
 export const districtFillOpacityExpression = [
   "interpolate",
@@ -38,7 +56,7 @@ export const districtFillOpacityExpression = [
   0.16,
   14.5,
   0.08,
-] as const;
+] as unknown as ExpressionSpecification;
 
 
 export const districtFillLayer: Omit<FillLayerSpecification, "source"> = {

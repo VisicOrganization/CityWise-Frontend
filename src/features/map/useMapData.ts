@@ -7,7 +7,7 @@ import type { MapMarker } from "../../shared/map/mapTypes";
 import { buildProjectMarkers } from "./projectMarkers";
 
 /** Map demo loads a small sample per district to limit API and geocoding work. */
-const MAP_PROJECTS_PER_DISTRICT = 30;
+const MAP_PROJECTS_PER_DISTRICT = 100;
 
 let cachedBoundariesPromise: Promise<DistrictBoundaryCollection> | null = null;
 let cachedProjectCardsPromise: Promise<DistrictProjectCard[]> | null = null;
