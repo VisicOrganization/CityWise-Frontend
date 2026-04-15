@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { usePostHog } from "@posthog/react";
 import Map, {
   Layer,
   Marker,
@@ -104,6 +105,7 @@ export function CityMap({
   onOpenDistrictOverview,
   onDistrictSelect,
 }: CityMapProps) {
+  const posthog = usePostHog();
   const DISTRICT_PILL_SWAP_MS = 140;
   const mapRef = useRef<MapRef>(null);
   const [isMapReady, setIsMapReady] = useState(false);
@@ -502,6 +504,7 @@ export function CityMap({
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Open CityWise feedback form in a new tab"
+        onClick={() => posthog?.capture("feedback_button_clicked")}
       >
         Give us your feedback!
       </a>

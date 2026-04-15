@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { usePostHog } from "@posthog/react";
 
 import {
   applyMapSearchParamsFromAddress,
@@ -17,6 +18,7 @@ interface MapAddressSearchProps {
 
 export function MapAddressSearch({ dismissSignal, onExpandedChange }: MapAddressSearchProps) {
   const [, setSearchParams] = useSearchParams();
+  const posthog = usePostHog();
   const [expanded, setExpanded] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<GeocodeSearchResult[]>([]);
@@ -62,6 +64,9 @@ export function MapAddressSearch({ dismissSignal, onExpandedChange }: MapAddress
 
   async function runSearch(selected?: GeocodeSearchResult) {
     const labelForParams = selected ? selected.label : query.trim();
+    if (!selected) {
+      posthog?.capture("map_address_searched", { query: labelForParams });
+    }
     try {
       await applyMapSearchParamsFromAddress(setSearchParams, labelForParams, selected);
     } catch {
@@ -105,6 +110,7 @@ export function MapAddressSearch({ dismissSignal, onExpandedChange }: MapAddress
                     className="map-address-search-hit"
                     role="option"
                     onClick={() => {
+                      posthog?.capture("map_address_suggestion_selected", { label: result.label });
                       setQuery(result.label);
                       void runSearch(result);
                     }}

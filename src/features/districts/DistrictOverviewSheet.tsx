@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { usePostHog } from "@posthog/react";
 import { normalizeCouncilWebsiteUrl } from "../../shared/data/councilMemberBio";
 import { formatPersonNameForDisplay } from "../../shared/formatPersonName";
 import { RecentProjects } from "./RecentProjects";
@@ -75,7 +76,8 @@ interface DistrictOverviewSheetProps {
   onSelectProjectOnMap: (projectId: string) => void;
 }
 
-function DistrictAboutSection({ text }: { text: string }) {
+function DistrictAboutSection({ text, districtId }: { text: string; districtId: number }) {
+  const posthog = usePostHog();
   const paragraphRef = useRef<HTMLParagraphElement>(null);
   const [expanded, setExpanded] = useState(false);
   const [isTruncatable, setIsTruncatable] = useState(false);
@@ -120,7 +122,14 @@ function DistrictAboutSection({ text }: { text: string }) {
           type="button"
           className="district-about-toggle font-schibsted"
           aria-expanded={expanded}
-          onClick={() => setExpanded((v) => !v)}
+          onClick={() => {
+            setExpanded((v) => {
+              if (!v) {
+                posthog?.capture("district_about_expanded", { district_id: districtId });
+              }
+              return !v;
+            });
+          }}
         >
           {expanded ? "Show less" : "Read more"}
         </button>
@@ -136,6 +145,7 @@ export function DistrictOverviewSheet({
   focusLabel = null,
   onSelectProjectOnMap,
 }: DistrictOverviewSheetProps) {
+  const posthog = usePostHog();
   const { profile, error: profileError } = useDistrictProfile(districtId);
   const { biosByDistrict } = useCouncilMemberBios();
   const { response, error, isLoading } = useDistrictProjects(districtId, 1, PAGE_SIZE);
@@ -240,7 +250,7 @@ export function DistrictOverviewSheet({
                   </div>
                 </dl>
 
-                {displayAbout ? <DistrictAboutSection text={displayAbout} /> : null}
+                {displayAbout ? <DistrictAboutSection text={displayAbout} districtId={districtId} /> : null}
               </div>
             </div>
           </section>
@@ -260,7 +270,14 @@ export function DistrictOverviewSheet({
                   startDate: formatDate(project.start_date),
                   completedStatus: formatCompletion(project.status, project.last_changed_date),
                   externalUrl: project.url ?? null,
-                  onOpenOnMap: () => onSelectProjectOnMap(project.id),
+                  onOpenOnMap: () => {
+                    posthog?.capture("project_opened_from_district", {
+                      project_id: project.id,
+                      project_title: project.title,
+                      district_id: districtId,
+                    });
+                    onSelectProjectOnMap(project.id);
+                  },
                 })) ?? []
               }
               isLoading={isLoading}
