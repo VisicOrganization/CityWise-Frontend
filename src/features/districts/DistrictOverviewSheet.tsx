@@ -252,7 +252,7 @@ export function DistrictOverviewSheet({
                 response?.items.map((project) => ({
                   id: project.id,
                   title: project.title,
-                  titleHref: null,
+                  titleHref: project.url ?? null,
                   statusLabel: formatStatus(project.status),
                   statusVariant: projectStatusVariant(project.status),
                   subtitle: formatProjectCategory(project.address_info?.topics, project.status),
