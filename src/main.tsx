@@ -9,17 +9,27 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import "./tailwind.css";
 import "./app.css";
 
-posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_TOKEN, {
-  api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
-  defaults: "2026-01-30",
-});
+const isPostHogEnabled = import.meta.env.PROD;
+
+if (isPostHogEnabled) {
+  posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_TOKEN, {
+    api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
+    defaults: "2026-01-30",
+  });
+}
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <PostHogProvider client={posthog}>
+    {isPostHogEnabled ? (
+      <PostHogProvider client={posthog}>
+        <BrowserRouter basename={import.meta.env.BASE_URL}>
+          <App />
+        </BrowserRouter>
+      </PostHogProvider>
+    ) : (
       <BrowserRouter basename={import.meta.env.BASE_URL}>
         <App />
       </BrowserRouter>
-    </PostHogProvider>
+    )}
   </React.StrictMode>,
 );
