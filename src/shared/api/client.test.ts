@@ -1,12 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { getDistrictProjects, getProjectDetail } from "./client";
+import { clearApiCacheForTests, getDistrictProjects, getProjectDetail } from "./client";
 
 const fetchMock = vi.fn();
 vi.stubGlobal("fetch", fetchMock);
 
 afterEach(() => {
   fetchMock.mockReset();
+  clearApiCacheForTests();
 });
 
 describe("api client", () => {
@@ -120,5 +121,48 @@ describe("api client", () => {
     expect(requestUrl.pathname).toBe("/projects/25-0358");
     expect(response.project.url).toBeNull();
     expect(response.address_info?.geocode).toBeNull();
+  });
+
+  it("caches project detail in local storage and reuses it", async () => {
+    fetchMock.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          project: {
+            id: "25-9999",
+            source_council_file_id: "25-9999",
+            url: "https://cityclerk.lacity.org/council-file/25-9999",
+            title: "Council File 25-9999",
+            summary: "Cached project detail response.",
+            status: "planned",
+            district_id: 11,
+            about: null,
+            start_date: "2025-01-01",
+            last_changed_date: "2025-01-02",
+            end_date: null,
+            meeting_date: "2025-01-03",
+            meeting_type: "Regular",
+            vote_action: null,
+            vote_given: null,
+            reference_numbers: null,
+            mover_seconder_comment: null,
+          },
+          movers: {
+            primary: [],
+            secondary: [],
+            other: [],
+          },
+          votes: [],
+          timeline: [],
+          documents: [],
+          address_info: null,
+        }),
+      ),
+    );
+
+    const firstResponse = await getProjectDetail("25-9999");
+    const secondResponse = await getProjectDetail("25-9999");
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(secondResponse).toEqual(firstResponse);
   });
 });
