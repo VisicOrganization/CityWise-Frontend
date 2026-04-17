@@ -5,6 +5,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import App from "../../app/App";
+import { clearApiCacheForTests } from "../../shared/api/client";
 import { formatPersonNameForDisplay } from "../../shared/formatPersonName";
 import { resetCouncilMemberBiosCacheForTests } from "../districts/useCouncilMemberBios";
 import { resetMapDataCacheForTests } from "./useMapData";
@@ -354,6 +355,7 @@ function defaultFetchMock(input: string | URL | Request) {
 
 describe("mock app routes", () => {
   beforeEach(() => {
+    clearApiCacheForTests();
     resetMapDataCacheForTests();
     resetCouncilMemberBiosCacheForTests();
     fetchMock.mockReset();
