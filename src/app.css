@@ -1468,63 +1468,6 @@ a {
   filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.08));
 }
 
-.cw-hover-tooltip-anchor {
-  position: relative;
-  display: inline-flex;
-}
-
-.cw-hover-tooltip-anchor--block {
-  display: block;
-}
-
-.cw-hover-tooltip-bubble {
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 8px);
-  transform: translateX(-50%) translateY(2px);
-  z-index: 12;
-  max-width: min(17.5rem, calc(100vw - 2rem));
-  padding: 0.45rem 0.6rem;
-  border-radius: 8px;
-  background: #ffffff;
-  border: 1px solid rgba(227, 227, 227, 0.95);
-  box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
-  color: rgba(23, 50, 77, 0.86);
-  font-family: "Schibsted Grotesk", "Public Sans", "Segoe UI", sans-serif;
-  font-size: 0.75rem;
-  font-weight: 500;
-  line-height: 1.25;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  visibility: hidden;
-  transition:
-    opacity 110ms ease,
-    transform 110ms ease,
-    visibility 110ms ease;
-}
-
-.cw-hover-tooltip-bubble::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 100%;
-  width: 0;
-  height: 0;
-  transform: translateX(-50%);
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-top: 6px solid #ffffff;
-}
-
-.cw-hover-tooltip-anchor:hover .cw-hover-tooltip-bubble,
-.cw-hover-tooltip-anchor:focus-within .cw-hover-tooltip-bubble {
-  opacity: 1;
-  visibility: visible;
-  transform: translateX(-50%) translateY(0);
-}
-
-
 .map-marker-hover-title {
   display: block;
   font-family: "Public Sans", "Schibsted Grotesk", "Segoe UI", sans-serif;
@@ -2721,6 +2664,23 @@ a {
 
 .project-title-link:hover,
 .project-title-link:focus-visible {
+  text-decoration: underline;
+}
+
+.project-source-link {
+  display: inline-block;
+  margin-top: 0.35rem;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: #9ca3af;
+  text-decoration: none;
+}
+
+.project-source-link:hover,
+.project-source-link:focus-visible {
+  color: #6b7280;
   text-decoration: underline;
 }
 
@@ -4435,12 +4395,38 @@ a {
   color: #333333;
 }
 
+.district-overview-project-card__title-button {
+  width: 100%;
+}
+
+.district-overview-project-card__title-button:hover .district-overview-project-card__title,
+.district-overview-project-card__title-button:focus-visible .district-overview-project-card__title {
+  text-decoration: underline;
+}
+
 .district-overview-project-card__title-link {
   text-decoration: none;
 }
 
 .district-overview-project-card__title-link:hover,
 .district-overview-project-card__title-link:focus-visible {
+  text-decoration: underline;
+}
+
+.district-overview-project-card__source-link {
+  display: inline-block;
+  margin-top: 0.3rem;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: #9ca3af;
+  text-decoration: none;
+}
+
+.district-overview-project-card__source-link:hover,
+.district-overview-project-card__source-link:focus-visible {
+  color: #6b7280;
   text-decoration: underline;
 }
 
