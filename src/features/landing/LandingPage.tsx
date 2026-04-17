@@ -24,12 +24,29 @@ const LANDING_PINS = [
 const LANDING_ART_OPACITY = 0.22;
 /** Pin opacity only (map uses LANDING_ART_OPACITY). Same file: `--landing-pin-opacity` on `.landing-hero`. */
 const LANDING_PIN_OPACITY = 0.30;
+const LANDING_ADDRESS_STORAGE_KEY = "citywise:landingAddressQuery";
 
 export function LandingPage() {
   const navigate = useNavigate();
   const posthog = usePostHog();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<GeocodeSearchResult[]>([]);
+
+  useEffect(() => {
+    const storedQuery = window.localStorage.getItem(LANDING_ADDRESS_STORAGE_KEY);
+    if (storedQuery) {
+      setQuery(storedQuery);
+    }
+  }, []);
+
+  useEffect(() => {
+    const trimmedQuery = query.trim();
+    if (trimmedQuery) {
+      window.localStorage.setItem(LANDING_ADDRESS_STORAGE_KEY, trimmedQuery);
+      return;
+    }
+    window.localStorage.removeItem(LANDING_ADDRESS_STORAGE_KEY);
+  }, [query]);
 
   useEffect(() => {
     let ignore = false;

@@ -5,6 +5,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import App from "../../app/App";
+import { clearApiCacheForTests } from "../../shared/api/client";
 import { formatPersonNameForDisplay } from "../../shared/formatPersonName";
 import { resetCouncilMemberBiosCacheForTests } from "../districts/useCouncilMemberBios";
 import { resetMapDataCacheForTests } from "./useMapData";
@@ -354,6 +355,7 @@ function defaultFetchMock(input: string | URL | Request) {
 
 describe("mock app routes", () => {
   beforeEach(() => {
+    clearApiCacheForTests();
     resetMapDataCacheForTests();
     resetCouncilMemberBiosCacheForTests();
     fetchMock.mockReset();
@@ -753,7 +755,7 @@ describe("mock app routes", () => {
     );
 
     expect(await screen.findByLabelText("District overview")).toBeInTheDocument();
-    const projectLinks = screen.getAllByLabelText("Open project document in new tab");
+    const projectLinks = await screen.findAllByLabelText("Open project document in new tab");
     expect(projectLinks).toHaveLength(1);
     expect(projectLinks[0]).toHaveAttribute("href", "https://cityclerk.lacity.org/council-file/25-0358");
     expect(fetchMock.mock.calls.filter(([input]) => String(input).includes("/projects/"))).toHaveLength(0);
