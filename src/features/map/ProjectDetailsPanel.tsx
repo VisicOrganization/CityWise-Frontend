@@ -507,28 +507,7 @@ export function ProjectDetailsPanel({
                   <div className="project-sidebar-title-band">
                     <div className="project-sidebar-title-cluster">
                       <h2 className="project-sidebar-title">
-                        {externalUrl ? (
-                          <span className="cw-hover-tooltip-anchor">
-                            <a
-                              className="project-title-link"
-                              href={externalUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={() => posthog?.capture("project_external_link_clicked", {
-                                project_id: detail?.project.id,
-                                project_title: title,
-                                url: externalUrl,
-                              })}
-                            >
-                              {title}
-                            </a>
-                            <span className="cw-hover-tooltip-bubble" role="tooltip">
-                              Click to view original council file
-                            </span>
-                          </span>
-                        ) : (
-                          title
-                        )}
+                        {title}
                         {externalUrl ? (
                           <>
                             {" "}
@@ -549,6 +528,23 @@ export function ProjectDetailsPanel({
                           </>
                         ) : null}
                       </h2>
+                      {externalUrl ? (
+                        <a
+                          className="project-source-link"
+                          href={externalUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() =>
+                            posthog?.capture("project_external_link_clicked", {
+                              project_id: detail?.project.id,
+                              project_title: title,
+                              url: externalUrl,
+                            })
+                          }
+                        >
+                          View source
+                        </a>
+                      ) : null}
                     </div>
                     <div className="project-sidebar-status-column">
                       <StatusBadge status={status} project={detail?.project ?? null} />

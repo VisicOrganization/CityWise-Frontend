@@ -27,8 +27,6 @@ export function RecentProjects({ projects, isLoading, error, layoutVariant = "de
       <h2 className={headingClass}>Recent Projects</h2>
       <p className={subtitleClass}>
         Click on a project to learn more.
-        <br />
-        Click on a title to view the original council file
       </p>
 
       {isLoading ? <p className="status-message font-normal">Loading district projects…</p> : null}

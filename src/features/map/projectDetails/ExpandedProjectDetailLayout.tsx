@@ -85,18 +85,7 @@ function ProjectHeader({
       <div className="project-sidebar-title-band" style={{ alignItems: "flex-start", justifyContent: "space-between" }}>
         <div className="project-sidebar-title-cluster" style={{ minWidth: 0 }}>
           <h1 className="project-sidebar-title">
-            {externalUrl ? (
-              <a
-                className="project-title-link"
-                href={externalUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {title}
-              </a>
-            ) : (
-              title
-            )}
+            {title}
             {externalUrl ? (
               <>
                 {" "}
@@ -112,6 +101,11 @@ function ProjectHeader({
               </>
             ) : null}
           </h1>
+          {externalUrl ? (
+            <a className="project-source-link" href={externalUrl} target="_blank" rel="noopener noreferrer">
+              View source
+            </a>
+          ) : null}
           {category.trim() ? <p className="project-sidebar-category">{category}</p> : null}
           {summary.trim() ? <p className="project-expanded-description">{summary}</p> : null}
         </div>
