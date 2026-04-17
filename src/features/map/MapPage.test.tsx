@@ -755,7 +755,7 @@ describe("mock app routes", () => {
     );
 
     expect(await screen.findByLabelText("District overview")).toBeInTheDocument();
-    const projectLinks = screen.getAllByLabelText("Open project document in new tab");
+    const projectLinks = await screen.findAllByLabelText("Open project document in new tab");
     expect(projectLinks).toHaveLength(1);
     expect(projectLinks[0]).toHaveAttribute("href", "https://cityclerk.lacity.org/council-file/25-0358");
     expect(fetchMock.mock.calls.filter(([input]) => String(input).includes("/projects/"))).toHaveLength(0);
