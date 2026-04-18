@@ -24,7 +24,7 @@ export function RecentProjects({ projects, isLoading, error, layoutVariant = "de
 
   return (
     <div className="recent-projects-container font-schibsted mx-auto w-[90%] max-w-[1100px] pb-6">
-      <h2 className={headingClass}>Recent Projects</h2>
+      <h2 className={headingClass}>All Projects</h2>
       <p className={subtitleClass}>
         Click on a project to learn more.
       </p>
