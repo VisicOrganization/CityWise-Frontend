@@ -7,7 +7,12 @@ import {
   geocodePrimaryLineParts,
   splitGeocodeDisplayLines,
 } from "../../shared/map/mapNavigateFromAddressSearch";
-import { searchAddresses, type GeocodeSearchResult } from "../../shared/map/geocodeSearch";
+import {
+  isAddressWithinLosAngelesCity,
+  searchAddressesWithLosAngelesCitySplit,
+  searchAddressesWithoutCityFilter,
+  type GeocodeSearchResult,
+} from "../../shared/map/geocodeSearch";
 
 interface MapAddressSearchProps {
   /** Increment when the map background is clicked so the expanded search closes. */
@@ -22,12 +27,14 @@ export function MapAddressSearch({ dismissSignal, onExpandedChange }: MapAddress
   const [expanded, setExpanded] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<GeocodeSearchResult[]>([]);
+  const [showOutOfCityWarning, setShowOutOfCityWarning] = useState(false);
 
   useEffect(() => {
     if (dismissSignal === 0) {
       return;
     }
     setExpanded(false);
+    setShowOutOfCityWarning(false);
   }, [dismissSignal]);
 
   useEffect(() => {
@@ -39,14 +46,15 @@ export function MapAddressSearch({ dismissSignal, onExpandedChange }: MapAddress
 
     if (!expanded || !query.trim()) {
       setResults([]);
+      setShowOutOfCityWarning(false);
       return undefined;
     }
 
     const timeoutId = window.setTimeout(() => {
-      void searchAddresses(query)
-        .then((nextResults) => {
+      void searchAddressesWithLosAngelesCitySplit(query)
+        .then(({ nominatimResults }) => {
           if (!ignore) {
-            setResults(nextResults);
+            setResults(nominatimResults);
           }
         })
         .catch(() => {
@@ -64,15 +72,34 @@ export function MapAddressSearch({ dismissSignal, onExpandedChange }: MapAddress
 
   async function runSearch(selected?: GeocodeSearchResult) {
     const labelForParams = selected ? selected.label : query.trim();
+    setShowOutOfCityWarning(false);
+    if (selected) {
+      const inCity = await isAddressWithinLosAngelesCity(selected);
+      if (!inCity) {
+        setShowOutOfCityWarning(true);
+        return;
+      }
+    }
+    let resultForNavigation = selected;
+    let shouldKeepExpanded = false;
     if (!selected) {
       posthog?.capture("map_address_searched", { query: labelForParams });
+      const nextResults = await searchAddressesWithoutCityFilter(labelForParams);
+      resultForNavigation = nextResults[0];
+      if (resultForNavigation) {
+        const isWithinLosAngeles = await isAddressWithinLosAngelesCity(resultForNavigation);
+        shouldKeepExpanded = !isWithinLosAngeles;
+        setShowOutOfCityWarning(shouldKeepExpanded);
+      }
     }
     try {
-      await applyMapSearchParamsFromAddress(setSearchParams, labelForParams, selected);
+      await applyMapSearchParamsFromAddress(setSearchParams, labelForParams, resultForNavigation);
     } catch {
       /* Nominatim or boundaries lookup may fail; still collapse the panel. */
     }
-    setExpanded(false);
+    if (!shouldKeepExpanded) {
+      setExpanded(false);
+    }
   }
 
   return (
@@ -92,12 +119,23 @@ export function MapAddressSearch({ dismissSignal, onExpandedChange }: MapAddress
             <input
               type="text"
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setShowOutOfCityWarning(false);
+              }}
               aria-label="Search address"
               placeholder="Enter your address to search..."
               autoFocus
             />
           </div>
+          <p className="map-address-search-subtitle">
+            Only addresses within the City of Los Angeles are supported
+          </p>
+          {showOutOfCityWarning ? (
+            <p className="map-address-search-warning" role="status">
+              Only addresses within LA city are allowed
+            </p>
+          ) : null}
           {results.length > 0 ? (
             <div className="map-address-search-dropdown" role="listbox" aria-label="Address search results">
               {results.map((result) => {

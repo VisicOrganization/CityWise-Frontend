@@ -248,7 +248,7 @@ function defaultFetchMock(input: string | URL | Request) {
   const url = String(input);
   const pathname = new URL(url, "http://localhost").pathname;
 
-  if (url.startsWith("https://nominatim.openstreetmap.org/search")) {
+  if (url.includes("/nominatim/search") || url.startsWith("https://nominatim.openstreetmap.org/search")) {
     return Promise.resolve(
       new Response(
         JSON.stringify([
@@ -371,15 +371,15 @@ describe("mock app routes", () => {
     fetchMock.mockImplementation((input: string | URL | Request) => {
       const url = String(input);
 
-      if (url.startsWith("https://nominatim.openstreetmap.org/search")) {
+      if (url.includes("/nominatim/search") || url.startsWith("https://nominatim.openstreetmap.org/search")) {
         return Promise.resolve(
           new Response(
             JSON.stringify([
               {
                 place_id: 3,
                 display_name: "123 Main St, Los Angeles, California, United States",
-                lat: "34.0500",
-                lon: "-118.2500",
+                lat: "34.1500",
+                lon: "-118.5200",
               },
             ]),
           ),
@@ -399,7 +399,9 @@ describe("mock app routes", () => {
     const input = screen.getByLabelText("Search address");
     await user.type(input, "123 Main St");
     expect(input).toHaveValue("123 Main St");
-    expect(await screen.findByText("123 Main St, Los Angeles, California, United States")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("option", { name: "123 Main St, Los Angeles, California, United States" }),
+    ).toBeInTheDocument();
   });
 
   it("submits the landing search on Enter", async () => {
@@ -407,7 +409,7 @@ describe("mock app routes", () => {
 
     fetchMock.mockImplementation((input: string | URL | Request) => {
       const url = String(input);
-      if (url.startsWith("https://nominatim.openstreetmap.org/search")) {
+      if (url.includes("/nominatim/search") || url.startsWith("https://nominatim.openstreetmap.org/search")) {
         return Promise.resolve(
           new Response(
             JSON.stringify([
@@ -507,7 +509,7 @@ describe("mock app routes", () => {
     fetchMock.mockImplementation((input: string | URL | Request) => {
       const url = String(input);
 
-      if (url.startsWith("https://nominatim.openstreetmap.org/search")) {
+      if (url.includes("/nominatim/search") || url.startsWith("https://nominatim.openstreetmap.org/search")) {
         return Promise.reject(new Error("project markers should not geocode on the client"));
       }
 

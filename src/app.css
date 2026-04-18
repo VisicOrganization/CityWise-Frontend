@@ -614,10 +614,9 @@ a {
   position: relative;
   z-index: 2;
   display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5em;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
   box-sizing: border-box;
   width: 100%;
   max-width: min(40.65rem, calc(100% - 1.25rem));
@@ -631,6 +630,15 @@ a {
   font-size: clamp(0.8125rem, 0.16rem + 1.9vw, 1.0625rem);
   line-height: 1.25;
   animation: landing-fade-in-soft 520ms ease-out 290ms both;
+}
+
+.landing-search-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5em;
+  width: 100%;
 }
 
 .landing-search:focus-within {
@@ -677,6 +685,17 @@ a {
 
 .landing-search input::placeholder {
   color: rgba(0, 0, 0, 0.6);
+}
+
+.landing-search-subtitle {
+  margin: 1rem auto 0;
+  max-width: min(40.65rem, calc(100% - 1.25rem));
+  color: #6b7280;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  text-align: center;
+  font-style: italic;
+  animation: landing-fade-in-soft 520ms ease-out 330ms both;
 }
 
 .district-open-map {
@@ -730,9 +749,164 @@ a {
   color: #ffffff;
 }
 
-.landing-search-button-icon-wrap svg {
-  width: 1.2em;
-  height: 1.2em;
+.landing-search-button-container {
+  position: relative;
+  display: inline-block;
+}
+
+.landing-search-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1d865e;
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  z-index: 10;
+  margin-bottom: 0.5rem;
+}
+
+.landing-search-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #1d865e;
+}
+
+.landing-search-button-container:hover .landing-search-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Landing modal for out-of-city addresses */
+.landing-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: landing-fade-in-soft 200ms ease-out;
+}
+
+.landing-modal {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
+  animation: landing-fade-in-soft 300ms ease-out 100ms both;
+}
+
+.landing-modal-content {
+  padding: 1.8rem;
+  text-align: center;
+}
+
+.landing-modal-title {
+  font-family: "Schibsted Grotesk", "Public Sans", "Segoe UI", sans-serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #1d865e;
+  margin: 0 0 0.9rem;
+}
+
+.landing-modal-message {
+  font-family: "Public Sans", "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #374151;
+  margin: 0 0 1.8rem;
+}
+
+.landing-modal-actions {
+  display: flex;
+  gap: 0.9rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.landing-modal-explore-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.675rem 1.8rem;
+  border: 2px solid #1d865e;
+  border-radius: 999px;
+  background: #1d865e;
+  color: white;
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 160ms ease-out;
+}
+
+.landing-modal-explore-button:hover {
+  background: #176e4d;
+  border-color: #176e4d;
+}
+
+.landing-modal-cancel-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.675rem 1.8rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #6b7280;
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 160ms ease-out;
+}
+
+.landing-modal-cancel-button:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+/* Responsive modal */
+@media (max-width: 640px) {
+  .landing-modal-content {
+    padding: 1.35rem;
+  }
+  
+  .landing-modal-title {
+    font-size: 1.125rem;
+  }
+  
+  .landing-modal-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .landing-modal-explore-button,
+  .landing-modal-cancel-button {
+    width: 100%;
+    max-width: 200px;
+  }
 }
 
 .landing-search-results,
@@ -748,11 +922,18 @@ a {
 }
 
 .landing-search-results {
-  position: absolute;
-  top: calc(100% + 0.45rem);
-  left: 0;
-  right: 0;
-  z-index: 25;
+  z-index: 35;
+  max-height: min(42dvh, 18rem);
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
+}
+
+/* Portal to document.body: does not shift hero layout; max-height from JS fills to viewport bottom. */
+.landing-search-results--overlay {
+  z-index: 40;
+  margin: 0;
 }
 
 .landing-search-results button,
@@ -768,6 +949,33 @@ a {
 .landing-search-results button + button,
 .map-search-results button + button {
   border-top: 1px solid rgba(23, 50, 77, 0.06);
+}
+
+.landing-search-result-hit {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  width: 100%;
+}
+
+.landing-search-result-line1 {
+  display: block;
+  font-size: 0.95em;
+  line-height: 1.35;
+  color: #17324d;
+}
+
+.landing-search-result-line2 {
+  display: block;
+  font-size: 0.85em;
+  font-weight: 400;
+  line-height: 1.35;
+  color: rgba(23, 50, 77, 0.55);
+}
+
+.landing-search-result-bold {
+  font-weight: 700;
 }
 
 .map-demo-screen,
@@ -1312,13 +1520,25 @@ a {
   color: rgba(0, 0, 0, 0.6);
 }
 
+.map-address-search-subtitle {
+  margin: 8px 0 0;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: #6b7280;
+  font-style: italic;
+}
+
 .map-address-search-dropdown {
   margin-top: 4px;
   border: 1px solid #e3e3e3;
   border-radius: 10px;
   background: #ffffff;
   box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.25);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: min(38dvh, 240px);
+  -webkit-overflow-scrolling: touch;
 }
 
 .map-address-search-hit {
@@ -4939,13 +5159,16 @@ a {
   }
 
   .landing-search {
-    flex-direction: row;
-    align-items: center;
-    flex-wrap: nowrap;
     border-radius: 999px;
     width: 100%;
     max-width: 100%;
     padding: 0.55em 0.5em 0.55em 0.8em;
+  }
+
+  .landing-search-row {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: nowrap;
   }
 
   .landing-search-field {
@@ -5376,7 +5599,8 @@ a {
   .landing-hero .landing-centerpiece h1,
   .landing-hero .landing-tagline,
   .landing-hero .landing-search,
-  .landing-hero .landing-search-results button {
+  .landing-hero .landing-search-results button,
+  .landing-search-results--overlay button {
     animation: none !important;
   }
 
