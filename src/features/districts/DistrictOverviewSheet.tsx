@@ -9,9 +9,6 @@ import { useDistrictProfile } from "./useDistrictProfile";
 import { useDistrictProjects } from "./useDistrictProjects";
 // import { HousingIcon, InfrastructureIcon, TransitIcon } from "../../shared/ui/visicIcons";
 
-
-const PAGE_SIZE = 3;
-
 function formatDate(value: string | null): string {
   if (!value) {
     return "Not available";
@@ -149,7 +146,7 @@ export function DistrictOverviewSheet({
   const posthog = usePostHog();
   const { profile, error: profileError } = useDistrictProfile(districtId);
   const { biosByDistrict } = useCouncilMemberBios();
-  const { response, error, isLoading } = useDistrictProjects(districtId, 1, PAGE_SIZE);
+  const { response, error, isLoading } = useDistrictProjects(districtId, 1, 100, { fetchAllPages: true });
 
   const bio = biosByDistrict?.get(districtId);
   const representativeRaw = (bio?.name?.trim() || profile?.name?.trim() || "") || "";
