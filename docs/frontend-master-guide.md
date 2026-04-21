@@ -407,6 +407,8 @@ Important ones:
 - `VITE_PORT`
 - `VITE_API_BASE_URL`
 
+Address search geocoding uses the same `VITE_API_BASE_URL` and calls backend `GET /nominatim/search`.
+
 Preferred local Docker flow:
 
 ```bash
@@ -419,6 +421,8 @@ Default useful URLs:
 - `http://localhost:15173/`
 - `http://localhost:15173/map`
 - `http://localhost:15173/districts/11`
+
+If you run Vite directly on `http://localhost:5173`, make sure the backend allows that origin in `FRONTEND_ORIGINS`.
 
 ## 11. What To Ask When Something Breaks
 

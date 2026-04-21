@@ -1,37 +1,13 @@
 import { findDistrictIdForPoint, loadDistrictBoundaries } from "./districtBoundaries";
 
-/** Public Nominatim (browser direct: often blocked by CORS / rate limits). */
-const NOMINATIM_PUBLIC_SEARCH = "https://nominatim.openstreetmap.org/search";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:18100";
 
-/**
- * Where the app calls for search JSON. Prefer same-origin in dev (Vite → nominatim) or
- * `{VITE_API_BASE_URL}/nominatim/search` in prod so the outbound request to OSM is server-side.
- */
 function nominatimSearchEndpoint(): string {
-  const explicit = import.meta.env.VITE_NOMINATIM_SEARCH_URL?.trim();
-  if (explicit) {
-    return explicit;
-  }
-  if (import.meta.env.DEV) {
-    return "/nominatim/search";
-  }
-  const apiBase = (import.meta.env.VITE_API_BASE_URL ?? "").trim().replace(/\/$/, "");
-  if (apiBase) {
-    return `${apiBase}/nominatim/search`;
-  }
-  return NOMINATIM_PUBLIC_SEARCH;
+  return `${API_BASE_URL.trim().replace(/\/$/, "")}/nominatim/search`;
 }
 
 function buildNominatimSearchUrl(trimmedQuery: string): URL {
-  const endpoint = nominatimSearchEndpoint();
-  const origin =
-    typeof globalThis !== "undefined" && "location" in globalThis && globalThis.location?.origin
-      ? globalThis.location.origin
-      : "http://localhost";
-  const url =
-    endpoint.startsWith("http://") || endpoint.startsWith("https://")
-      ? new URL(endpoint)
-      : new URL(endpoint, origin);
+  const url = new URL(nominatimSearchEndpoint());
   url.searchParams.set("q", trimmedQuery);
   url.searchParams.set("format", "jsonv2");
   url.searchParams.set("limit", "4");
