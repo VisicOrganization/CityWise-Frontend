@@ -77,6 +77,7 @@ For local Docker work, copy `.env.example` to `.env`. The local `docker compose`
 The frontend container always serves the Vite dev server on `VITE_PORT` internally. `FRONTEND_HOST_PORT` only controls the host-side published port.
 
 `VITE_API_BASE_URL` should point at the backend API. For the documented local MVP flow, that is the backend Docker host port `18100`.
+Address search geocoding uses this same backend base URL and calls `GET /nominatim/search`.
 
 ## Quick Start
 
@@ -116,6 +117,7 @@ npm run dev -- --host 0.0.0.0 --port 5173
 ```
 
 If you do that, make sure `VITE_API_BASE_URL` points at a running backend.
+For host-run Vite on `http://localhost:5173`, the backend must allow that origin via `FRONTEND_ORIGINS`.
 
 ## Common Workflows
 
@@ -164,8 +166,15 @@ Manual backend checks:
 
 ```bash
 curl -i http://127.0.0.1:18100/health
+curl -i "http://127.0.0.1:18100/nominatim/search?q=test&format=jsonv2&limit=1"
 curl -i "http://127.0.0.1:18100/districts/11/projects?page=1&page_size=3"
 curl -i http://127.0.0.1:18100/projects/25-0358
+```
+
+Expected browser geocoding request shape:
+
+```text
+http://localhost:18100/nominatim/search?q=<query>&format=jsonv2&limit=4
 ```
 
 ### Map And District MVP Assumptions

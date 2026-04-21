@@ -246,9 +246,11 @@ const mockCouncilMemberBiosResponse = [
 
 function defaultFetchMock(input: string | URL | Request) {
   const url = String(input);
-  const pathname = new URL(url, "http://localhost").pathname;
+  const requestUrl = new URL(url, "http://localhost");
+  const pathname = requestUrl.pathname;
 
-  if (url.includes("/nominatim/search") || url.startsWith("https://nominatim.openstreetmap.org/search")) {
+  if (pathname === "/nominatim/search") {
+    expect(requestUrl.origin).toBe("http://localhost:18100");
     return Promise.resolve(
       new Response(
         JSON.stringify([
@@ -369,9 +371,10 @@ describe("mock app routes", () => {
   it("renders the landing page as the entry point", async () => {
     const user = userEvent.setup();
     fetchMock.mockImplementation((input: string | URL | Request) => {
-      const url = String(input);
+      const requestUrl = new URL(String(input), "http://localhost");
 
-      if (url.includes("/nominatim/search") || url.startsWith("https://nominatim.openstreetmap.org/search")) {
+      if (requestUrl.pathname === "/nominatim/search") {
+        expect(requestUrl.origin).toBe("http://localhost:18100");
         return Promise.resolve(
           new Response(
             JSON.stringify([
@@ -408,8 +411,9 @@ describe("mock app routes", () => {
     const user = userEvent.setup();
 
     fetchMock.mockImplementation((input: string | URL | Request) => {
-      const url = String(input);
-      if (url.includes("/nominatim/search") || url.startsWith("https://nominatim.openstreetmap.org/search")) {
+      const requestUrl = new URL(String(input), "http://localhost");
+      if (requestUrl.pathname === "/nominatim/search") {
+        expect(requestUrl.origin).toBe("http://localhost:18100");
         return Promise.resolve(
           new Response(
             JSON.stringify([
@@ -507,9 +511,9 @@ describe("mock app routes", () => {
 
   it("uses backend geocode coordinates for project markers without client-side geocoding", async () => {
     fetchMock.mockImplementation((input: string | URL | Request) => {
-      const url = String(input);
+      const requestUrl = new URL(String(input), "http://localhost");
 
-      if (url.includes("/nominatim/search") || url.startsWith("https://nominatim.openstreetmap.org/search")) {
+      if (requestUrl.pathname === "/nominatim/search") {
         return Promise.reject(new Error("project markers should not geocode on the client"));
       }
 
