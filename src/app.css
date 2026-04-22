@@ -128,7 +128,7 @@ a {
 }
 
 .top-nav-links a {
-  color: #258f69;
+  color: #000000;
   text-decoration: none;
   font-weight: 600;
   font-size: 1.0125rem;
@@ -140,9 +140,9 @@ a {
 }
 
 .top-nav-links a:hover {
-  color: #1a7a55;
+  color: #333333;
   text-decoration: underline;
-  text-decoration-color: rgba(37, 143, 105, 0.55);
+  text-decoration-color: rgba(0, 0, 0, 0.25);
   text-underline-offset: 0.22em;
 }
 
@@ -153,12 +153,12 @@ a {
 }
 
 .top-nav-links a.active {
-  color: #17324d;
+  color: #1d865e;
 }
 
 .top-nav-links a.active:hover {
-  color: #122a42;
-  text-decoration-color: rgba(23, 50, 77, 0.45);
+  color: #166b4b;
+  text-decoration-color: rgba(29, 134, 94, 0.55);
 }
 
 .landing-shell {
@@ -215,12 +215,12 @@ a {
 }
 
 .landing-shell .top-nav-links a {
-  color: #1d865e;
+  color: #000000;
 }
 
 .landing-shell .top-nav-links a:hover {
-  color: #166b4b;
-  text-decoration-color: rgba(29, 134, 94, 0.55);
+  color: #333333;
+  text-decoration-color: rgba(0, 0, 0, 0.25);
 }
 
 .landing-shell .top-nav-links a:focus-visible {
@@ -228,12 +228,12 @@ a {
 }
 
 .landing-shell .top-nav-links a.active {
-  color: #000000;
+  color: #1d865e;
 }
 
 .landing-shell .top-nav-links a.active:hover {
-  color: #111111;
-  text-decoration-color: rgba(0, 0, 0, 0.35);
+  color: #166b4b;
+  text-decoration-color: rgba(29, 134, 94, 0.55);
 }
 
 .landing-hero {
