@@ -2867,7 +2867,7 @@ a {
   overflow: visible;
   margin: 0;
   box-sizing: border-box;
-  padding: 24px 18px 16px 18px;
+  padding: 24px 18px 10px 18px;
 }
 
 /* Title row: title left, status + icon stack right */
@@ -2877,21 +2877,24 @@ a {
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  margin: 0 0 12px;
+  margin: 0 0 6px;
   padding: 0;
 }
 
 .project-sidebar-title-cluster {
+  display: flex;
   flex: 1 1 auto;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
   min-width: 0;
   max-width: 100%;
 }
 
-/* Collapsed sidebar title — 28px bold, room for multi-line title + inline external link */
+/* Collapsed sidebar title — 28px bold; link icon flows inline after text (wraps with last line when it fits) */
 .project-sidebar-title {
   margin: 0;
   max-width: 100%;
-  padding-right: 8px;
   font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
   font-size: 28px;
   font-weight: 700;
@@ -2903,6 +2906,15 @@ a {
   hyphens: auto;
 }
 
+.project-sidebar-title-text {
+  display: inline;
+}
+
+.project-sidebar-title .project-title-external-link {
+  margin-inline-start: 0.2em;
+  white-space: nowrap;
+}
+
 .project-title-link {
   color: inherit;
   text-decoration: none;
@@ -2910,23 +2922,6 @@ a {
 
 .project-title-link:hover,
 .project-title-link:focus-visible {
-  text-decoration: underline;
-}
-
-.project-source-link {
-  display: inline-block;
-  margin-top: 0.35rem;
-  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
-  font-size: 0.875rem;
-  font-weight: 500;
-  line-height: 1.2;
-  color: #9ca3af;
-  text-decoration: none;
-}
-
-.project-source-link:hover,
-.project-source-link:focus-visible {
-  color: #6b7280;
   text-decoration: underline;
 }
 
@@ -2972,6 +2967,52 @@ a {
   justify-content: flex-end;
   gap: 8px;
   overflow: visible;
+}
+
+/* Voting record control (voting_expand.svg — full control opens voting) */
+.project-sidebar-voting-expand {
+  box-sizing: border-box;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  line-height: 0;
+  border-radius: 13px;
+  transition:
+    background-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.project-sidebar-voting-expand__img {
+  display: block;
+  width: 75px;
+  height: auto;
+  max-width: 100%;
+  vertical-align: top;
+}
+
+.project-sidebar-voting-expand:hover:not(:disabled):not(.is-active) {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.project-sidebar-voting-expand:focus-visible {
+  z-index: 1;
+  outline: 2px solid var(--ps-forest, #1d865e);
+  outline-offset: 2px;
+}
+
+.project-sidebar-voting-expand:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.project-sidebar-voting-expand.is-active {
+  box-shadow: inset 0 0 0 999px rgba(29, 134, 94, 0.12);
 }
 
 /* Figma: dark control + label pill on hover (Timeline View / Voting Record) */
@@ -3154,12 +3195,13 @@ a {
   border-color: rgba(107, 114, 128, 0.35);
 }
 
-/* Category — full width below title row, gray body text */
+/* Category — under title, same column as title (wraps; aligns with status / Voting column) */
 .project-sidebar-category {
   margin: 0;
   padding: 0;
+  min-width: 0;
   font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 400;
   line-height: normal;
   color: #6b7280;
@@ -3441,7 +3483,7 @@ a {
 }
 
 .project-sidebar-figma-scroll .project-sidebar-overview {
-  margin-top: 24px;
+  margin-top: 10px;
   padding: 0 var(--project-sidebar-pad-x, 18px);
 }
 
@@ -4039,7 +4081,7 @@ a {
   padding: 0;
   line-height: 1.15;
   pointer-events: auto;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .project-h-timeline--mini .project-h-timeline-node {

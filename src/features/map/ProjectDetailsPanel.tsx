@@ -21,6 +21,7 @@ import { SidebarVoteTallyValue, sidebarHasVoteTallyDisplay } from "./projectDeta
 import { useMobileProjectSidebarLayout } from "./useMobileProjectSidebarLayout";
 
 /** Public-folder SVGs (Vite: use URL string, not import from `/images`). */
+const SIDEBAR_VOTING_EXPAND_SRC = "/voting_expand.svg";
 const SIDEBAR_TIMELINE_ICON_SRC = "/images/timeline-icon.svg";
 const SIDEBAR_VOTING_ICON_SRC = "/images/voting-icon.svg";
 const SIDEBAR_EXPAND_ICON_SRC = "/expand-icon.svg";
@@ -515,95 +516,120 @@ export function ProjectDetailsPanel({
                   <div className="project-sidebar-title-band">
                     <div className="project-sidebar-title-cluster">
                       <h2 className="project-sidebar-title">
-                        {title}
+                        <span className="project-sidebar-title-text">{title}</span>
                         {externalUrl ? (
                           <>
                             {" "}
                             <a
-                              className="project-title-external-link"
-                              href={externalUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              aria-label="Open primary project document in a new tab"
-                              onClick={() => posthog?.capture("project_external_link_clicked", {
-                                project_id: detail?.project.id,
-                                project_title: title,
-                                url: externalUrl,
-                              })}
-                            >
-                              <img
-                                className="project-title-external-link__icon"
-                                src={PROJECT_TITLE_LINK_ICON_SRC}
-                                alt=""
-                                width={16}
-                                height={16}
-                                decoding="async"
-                              />
-                            </a>
-                          </>
-                        ) : null}
-                      </h2>
-                      {externalUrl ? (
-                        <a
-                          className="project-source-link"
-                          href={externalUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={() =>
-                            posthog?.capture("project_external_link_clicked", {
+                            className="project-title-external-link"
+                            href={externalUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="Open primary project document in a new tab"
+                            onClick={() => posthog?.capture("project_external_link_clicked", {
                               project_id: detail?.project.id,
                               project_title: title,
                               url: externalUrl,
-                            })
-                          }
-                        >
-                          View source
-                        </a>
-                      ) : null}
+                            })}
+                          >
+                            <img
+                              className="project-title-external-link__icon"
+                              src={PROJECT_TITLE_LINK_ICON_SRC}
+                              alt=""
+                              width={16}
+                              height={16}
+                              decoding="async"
+                            />
+                          </a>
+                          </>
+                        ) : null}
+                      </h2>
+                      <p className="project-sidebar-category">{category}</p>
                     </div>
                     <div className="project-sidebar-status-column">
                       <StatusBadge status={status} project={detail?.project ?? null} />
                       <div className="project-sidebar-tool-row">
-                        {detail && horizontalMilestones.length > 0 ? (
-                          <span className="project-sidebar-tool-btn-with-hint">
-                            <button
-                              type="button"
-                              className={`project-sidebar-tool-btn project-sidebar-tool-btn--32 ${timelineViewOpen ? "is-active" : ""}`}
-                              aria-label="Timeline view"
-                              aria-expanded={timelineViewOpen}
-                              aria-controls="project-vertical-timeline-panel"
-                              onClick={() => {
-                                setIsVotingPopoverOpen(false);
-                                setTimelineViewOpen((v) => {
-                                  if (!v) {
-                                    posthog?.capture("timeline_view_opened", {
-                                      project_id: detail?.project.id,
-                                      project_title: title,
+                        {isMobileLayout ? (
+                          <>
+                            {detail && horizontalMilestones.length > 0 ? (
+                              <span className="project-sidebar-tool-btn-with-hint">
+                                <button
+                                  type="button"
+                                  className={`project-sidebar-tool-btn project-sidebar-tool-btn--32 ${
+                                    timelineViewOpen ? "is-active" : ""
+                                  }`}
+                                  aria-label="Timeline view"
+                                  aria-expanded={timelineViewOpen}
+                                  aria-controls="project-vertical-timeline-panel"
+                                  onClick={() => {
+                                    setIsVotingPopoverOpen(false);
+                                    setTimelineViewOpen((v) => {
+                                      if (!v) {
+                                        posthog?.capture("timeline_view_opened", {
+                                          project_id: detail.project.id,
+                                          project_title: title,
+                                        });
+                                      }
+                                      return !v;
                                     });
-                                  }
-                                  return !v;
-                                });
-                              }}
-                            >
-                              <img
-                                className="project-sidebar-header-icon-img"
-                                src={SIDEBAR_TIMELINE_ICON_SRC}
-                                alt=""
-                                width={18}
-                                height={18}
-                                decoding="async"
-                              />
-                            </button>
-                            <span className="project-sidebar-tool-btn-hint" aria-hidden="true">
-                              Timeline View
+                                  }}
+                                >
+                                  <img
+                                    className="project-sidebar-header-icon-img"
+                                    src={SIDEBAR_TIMELINE_ICON_SRC}
+                                    alt=""
+                                    width={18}
+                                    height={18}
+                                    decoding="async"
+                                  />
+                                </button>
+                                <span className="project-sidebar-tool-btn-hint" aria-hidden="true">
+                                  Timeline View
+                                </span>
+                              </span>
+                            ) : null}
+                            <span className="project-sidebar-tool-btn-with-hint">
+                              <button
+                                ref={voteButtonRef}
+                                type="button"
+                                className={`project-sidebar-tool-btn project-sidebar-tool-btn--32 ${
+                                  isVotingPopoverOpen ? "is-active" : ""
+                                }`}
+                                aria-label="Toggle voting record"
+                                aria-expanded={isVotingPopoverOpen}
+                                disabled={!detail}
+                                onClick={() => {
+                                  setTimelineViewOpen(false);
+                                  setIsVotingPopoverOpen((current) => {
+                                    if (!current) {
+                                      posthog?.capture("voting_record_opened", {
+                                        project_id: detail?.project.id,
+                                        project_title: title,
+                                      });
+                                    }
+                                    return !current;
+                                  });
+                                }}
+                              >
+                                <img
+                                  className="project-sidebar-header-icon-img"
+                                  src={SIDEBAR_VOTING_ICON_SRC}
+                                  alt=""
+                                  width={18}
+                                  height={18}
+                                  decoding="async"
+                                />
+                              </button>
+                              <span className="project-sidebar-tool-btn-hint" aria-hidden="true">
+                                Voting Record
+                              </span>
                             </span>
-                          </span>
-                        ) : null}
-                        <span className="project-sidebar-tool-btn-with-hint">
+                          </>
+                        ) : (
                           <button
                             ref={voteButtonRef}
                             type="button"
-                            className={`project-sidebar-tool-btn project-sidebar-tool-btn--32 ${isVotingPopoverOpen ? "is-active" : ""}`}
+                            className={`project-sidebar-voting-expand ${isVotingPopoverOpen ? "is-active" : ""}`}
                             aria-label="Toggle voting record"
                             aria-expanded={isVotingPopoverOpen}
                             disabled={!detail}
@@ -621,22 +647,18 @@ export function ProjectDetailsPanel({
                             }}
                           >
                             <img
-                              className="project-sidebar-header-icon-img"
-                              src={SIDEBAR_VOTING_ICON_SRC}
+                              className="project-sidebar-voting-expand__img"
+                              src={SIDEBAR_VOTING_EXPAND_SRC}
                               alt=""
-                              width={18}
-                              height={18}
+                              width={75}
+                              height={27}
                               decoding="async"
                             />
                           </button>
-                          <span className="project-sidebar-tool-btn-hint" aria-hidden="true">
-                            Voting Record
-                          </span>
-                        </span>
+                        )}
                       </div>
                     </div>
                   </div>
-                  <p className="project-sidebar-category">{category}</p>
                 </header>
 
                 {showTimelinePanel ? (

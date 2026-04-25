@@ -910,7 +910,7 @@ describe("mock app routes", () => {
       await screen.findByText(formatPersonNameForDisplay("TRACI PARK")),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /Timeline view/i }));
+    await user.click(screen.getByRole("button", { name: /Open expanded timeline overview/i }));
     const motionNodes = await screen.findAllByText("Motion introduced.");
     expect(motionNodes.length).toBeGreaterThanOrEqual(1);
 
