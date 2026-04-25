@@ -1,4 +1,10 @@
-import type { ExpressionSpecification, FillLayerSpecification, LineLayerSpecification, StyleSpecification } from "maplibre-gl";
+import type {
+  ExpressionSpecification,
+  FillLayerSpecification,
+  LineLayerSpecification,
+  StyleSpecification,
+  SymbolLayerSpecification,
+} from "maplibre-gl";
 
 
 const districtColors: Array<number | string> = [
@@ -43,6 +49,66 @@ export const districtColorExpression = [
   ...districtColors,
   "#90b4ce",
 ] as unknown as ExpressionSpecification;
+
+function darkenRgbHex(hex: string, factor: number): string {
+  const clean = hex.replace("#", "").trim();
+  if (clean.length !== 6) {
+    return hex;
+  }
+  const n = Number.parseInt(clean, 16);
+  if (Number.isNaN(n)) {
+    return hex;
+  }
+  const r = Math.round(((n >> 16) & 255) * factor);
+  const g = Math.round(((n >> 8) & 255) * factor);
+  const b = Math.round((n & 255) * factor);
+  const part = (channel: number) => channel.toString(16).padStart(2, "0");
+  return `#${part(r)}${part(g)}${part(b)}`;
+}
+
+const districtLabelColorPairs: Array<number | string> = [];
+for (let index = 0; index < districtColors.length; index += 2) {
+  const id = districtColors[index];
+  const color = districtColors[index + 1];
+  if (typeof id === "number" && typeof color === "string") {
+    districtLabelColorPairs.push(id, darkenRgbHex(color, 0.78));
+  }
+}
+
+/** Same hue family as district fills, slightly darker for legibility on pastel fills. */
+export const districtLabelColorExpression = [
+  "match",
+  ["to-number", ["get", "District"]],
+  ...districtLabelColorPairs,
+  "#6f8fa8",
+] as unknown as ExpressionSpecification;
+
+export const districtLabelsLayer: Omit<SymbolLayerSpecification, "source"> = {
+  id: "district-labels",
+  type: "symbol",
+  layout: {
+    "text-field": ["to-string", ["get", "District"]],
+    "text-font": ["Open Sans Semibold"],
+    "text-size": [
+      "interpolate",
+      ["linear"],
+      ["zoom"],
+      7,
+      11,
+      10,
+      14,
+      14,
+      18,
+    ],
+    "text-allow-overlap": true,
+    "text-ignore-placement": true,
+    "text-padding": 2,
+  },
+  paint: {
+    "text-color": districtLabelColorExpression,
+    "text-opacity": ["interpolate", ["linear"], ["zoom"], 7, 0.7, 9.5, 0.88, 12, 1],
+  },
+};
 
 export const districtFillOpacityExpression = [
   "interpolate",

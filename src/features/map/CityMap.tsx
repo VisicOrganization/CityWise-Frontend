@@ -16,12 +16,19 @@ import { useDistrictProfile } from "../districts/useDistrictProfile";
 import { formatPersonNameForDisplay } from "../../shared/formatPersonName";
 import { formatProjectTitleForDisplay } from "../../shared/formatProjectTitleForDisplay";
 import { findDistrictFeature, getFeatureBounds, type DistrictBoundaryCollection } from "../../shared/map/districtBoundaries";
-import { districtFillLayer, districtFillOpacityExpression, districtHighlightLayer, districtOutlineLayer } from "../../shared/map/districtLayers";
+import {
+  districtFillLayer,
+  districtFillOpacityExpression,
+  districtHighlightLayer,
+  districtLabelsLayer,
+  districtOutlineLayer,
+} from "../../shared/map/districtLayers";
 import type { MapMarker, MarkerCategory } from "../../shared/map/mapTypes";
 import { InfoIcon } from "../../shared/ui/visicIcons";
 
 const LIGHT_BASE_MAP_STYLE: StyleSpecification = {
   version: 8,
+  glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
   sources: {
     raster: {
       type: "raster",
@@ -123,6 +130,8 @@ interface CityMapProps {
   activeDistrictId: number | null;
   /** Geocoded address from landing; used to zoom before district GeoJSON is ready, and as fallback. */
   addressFocusPoint?: { latitude: number; longitude: number } | null;
+  /** When set (address search set focus + district in URL), project pin filters default to this district only. */
+  addressDrivenDistrictPinsId?: number | null;
   /** Increments when map should re-center on current district. */
   districtRefocusSignal?: number;
   /** Hides the floating district pill (e.g. while the district overview sheet is open — avoids a second “divot”). */
@@ -139,6 +148,7 @@ export function CityMap({
   activeMarkerId,
   activeDistrictId,
   addressFocusPoint = null,
+  addressDrivenDistrictPinsId = null,
   districtRefocusSignal = 0,
   districtOverviewOpen = false,
   onMarkerSelect,
@@ -150,7 +160,8 @@ export function CityMap({
   const DISTRICT_PILL_SWAP_MS = 140;
   const mapRef = useRef<MapRef>(null);
   const [isMapReady, setIsMapReady] = useState(false);
-  const lastDistrictFocusRef = useRef<number | null>(null);
+  const lastDistrictFocusRef = useRef<string | null>(null);
+  const prevDistrictOverviewOpenRef = useRef<boolean | undefined>(undefined);
   const lastHandledRefocusSignalRef = useRef(0);
   const lastPillDistrictIdRef = useRef<number | null>(null);
   const pillSwapTimeoutRef = useRef<number | null>(null);
@@ -166,27 +177,10 @@ export function CityMap({
   const [selectedDistrictIds, setSelectedDistrictIds] = useState<Set<number>>(
     () => new Set(DEFAULT_DISTRICT_IDS),
   );
+  const [lastTouchedDistrictId, setLastTouchedDistrictId] = useState<number | null>(null);
   const hasInitializedDistrictFilterRef = useRef(false);
+  const previousActiveDistrictIdForPillRef = useRef<number | null | undefined>(undefined);
 
-  const { profile: districtProfile } = useDistrictProfile(activeDistrictId);
-  const { biosByDistrict } = useCouncilMemberBios();
-  const activeDistrict = activeDistrictId != null;
-  const displayedDistrictId = activeDistrictId ?? lastVisibleDistrictId;
-  const bio = activeDistrictId != null ? biosByDistrict?.get(activeDistrictId) : undefined;
-  const councilNameRaw = (bio?.name?.trim() || districtProfile?.name?.trim() || "") || "";
-  const displayedName = councilNameRaw
-    ? formatPersonNameForDisplay(councilNameRaw)
-    : displayedDistrictId != null
-      ? `District ${displayedDistrictId}`
-      : "District";
-  const displayedLabel =
-    displayedDistrictId != null ? `District ${displayedDistrictId}` : "";
-  const portraitSrc = (bio?.profilePic?.trim() || districtProfile?.profile_pic?.trim() || "").trim() || null;
-  const initials = displayedName
-    .split(" ")
-    .map((part) => part[0])
-    .filter(Boolean)
-    .join("");
   const availableDistrictIds = useMemo(() => {
     const ids = new Set<number>();
     markers.forEach((marker) => {
@@ -201,6 +195,46 @@ export function CityMap({
     [markers, selectedDistrictIds],
   );
   const selectedDistrictIdList = useMemo(() => [...selectedDistrictIds], [selectedDistrictIds]);
+  const activeFilterDistrictIds = useMemo(
+    () => availableDistrictIds.filter((id) => selectedDistrictIds.has(id)),
+    [availableDistrictIds, selectedDistrictIds],
+  );
+  /** Councilmember pill: most recent map focus (`activeDistrictId`) or filter checkbox. No pill when both are cleared (e.g. map background click). */
+  const pillDistrictId = useMemo((): number | null => {
+    if (activeFilterDistrictIds.length === 0) {
+      return null;
+    }
+    if (lastTouchedDistrictId != null && activeFilterDistrictIds.includes(lastTouchedDistrictId)) {
+      return lastTouchedDistrictId;
+    }
+    if (activeDistrictId != null && activeFilterDistrictIds.includes(activeDistrictId)) {
+      return activeDistrictId;
+    }
+    if (activeDistrictId == null && lastTouchedDistrictId == null) {
+      return null;
+    }
+    return Math.min(...activeFilterDistrictIds);
+  }, [activeFilterDistrictIds, lastTouchedDistrictId, activeDistrictId]);
+
+  const { profile: districtProfile } = useDistrictProfile(pillDistrictId);
+  const { biosByDistrict } = useCouncilMemberBios();
+  const showDistrictPill = pillDistrictId != null;
+  const displayedDistrictId = pillDistrictId ?? lastVisibleDistrictId;
+  const bio = pillDistrictId != null ? biosByDistrict?.get(pillDistrictId) : undefined;
+  const councilNameRaw = (bio?.name?.trim() || districtProfile?.name?.trim() || "") || "";
+  const displayedName = councilNameRaw
+    ? formatPersonNameForDisplay(councilNameRaw)
+    : displayedDistrictId != null
+      ? `District ${displayedDistrictId}`
+      : "District";
+  const displayedLabel =
+    displayedDistrictId != null ? `District ${displayedDistrictId}` : "";
+  const portraitSrc = (bio?.profilePic?.trim() || districtProfile?.profile_pic?.trim() || "").trim() || null;
+  const initials = displayedName
+    .split(" ")
+    .map((part) => part[0])
+    .filter(Boolean)
+    .join("");
 
   const setMapInstance = useCallback((instance: MapRef | null) => {
     mapRef.current = instance;
@@ -208,10 +242,22 @@ export function CityMap({
   }, []);
 
   useEffect(() => {
-    if (activeDistrictId) {
-      setLastVisibleDistrictId(activeDistrictId);
+    if (activeDistrictId === previousActiveDistrictIdForPillRef.current) {
+      return;
     }
+    if (activeDistrictId != null) {
+      setLastTouchedDistrictId(activeDistrictId);
+    } else if (previousActiveDistrictIdForPillRef.current != null) {
+      setLastTouchedDistrictId(null);
+    }
+    previousActiveDistrictIdForPillRef.current = activeDistrictId;
   }, [activeDistrictId]);
+
+  useEffect(() => {
+    if (pillDistrictId != null) {
+      setLastVisibleDistrictId(pillDistrictId);
+    }
+  }, [pillDistrictId]);
 
   useEffect(() => {
     if (districtOverviewOpen) {
@@ -222,11 +268,22 @@ export function CityMap({
   }, [districtOverviewOpen]);
 
   useEffect(() => {
-    if (!hasInitializedDistrictFilterRef.current && availableDistrictIds.length > 0) {
+    if (availableDistrictIds.length === 0) {
+      return;
+    }
+
+    if (addressDrivenDistrictPinsId != null) {
+      setSelectedDistrictIds(new Set([addressDrivenDistrictPinsId]));
+      setLastTouchedDistrictId(addressDrivenDistrictPinsId);
+      hasInitializedDistrictFilterRef.current = true;
+      return;
+    }
+
+    if (!hasInitializedDistrictFilterRef.current) {
       setSelectedDistrictIds(new Set(availableDistrictIds));
       hasInitializedDistrictFilterRef.current = true;
     }
-  }, [availableDistrictIds]);
+  }, [availableDistrictIds, addressDrivenDistrictPinsId]);
 
   useEffect(() => {
     if (!activeMarkerId) {
@@ -241,7 +298,7 @@ export function CityMap({
 
   useEffect(() => {
     setPillPortraitFailed(false);
-  }, [portraitSrc, activeDistrictId]);
+  }, [portraitSrc, pillDistrictId]);
 
   useEffect(() => {
     return () => {
@@ -252,7 +309,7 @@ export function CityMap({
   }, []);
 
   useEffect(() => {
-    if (activeDistrictId == null) {
+    if (pillDistrictId == null) {
       lastPillDistrictIdRef.current = null;
       setIsDistrictPillVisible(false);
       if (pillSwapTimeoutRef.current != null) {
@@ -263,9 +320,9 @@ export function CityMap({
     }
 
     const previousDistrictId = lastPillDistrictIdRef.current;
-    lastPillDistrictIdRef.current = activeDistrictId;
+    lastPillDistrictIdRef.current = pillDistrictId;
 
-    if (previousDistrictId == null || previousDistrictId === activeDistrictId) {
+    if (previousDistrictId == null || previousDistrictId === pillDistrictId) {
       setIsDistrictPillVisible(true);
       return;
     }
@@ -278,76 +335,102 @@ export function CityMap({
       setIsDistrictPillVisible(true);
       pillSwapTimeoutRef.current = null;
     }, DISTRICT_PILL_SWAP_MS);
-  }, [activeDistrictId]);
+  }, [pillDistrictId]);
 
   useLayoutEffect(() => {
-    const map = mapRef.current?.getMap();
-    if (!map || !isMapReady) {
-      return;
-    }
+    const overviewWasOpen = prevDistrictOverviewOpenRef.current;
 
-    const shouldForceRefocus = districtRefocusSignal !== lastHandledRefocusSignalRef.current;
-    if (shouldForceRefocus) {
-      lastHandledRefocusSignalRef.current = districtRefocusSignal;
-      lastDistrictFocusRef.current = null;
-    }
+    try {
+      const map = mapRef.current?.getMap();
+      if (!map || !isMapReady) {
+        return;
+      }
 
-    if (activeDistrictId == null) {
-      lastDistrictFocusRef.current = null;
+      const shouldForceRefocus = districtRefocusSignal !== lastHandledRefocusSignalRef.current;
+      if (shouldForceRefocus) {
+        lastHandledRefocusSignalRef.current = districtRefocusSignal;
+        lastDistrictFocusRef.current = null;
+      }
+
+      if (activeDistrictId == null) {
+        lastDistrictFocusRef.current = null;
+        if (addressFocusPoint) {
+          map.jumpTo({
+            center: [addressFocusPoint.longitude, addressFocusPoint.latitude],
+            zoom: Math.max(map.getZoom(), 12.8),
+          });
+        }
+        return;
+      }
+
+      if (boundaries) {
+        const districtFeature = findDistrictFeature(boundaries, activeDistrictId);
+        if (districtFeature) {
+          const [[minLng, minLat], [maxLng, maxLat]] = getFeatureBounds(districtFeature);
+
+          if (districtOverviewOpen) {
+            const framingKey = `${activeDistrictId}:sheet`;
+            if (!shouldForceRefocus && overviewWasOpen === true && lastDistrictFocusRef.current === framingKey) {
+              return;
+            }
+            lastDistrictFocusRef.current = framingKey;
+            const bottomPad = Math.max(220, Math.round(window.innerHeight * 0.44));
+            map.fitBounds(
+              [
+                [minLng, minLat],
+                [maxLng, maxLat],
+              ],
+              {
+                padding: { top: 96, bottom: bottomPad, left: 72, right: 72 },
+                maxZoom: 14,
+                minZoom: 8.8,
+                duration: 0,
+              },
+            );
+            return;
+          }
+
+          if (overviewWasOpen === true && !shouldForceRefocus) {
+            lastDistrictFocusRef.current = `${activeDistrictId}:post-sheet`;
+            return;
+          }
+
+          const postSheetKey = `${activeDistrictId}:post-sheet`;
+          if (lastDistrictFocusRef.current === postSheetKey) {
+            return;
+          }
+
+          const framingKey = `${activeDistrictId}:full`;
+          if (!shouldForceRefocus && lastDistrictFocusRef.current === framingKey) {
+            return;
+          }
+          lastDistrictFocusRef.current = framingKey;
+          map.fitBounds(
+            [
+              [minLng, minLat],
+              [maxLng, maxLat],
+            ],
+            {
+              padding: { top: 96, bottom: 96, left: 72, right: 72 },
+              maxZoom: 14,
+              minZoom: 8.8,
+              duration: 0,
+            },
+          );
+          return;
+        }
+      }
+
       if (addressFocusPoint) {
         map.jumpTo({
           center: [addressFocusPoint.longitude, addressFocusPoint.latitude],
           zoom: Math.max(map.getZoom(), 12.8),
         });
       }
-      return;
+    } finally {
+      prevDistrictOverviewOpenRef.current = districtOverviewOpen;
     }
-
-    if (boundaries) {
-      const districtFeature = findDistrictFeature(boundaries, activeDistrictId);
-      if (districtFeature) {
-        const [[minLng, minLat], [maxLng, maxLat]] = getFeatureBounds(districtFeature);
-        const centerLng = (minLng + maxLng) / 2;
-        const centerLat = (minLat + maxLat) / 2;
-
-        const previousFocusedId = lastDistrictFocusRef.current;
-        const isSwitchingDistrict =
-          previousFocusedId != null && previousFocusedId !== activeDistrictId;
-
-        if (isSwitchingDistrict) {
-          lastDistrictFocusRef.current = activeDistrictId;
-          map.jumpTo({
-            center: [centerLng, centerLat],
-          });
-          return;
-        }
-
-        if (previousFocusedId === activeDistrictId) {
-          return;
-        }
-
-        const lngSpan = Math.max(maxLng - minLng, 0.0025);
-        const latSpan = Math.max(maxLat - minLat, 0.0025);
-        const horizontalZoom = Math.log2(360 / lngSpan) - 1.4;
-        const verticalZoom = Math.log2(180 / latSpan) - 0.8;
-        const focusZoom = Math.max(9.8, Math.min(13.6, Math.min(horizontalZoom, verticalZoom)));
-
-        lastDistrictFocusRef.current = activeDistrictId;
-        map.jumpTo({
-          center: [centerLng, centerLat],
-          zoom: focusZoom,
-        });
-        return;
-      }
-    }
-
-    if (addressFocusPoint) {
-      map.jumpTo({
-        center: [addressFocusPoint.longitude, addressFocusPoint.latitude],
-        zoom: Math.max(map.getZoom(), 12.8),
-      });
-    }
-  }, [activeDistrictId, boundaries, addressFocusPoint, districtRefocusSignal, isMapReady]);
+  }, [activeDistrictId, boundaries, addressFocusPoint, districtRefocusSignal, districtOverviewOpen, isMapReady]);
 
   function handleZoom(delta: number) {
     const map = mapRef.current?.getMap();
@@ -367,17 +450,17 @@ export function CityMap({
     });
 
     if (!clickedFeature) {
-      onDistrictSelect(null);
       return;
     }
 
     const districtValue = clickedFeature.properties?.District;
     const parsedDistrictId = Number(districtValue);
     if (Number.isNaN(parsedDistrictId)) {
-      onDistrictSelect(null);
       return;
     }
 
+    setSelectedDistrictIds(new Set([parsedDistrictId]));
+    hasInitializedDistrictFilterRef.current = true;
     onDistrictSelect(parsedDistrictId);
   }
 
@@ -387,7 +470,12 @@ export function CityMap({
         ref={setMapInstance}
         initialViewState={DEFAULT_VIEW_STATE}
         onClick={handleMapClick}
-        interactiveLayerIds={["district-fill"]}
+        interactiveLayerIds={[
+          "district-fill-dim",
+          "district-fill-selected",
+          "district-highlight",
+          "district-labels",
+        ]}
         mapStyle={LIGHT_BASE_MAP_STYLE}
         attributionControl={false}
         style={{ width: "100%", height: "100%" }}
@@ -397,7 +485,8 @@ export function CityMap({
             <Layer {...buildDistrictFillDimLayer()} />
             <Layer {...buildDistrictFillLayer(selectedDistrictIdList)} />
             <Layer {...districtOutlineLayer} />
-            {activeDistrictId != null ? <Layer {...buildHighlightLayer(activeDistrictId)} /> : null}
+            {pillDistrictId != null ? <Layer {...buildHighlightLayer(pillDistrictId)} /> : null}
+            <Layer {...districtLabelsLayer} />
           </Source>
         ) : null}
 
@@ -465,7 +554,7 @@ export function CityMap({
 
       <div
         className={`map-district-pill-shell ${
-          activeDistrict && !districtOverviewOpen && isDistrictPillVisible && !isSearchExpanded
+          showDistrictPill && !districtOverviewOpen && isDistrictPillVisible && !isSearchExpanded
             ? "is-visible"
             : "is-hidden"
         }`}
@@ -474,13 +563,13 @@ export function CityMap({
           type="button"
           className="map-district-pill"
           onClick={() => {
-            if (activeDistrictId != null) {
-              onOpenDistrictOverview(activeDistrictId);
+            if (pillDistrictId != null) {
+              onOpenDistrictOverview(pillDistrictId);
             }
           }}
-          aria-label={activeDistrictId != null ? `Open District ${activeDistrictId} overview` : "District overview hidden"}
-          aria-hidden={activeDistrict && !districtOverviewOpen ? undefined : true}
-          tabIndex={activeDistrict && !districtOverviewOpen ? 0 : -1}
+          aria-label={pillDistrictId != null ? `Open District ${pillDistrictId} overview` : "District overview hidden"}
+          aria-hidden={showDistrictPill && !districtOverviewOpen ? undefined : true}
+          tabIndex={showDistrictPill && !districtOverviewOpen ? 0 : -1}
         >
           <span className="map-district-avatar" aria-hidden="true">
             {portraitSrc && !pillPortraitFailed ? (
@@ -616,7 +705,10 @@ export function CityMap({
                     <button
                       type="button"
                       className="map-district-filter-action-btn"
-                      onClick={() => setSelectedDistrictIds(new Set<number>())}
+                      onClick={() => {
+                        setLastTouchedDistrictId(null);
+                        setSelectedDistrictIds(new Set<number>());
+                      }}
                     >
                       Deselect all
                     </button>
@@ -628,6 +720,7 @@ export function CityMap({
                           type="checkbox"
                           checked={selectedDistrictIds.has(districtId)}
                           onChange={() => {
+                            setLastTouchedDistrictId(districtId);
                             setSelectedDistrictIds((current) => {
                               const next = new Set(current);
                               if (next.has(districtId)) {

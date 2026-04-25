@@ -22,6 +22,7 @@ export function MapPage() {
   const [districtRefocusSignal, setDistrictRefocusSignal] = useState(0);
   const [isDistrictOverviewClosing, setIsDistrictOverviewClosing] = useState(false);
   const districtOverviewCloseTimeoutRef = useRef<number | null>(null);
+  const lastSyncedDistrictFocusFromUrlRef = useRef<number | null | undefined>(undefined);
   const districtFocusId = useMemo(() => {
     const districtFocusValue = searchParams.get("districtFocus");
     if (!districtFocusValue) {
@@ -50,6 +51,9 @@ export function MapPage() {
     return { latitude, longitude };
   }, [searchParams]);
   const districtSheetFocusLabel = searchParams.get("focusLabel")?.trim() || null;
+  /** Address search + geocoded point set this together with `districtFocus`; narrow map pins to that district. */
+  const addressDrivenDistrictPinsId =
+    addressFocusPoint !== null && districtFocusId !== null ? districtFocusId : null;
   const { boundaries, projectCards, projectMarkers } = useMapData();
 
   useEffect(() => {
@@ -66,7 +70,11 @@ export function MapPage() {
   } = useProjectDetail();
 
   useLayoutEffect(() => {
-    if (districtFocusId) {
+    if (districtFocusId === lastSyncedDistrictFocusFromUrlRef.current) {
+      return;
+    }
+    lastSyncedDistrictFocusFromUrlRef.current = districtFocusId;
+    if (districtFocusId != null) {
       setActiveDistrictId(districtFocusId);
     }
   }, [districtFocusId]);
@@ -162,6 +170,7 @@ export function MapPage() {
           activeDistrictId={activeDistrictId}
           districtRefocusSignal={districtRefocusSignal}
           addressFocusPoint={addressFocusPoint}
+          addressDrivenDistrictPinsId={addressDrivenDistrictPinsId}
           districtOverviewOpen={Boolean(districtFocusId && shouldShowDistrictProfile)}
           onMarkerSelect={(marker) => {
             void handleMarkerSelect(marker);
@@ -172,6 +181,16 @@ export function MapPage() {
           }}
           onDistrictSelect={(districtId) => {
             setActiveDistrictId(districtId);
+            if (districtId == null) {
+              return;
+            }
+            const nextParams = new URLSearchParams(searchParams);
+            nextParams.set("districtFocus", String(districtId));
+            nextParams.set("showDistrictProfile", "0");
+            nextParams.delete("focusLat");
+            nextParams.delete("focusLng");
+            nextParams.delete("focusLabel");
+            setSearchParams(nextParams, { replace: true });
           }}
         />
         {(activeMarker || isDetailsLoading || detailsError) && isProjectSidebarOpen ? (
