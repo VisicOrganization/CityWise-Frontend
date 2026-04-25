@@ -19,6 +19,7 @@ export function MapPage() {
   const [activeMarker, setActiveMarker] = useState<MapMarker | null>(null);
   const [activeDistrictId, setActiveDistrictId] = useState<number | null>(null);
   const [isProjectSidebarOpen, setIsProjectSidebarOpen] = useState(true);
+  const [isProjectSidebarExpanded, setIsProjectSidebarExpanded] = useState(false);
   const [districtRefocusSignal, setDistrictRefocusSignal] = useState(0);
   const [isDistrictOverviewClosing, setIsDistrictOverviewClosing] = useState(false);
   const districtOverviewCloseTimeoutRef = useRef<number | null>(null);
@@ -163,6 +164,7 @@ export function MapPage() {
           districtRefocusSignal={districtRefocusSignal}
           addressFocusPoint={addressFocusPoint}
           districtOverviewOpen={Boolean(districtFocusId && shouldShowDistrictProfile)}
+          hideMapChrome={isProjectSidebarExpanded}
           onMarkerSelect={(marker) => {
             void handleMarkerSelect(marker);
           }}
@@ -181,6 +183,7 @@ export function MapPage() {
             isLoading={isDetailsLoading}
             errorMessage={detailsError}
             onExploreMap={() => setIsProjectSidebarOpen(false)}
+            onExpandedChange={setIsProjectSidebarExpanded}
           />
         ) : null}
         {districtFocusId !== null && shouldRenderDistrictOverview ? (
