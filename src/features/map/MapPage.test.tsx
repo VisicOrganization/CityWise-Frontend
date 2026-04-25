@@ -21,6 +21,7 @@ vi.mock("react-map-gl/maplibre", () => ({
         getZoom: () => 10,
         easeTo: vi.fn(),
         jumpTo: vi.fn(),
+        fitBounds: vi.fn(),
       }),
     }));
     return (
@@ -564,7 +565,7 @@ describe("mock app routes", () => {
     );
   });
 
-  it("hides the district pill when the map is clicked outside district boundaries", async () => {
+  it("keeps the district pill when the map is clicked outside district boundaries", async () => {
     const user = userEvent.setup();
 
     render(
@@ -580,7 +581,9 @@ describe("mock app routes", () => {
 
     await user.click(screen.getByTestId("mock-empty-map-click"));
 
-    expect(screen.queryByLabelText(/Open District .* overview/)).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Open District 11 overview")).toHaveTextContent(
+      /jordan\s+alvarez\s*•\s*district\s+11/i,
+    );
     expect(screen.queryByText("Select a district")).not.toBeInTheDocument();
   });
 

@@ -9,11 +9,18 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import "./tailwind.css";
 import "./app.css";
 
-const isPostHogEnabled = import.meta.env.PROD;
+const posthogToken = import.meta.env.VITE_PUBLIC_POSTHOG_TOKEN;
+const posthogHost = import.meta.env.VITE_PUBLIC_POSTHOG_HOST;
+
+// Require a build-time token so we never call posthog.init(undefined) in production.
+const isPostHogEnabled =
+  import.meta.env.PROD &&
+  typeof posthogToken === "string" &&
+  posthogToken.length > 0;
 
 if (isPostHogEnabled) {
-  posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_TOKEN, {
-    api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
+  posthog.init(posthogToken, {
+    api_host: posthogHost || "https://us.i.posthog.com",
     defaults: "2026-01-30",
   });
 }
