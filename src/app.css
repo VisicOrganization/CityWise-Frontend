@@ -2084,6 +2084,8 @@ a {
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  /* Align overview, timeline, and other inset blocks to the same horizontal padding */
+  --project-sidebar-pad-x: 18px;
 }
 
 .project-sidebar-footer-cta {
@@ -2865,7 +2867,7 @@ a {
   overflow: visible;
   margin: 0;
   box-sizing: border-box;
-  padding: 24px 24px 16px 24px;
+  padding: 24px 18px 16px 18px;
 }
 
 /* Title row: title left, status + icon stack right */
@@ -3440,7 +3442,7 @@ a {
 
 .project-sidebar-figma-scroll .project-sidebar-overview {
   margin-top: 24px;
-  padding: 0 18px;
+  padding: 0 var(--project-sidebar-pad-x, 18px);
 }
 
 .project-sidebar-figma-scroll .project-sidebar-status {
@@ -3448,11 +3450,14 @@ a {
 }
 
 .project-sidebar-figma-scroll .project-h-timeline {
-  padding: 0 14.5px;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 0 var(--project-sidebar-pad-x, 18px);
 }
 
 .project-sidebar-figma-scroll .project-sidebar-timeline-fallback {
-  padding: 0 18px;
+  padding: 0 var(--project-sidebar-pad-x, 18px);
 }
 
 .project-sidebar-overview {
@@ -3581,14 +3586,23 @@ a {
   margin-top: 1.5rem;
 }
 
+.project-h-timeline--mini {
+  --h-timeline-dash-w: 2.65rem;
+  --h-timeline-seg-bleed: 4px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
 .project-h-timeline-track {
   width: 100%;
+  min-width: 0;
 }
 
 .project-h-timeline-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   width: 100%;
 }
@@ -3622,6 +3636,7 @@ a {
   word-break: break-word;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
 }
 
@@ -3637,12 +3652,13 @@ a {
   word-break: break-word;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   min-width: 0;
 }
 
 .project-h-timeline-label-link:hover {
-  color: #374151;
+  color: rgba(0, 0, 0, 0.75);
 }
 
 .project-h-timeline-label-bottom {
@@ -3663,8 +3679,142 @@ a {
   min-height: 16px;
 }
 
-.project-h-timeline-bar--continuous {
-  min-height: 18px;
+.project-h-timeline-bar--segmented {
+  min-height: 0;
+}
+
+.project-h-timeline-bar-mid {
+  position: relative;
+  width: 100%;
+  min-height: 20px;
+}
+
+.project-h-timeline--mini .project-h-timeline-bar-mid--with-expand {
+  overflow: visible;
+}
+
+.project-h-timeline-expand-row {
+  width: 100%;
+  margin-bottom: 0;
+  text-align: center;
+}
+
+.project-h-timeline-expand-link {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: normal;
+  color: var(--ps-forest, #1d865e);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.project-h-timeline-expand-link:hover {
+  color: #166a4b;
+}
+
+.project-h-timeline-line-between-nodes {
+  position: absolute;
+  left: calc(100% / var(--h-timeline-n, 4) / 2);
+  right: calc(100% / var(--h-timeline-n, 4) / 2);
+  top: 50%;
+  z-index: 0;
+  height: 4px;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.project-h-timeline-line-segments {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 4px;
+}
+
+.project-h-timeline--mini .project-h-timeline-line-between-nodes {
+  right: 0;
+  left: 0;
+}
+
+.project-h-timeline--mini .project-h-timeline-line-segments {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 4px;
+}
+
+.project-h-timeline-seg-slot {
+  position: absolute;
+  z-index: 0;
+  height: 4px;
+  pointer-events: none;
+}
+
+.project-h-timeline-seg-slot-solid {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background-color: var(--ps-forest, #1d865e);
+}
+
+.project-h-timeline--mini .project-h-timeline-seg-slot .project-h-timeline-seg-bridge {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  min-width: 0;
+  flex: unset;
+}
+
+.project-h-timeline-seg {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.project-h-timeline-seg--solid {
+  height: 4px;
+  border-radius: 2px;
+  background-color: var(--ps-forest, #1d865e);
+}
+
+.project-h-timeline-seg--dashed {
+  align-self: center;
+  height: 0;
+  border: 0;
+  border-top: 4px dashed var(--ps-forest, #1d865e);
+  border-radius: 0;
+  background: none;
+}
+
+/* Middle inter-node gap only: short dashed span sized to the “Timeline” label */
+.project-h-timeline-seg-bridge {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  min-width: 0;
+}
+
+.project-h-timeline-seg-bridge-slab {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 4px;
+  border-radius: 2px;
+  background-color: var(--ps-forest, #1d865e);
+}
+
+.project-h-timeline-seg-bridge-dash {
+  flex: 0 0 var(--h-timeline-dash-w, 2.75rem);
+  align-self: center;
+  height: 0;
+  border: 0;
+  border-top: 4px dashed var(--ps-forest, #1d865e);
+  border-radius: 0;
+  background: none;
 }
 
 .project-h-timeline-line-full {
@@ -3715,6 +3865,7 @@ a {
   width: 100%;
   min-height: 16px;
   align-items: center;
+  justify-items: center;
 }
 
 .project-h-timeline-node-cell {
@@ -3742,34 +3893,169 @@ a {
 }
 
 .project-h-timeline--mini .project-h-timeline-label-top {
-  font-size: 0.625rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 0 2px;
+  font-size: 8px;
   font-weight: 500;
   color: rgba(0, 0, 0, 0.6);
-  padding: 0 4px;
+}
+
+.project-h-timeline--mini .project-h-timeline-label-top-inner {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  max-width: 64px;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.project-h-timeline--mini .project-h-timeline-label-top-inner:not(:has(.project-h-timeline-label-link)) {
+  display: -webkit-box;
+  max-width: 64px;
+  min-width: 0;
+  overflow: hidden;
+  text-align: center;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.project-h-timeline--mini .project-h-timeline-label-top-inner .project-h-timeline-label-link {
+  display: -webkit-box;
+  max-width: 64px;
+  min-width: 0;
+  overflow: hidden;
+  text-align: center;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
 }
 
 .project-h-timeline--mini .project-h-timeline-label-bottom {
-  font-size: 0.5625rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 0 2px;
+  font-size: 8px;
   font-weight: 500;
   color: rgba(0, 0, 0, 0.6);
-  padding: 0 4px;
+}
+
+.project-h-timeline--mini .project-h-timeline-label-bottom-inner {
+  display: block;
+  max-width: 64px;
+  min-width: 0;
+  text-align: center;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.project-h-timeline--mini .project-h-timeline-labels-top,
+.project-h-timeline--mini .project-h-timeline-labels-bottom,
+.project-h-timeline--mini .project-h-timeline-nodes {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  column-gap: 0;
+}
+
+.project-h-timeline--mini .project-h-timeline-label-top,
+.project-h-timeline--mini .project-h-timeline-label-bottom,
+.project-h-timeline--mini .project-h-timeline-node-cell {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Four milestones: tighter 1–2 / wider middle / slightly looser 3–4 (ratios match MiniHorizontalTimeline segment math) */
+.project-h-timeline--mini .project-h-timeline-container--four .project-h-timeline-labels-top .project-h-timeline-label-top:nth-child(1),
+.project-h-timeline--mini .project-h-timeline-container--four .project-h-timeline-labels-bottom .project-h-timeline-label-bottom:nth-child(1),
+.project-h-timeline--mini .project-h-timeline-container--four .project-h-timeline-nodes .project-h-timeline-node-cell:nth-child(1) {
+  flex: 0.36 1 0;
+}
+
+.project-h-timeline--mini .project-h-timeline-container--four .project-h-timeline-labels-top .project-h-timeline-label-top:nth-child(2),
+.project-h-timeline--mini .project-h-timeline-container--four .project-h-timeline-labels-bottom .project-h-timeline-label-bottom:nth-child(2),
+.project-h-timeline--mini .project-h-timeline-container--four .project-h-timeline-nodes .project-h-timeline-node-cell:nth-child(2) {
+  flex: 0.98 1 0;
+}
+
+.project-h-timeline--mini .project-h-timeline-container--four .project-h-timeline-labels-top .project-h-timeline-label-top:nth-child(3),
+.project-h-timeline--mini .project-h-timeline-container--four .project-h-timeline-labels-bottom .project-h-timeline-label-bottom:nth-child(3),
+.project-h-timeline--mini .project-h-timeline-container--four .project-h-timeline-nodes .project-h-timeline-node-cell:nth-child(3) {
+  flex: 0.94 1 0;
+}
+
+.project-h-timeline--mini .project-h-timeline-container--four .project-h-timeline-labels-top .project-h-timeline-label-top:nth-child(4),
+.project-h-timeline--mini .project-h-timeline-container--four .project-h-timeline-labels-bottom .project-h-timeline-label-bottom:nth-child(4),
+.project-h-timeline--mini .project-h-timeline-container--four .project-h-timeline-nodes .project-h-timeline-node-cell:nth-child(4) {
+  flex: 0.42 1 0;
+}
+
+.project-h-timeline--mini .project-h-timeline-nodes {
+  align-items: center;
+  min-height: 20px;
+}
+
+.project-h-timeline--mini .project-h-timeline-node-cell {
+  justify-content: center;
 }
 
 .project-h-timeline--mini .project-h-timeline-labels-top {
-  margin-bottom: 6px;
+  margin-bottom: 0;
 }
 
 .project-h-timeline--mini .project-h-timeline-labels-bottom {
-  margin-top: 6px;
+  margin-top: 2px;
+}
+
+/* Pin “Timeline” to the top edge of the track (above the line) so copy sits closer to the bar */
+.project-h-timeline--mini .project-h-timeline-bar-mid--with-expand .project-h-timeline-expand-row {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  transform: translateY(-100%);
+  pointer-events: none;
+}
+
+.project-h-timeline--mini .project-h-timeline-bar-mid--with-expand .project-h-timeline-expand-link {
+  padding: 0;
+  line-height: 1.15;
+  pointer-events: auto;
+  font-size: 10px;
 }
 
 .project-h-timeline--mini .project-h-timeline-node {
-  width: 10px;
-  height: 10px;
+  width: 14px;
+  height: 14px;
+}
+
+.project-h-timeline--mini .project-h-timeline-node--completed {
+  box-sizing: border-box;
+  background-color: #fff;
+  border: 2.5px solid var(--ps-forest, #1d865e);
 }
 
 .project-h-timeline--mini .project-h-timeline-node--upcoming {
-  border-width: 2px;
+  box-sizing: border-box;
+  border-width: 2.5px;
 }
 
 /* Expanded vertical timeline: below header, scrolls; header + toggles stay visible */

@@ -718,7 +718,20 @@ export function ProjectDetailsPanel({
                     </section>
 
                     {detail && horizontalMilestones.length > 0 ? (
-                      <MiniHorizontalTimeline milestones={horizontalMilestones} />
+                      <MiniHorizontalTimeline
+                        milestones={horizontalMilestones}
+                        onExpandTimeline={() => {
+                          setIsVotingPopoverOpen(false);
+                          if (!timelineViewOpen) {
+                            posthog?.capture("timeline_view_opened", {
+                              project_id: detail.project.id,
+                              project_title: title,
+                              source: "timeline_inline_link",
+                            });
+                          }
+                          setTimelineViewOpen(true);
+                        }}
+                      />
                     ) : null}
 
                     {detail && detail.timeline.length > 0 && verticalTimelineItems.length === 0 ? (
