@@ -134,6 +134,8 @@ interface CityMapProps {
   addressDrivenDistrictPinsId?: number | null;
   /** Increments when map should re-center on current district. */
   districtRefocusSignal?: number;
+  /** Hide map chrome (search + control stack + feedback) while another sheet is open. */
+  hideMapChrome?: boolean;
   /** Hides the floating district pill (e.g. while the district overview sheet is open — avoids a second “divot”). */
   districtOverviewOpen?: boolean;
   onMarkerSelect: (marker: MapMarker) => void;
@@ -150,6 +152,7 @@ export function CityMap({
   addressFocusPoint = null,
   addressDrivenDistrictPinsId = null,
   districtRefocusSignal = 0,
+  hideMapChrome = false,
   districtOverviewOpen = false,
   onMarkerSelect,
   onMapBackgroundClick,
@@ -594,7 +597,7 @@ export function CityMap({
         </button>
       </div>
 
-      {districtOverviewOpen ? null : (
+      {districtOverviewOpen || hideMapChrome ? null : (
         <>
           <div className="map-search-dock">
             <MapAddressSearch dismissSignal={searchDismissSignal} onExpandedChange={setIsSearchExpanded} />
@@ -743,16 +746,18 @@ export function CityMap({
         </>
       )}
 
-      <a
-        className="map-feedback-button"
-        href="https://forms.gle/kqi9Ex3VA47HhoC28"
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="Open CityWise feedback form in a new tab"
-        onClick={() => posthog?.capture("feedback_button_clicked")}
-      >
-        Give us your feedback!
-      </a>
+      {hideMapChrome ? null : (
+        <a
+          className="map-feedback-button"
+          href="https://forms.gle/kqi9Ex3VA47HhoC28"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Open CityWise feedback form in a new tab"
+          onClick={() => posthog?.capture("feedback_button_clicked")}
+        >
+          Give us your feedback!
+        </a>
+      )}
     </div>
   );
 }

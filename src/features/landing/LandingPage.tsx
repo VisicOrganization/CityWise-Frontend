@@ -281,7 +281,15 @@ export function LandingPage() {
                   <button type="submit" className="landing-search-button">
                     <span className="landing-search-button-text">Search</span>
                     <span className="landing-search-button-icon-wrap" aria-hidden="true">
-                      <SearchIcon />
+                      {/* Same asset as map collapsed search; filter turns #5E5E5E paths white on green. */}
+                      <img
+                        className="landing-search-button-icon-img"
+                        src="/search-icon.svg"
+                        alt=""
+                        width={18}
+                        height={18}
+                        decoding="async"
+                      />
                     </span>
                   </button>
                   {showOutOfCityTooltip && (

@@ -6,7 +6,7 @@ import type { ProjectDetail } from "../../shared/api/contracts";
 import { formatName } from "../../shared/formatPersonName";
 import { formatProjectTitleForDisplay } from "../../shared/formatProjectTitleForDisplay";
 import type { MapMarker } from "../../shared/map/mapTypes";
-import { CloseIcon, ExternalLinkIcon } from "../../shared/ui/visicIcons";
+import { CloseIcon } from "../../shared/ui/visicIcons";
 import { formatProjectDateLong, formatUsNumericDate } from "./projectDetails/formatProjectDate";
 import { MiniHorizontalTimeline } from "./projectDetails/MiniHorizontalTimeline";
 import {
@@ -25,6 +25,7 @@ const SIDEBAR_TIMELINE_ICON_SRC = "/images/timeline-icon.svg";
 const SIDEBAR_VOTING_ICON_SRC = "/images/voting-icon.svg";
 const SIDEBAR_EXPAND_ICON_SRC = "/expand-icon.svg";
 const SIDEBAR_COLLAPSE_ICON_SRC = "/collapse-icon.svg";
+const PROJECT_TITLE_LINK_ICON_SRC = "/link_icon.svg";
 
 function normalizeVoteGroup(vote: string | null): "Yes" | "No" | "Absent" {
   const normalized = vote?.trim().toLowerCase();
@@ -110,6 +111,7 @@ interface ProjectDetailsPanelProps {
   isLoading: boolean;
   errorMessage: string | null;
   onExploreMap: () => void;
+  onExpandedChange?: (isExpanded: boolean) => void;
 }
 
 const VOTE_POPOVER_GAP_PX = 8;
@@ -195,6 +197,7 @@ export function ProjectDetailsPanel({
   isLoading,
   errorMessage,
   onExploreMap,
+  onExpandedChange,
 }: ProjectDetailsPanelProps) {
   const posthog = usePostHog();
   const MOBILE_SIDEBAR_CLOSE_ANIMATION_MS = 620;
@@ -228,6 +231,11 @@ export function ProjectDetailsPanel({
       setTimelineViewOpen(false);
     }
   }, [sidebarWidthExpanded]);
+
+  useEffect(() => {
+    onExpandedChange?.(sidebarWidthExpanded);
+    return () => onExpandedChange?.(false);
+  }, [onExpandedChange, sidebarWidthExpanded]);
 
   useEffect(() => {
     if (!isMobileLayout && mobileSidebarClosing) {
@@ -523,7 +531,14 @@ export function ProjectDetailsPanel({
                                 url: externalUrl,
                               })}
                             >
-                              <ExternalLinkIcon width={16} height={16} />
+                              <img
+                                className="project-title-external-link__icon"
+                                src={PROJECT_TITLE_LINK_ICON_SRC}
+                                alt=""
+                                width={16}
+                                height={16}
+                                decoding="async"
+                              />
                             </a>
                           </>
                         ) : null}

@@ -1,6 +1,5 @@
 import type { ProjectDetail } from "../../../shared/api/contracts";
 import { formatName } from "../../../shared/formatPersonName";
-import { ExternalLinkIcon } from "../../../shared/ui/visicIcons";
 import { CardHorizontalTimeline, milestonesToCardTimelineNodes } from "./CardHorizontalTimeline";
 import { formatProjectDateLong } from "./formatProjectDate";
 import { SidebarVoteTallyValue, sidebarHasVoteTallyDisplay } from "./sidebarVoteTally";
@@ -9,6 +8,7 @@ import type { TimelineMilestoneModel } from "./timelineMilestones";
 import { useMemo } from "react";
 
 const SIDEBAR_COLLAPSE_ICON_SRC = "/collapse-icon.svg";
+const PROJECT_TITLE_LINK_ICON_SRC = "/link_icon.svg";
 
 type VoteRow = {
   key: string;
@@ -96,7 +96,14 @@ function ProjectHeader({
                   rel="noopener noreferrer"
                   aria-label="Open primary project document in a new tab"
                 >
-                  <ExternalLinkIcon width={16} height={16} />
+                  <img
+                    className="project-title-external-link__icon"
+                    src={PROJECT_TITLE_LINK_ICON_SRC}
+                    alt=""
+                    width={16}
+                    height={16}
+                    decoding="async"
+                  />
                 </a>
               </>
             ) : null}
