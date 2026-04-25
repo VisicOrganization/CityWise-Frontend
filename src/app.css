@@ -2246,6 +2246,8 @@ a {
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.02em;
+  /* Slightly more reserve than 28px sidebar title for the same icon */
+  padding-inline-end: calc(12px + 16px + 0.45em);
 }
 
 /* Figma 1179:4793 category — Public Sans Regular 24px */
@@ -2893,8 +2895,11 @@ a {
 
 /* Collapsed sidebar title — 28px bold; link icon flows inline after text (wraps with last line when it fits) */
 .project-sidebar-title {
+  box-sizing: border-box;
   margin: 0;
   max-width: 100%;
+  /* Reserve end space so the external-link icon is not orphaned on its own line (narrow columns) */
+  padding-inline-end: calc(12px + 16px + 0.35em);
   font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
   font-size: 28px;
   font-weight: 700;
