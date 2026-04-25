@@ -325,24 +325,22 @@ a {
 }
 
 @keyframes landing-comment-float {
-  0% {
+  0%,
+  100% {
     transform: translate(0, 0);
   }
 
+  /* ~75% of original motion — same path shape, slightly subtler */
   25% {
-    transform: translate(18px, -12px);
+    transform: translate(13px, -9px);
   }
 
   50% {
-    transform: translate(-14px, 16px);
+    transform: translate(-11px, 12px);
   }
 
   75% {
-    transform: translate(11px, 24px);
-  }
-
-  100% {
-    transform: translate(0, 0);
+    transform: translate(8px, 18px);
   }
 }
 
@@ -691,7 +689,7 @@ a {
   margin: 1rem auto 0;
   max-width: min(40.65rem, calc(100% - 1.25rem));
   color: #6b7280;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   line-height: 1.5;
   text-align: center;
   font-style: italic;
@@ -747,6 +745,15 @@ a {
   align-items: center;
   justify-content: center;
   color: #ffffff;
+}
+
+.landing-search-button-icon-img {
+  display: block;
+  width: 1.125rem;
+  height: 1.125rem;
+  object-fit: contain;
+  /* public/search-icon.svg uses gray fill; invert for white on #1d865e */
+  filter: brightness(0) invert(1);
 }
 
 .landing-search-button-container {
