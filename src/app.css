@@ -3,6 +3,7 @@
 :root {
   font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
   color: #17324d;
+  --cw-tooltip-delay: 350ms;
   background:
     linear-gradient(180deg, rgba(253, 251, 246, 0.92), rgba(246, 248, 251, 0.96)),
     radial-gradient(circle at top left, rgba(64, 184, 133, 0.13), transparent 24rem);
@@ -1352,6 +1353,49 @@ a {
   line-height: 1;
 }
 
+/* Stacked control buttons: hover/focus tooltip to the left of the icon */
+.map-figma-ctrl-tooltip-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  line-height: 0;
+}
+
+.map-figma-ctrl-tooltip {
+  position: absolute;
+  right: calc(100% + 0.45rem);
+  top: 50%;
+  z-index: 20;
+  transform: translateY(-50%);
+  padding: 4px 7px;
+  border-radius: 3px;
+  background: #5e5e5e;
+  color: #ffffff;
+  font-family: "Public Sans", "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 120ms ease,
+    visibility 120ms ease;
+  transition-delay: 0ms;
+}
+
+/* Hover only — :focus-within kept tooltips stuck after mouse click (focus remained on button). */
+.map-figma-ctrl-tooltip-wrap:hover .map-figma-ctrl-tooltip,
+.map-figma-ctrl-tooltip-wrap:has(.map-figma-ctrl-btn:focus-visible) .map-figma-ctrl-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: var(--cw-tooltip-delay, 350ms);
+}
+
 .map-figma-flyout {
   position: absolute;
   top: 0;
@@ -1364,6 +1408,134 @@ a {
   border: 1px solid rgba(227, 227, 227, 0.9);
   box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.25);
   text-align: left;
+}
+
+.map-figma-flyout--info {
+  width: 450px;
+  max-width: min(450px, calc(100vw - 3.25rem));
+  padding: 8px 16px 16px;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+.map-guidance-topbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 21px;
+  margin-bottom: 16px;
+}
+
+.map-guidance-topbar::after {
+  content: "";
+  position: absolute;
+  left: -16px;
+  right: -16px;
+  bottom: -8px;
+  height: 1px;
+  background: rgba(227, 227, 227, 0.9);
+}
+
+.map-guidance-topbar-title {
+  font-family: "Public Sans", "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1;
+  color: #000000;
+}
+
+.map-guidance-close-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.map-guidance-close-btn:focus-visible {
+  outline: 2px solid rgba(29, 134, 94, 0.65);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.map-guidance-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.map-guidance-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.map-guidance-section-title {
+  margin: 0;
+  font-family: "Public Sans", "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.1;
+  color: #000000;
+}
+
+.map-guidance-section-body {
+  margin: 0;
+  font-family: "Schibsted Grotesk", "Public Sans", "Segoe UI", sans-serif;
+  font-size: 0.75rem;
+  font-weight: 350;
+  line-height: 1.35;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.map-guidance-icons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 12px;
+}
+
+.map-guidance-icon-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.map-guidance-icon-img {
+  flex: 0 0 auto;
+  width: 39px;
+  height: 48px;
+  filter: drop-shadow(0px 1.333px 1.333px rgba(0, 0, 0, 0.25));
+}
+
+.map-guidance-icon-label {
+  font-family: "Schibsted Grotesk", "Public Sans", "Segoe UI", sans-serif;
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.2;
+  color: rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+}
+
+.map-guidance-howto {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.map-guidance-howto p {
+  margin: 0;
 }
 
 .map-figma-flyout .map-utility-header {
@@ -3020,7 +3192,6 @@ a {
   box-shadow: inset 0 0 0 999px rgba(29, 134, 94, 0.12);
 }
 
-/* Figma: dark control + label pill on hover (Timeline View / Voting Record) */
 .project-sidebar-tool-btn-with-hint {
   position: relative;
   display: inline-flex;
@@ -3037,10 +3208,10 @@ a {
   transform: translateX(-50%);
   padding: 4px 7px;
   border-radius: 3px;
-  background: #2d2d2d;
+  background: #5E5E5E;
   color: #ffffff;
   font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 400;
   line-height: 1.2;
   white-space: nowrap;
@@ -3051,11 +3222,21 @@ a {
   transition:
     opacity 120ms ease,
     visibility 120ms ease;
+  transition-delay: 0ms;
 }
 
 .project-sidebar-tool-btn-with-hint:hover .project-sidebar-tool-btn-hint {
   opacity: 1;
   visibility: visible;
+  transition-delay: var(--cw-tooltip-delay, 750ms);
+}
+
+/* Edge expand / close: same chip, to the right of the control (see project-sidebar-edge-controls) */
+.project-sidebar-tool-btn-hint--right {
+  top: 50%;
+  left: calc(100% + 4px);
+  right: auto;
+  transform: translateY(-50%);
 }
 
 .project-sidebar-tool-btn {

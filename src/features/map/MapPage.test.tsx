@@ -813,7 +813,7 @@ describe("mock app routes", () => {
 
     await user.click(screen.getByLabelText("Toggle accessibility information"));
     expect(screen.getByLabelText("Accessibility information")).toBeInTheDocument();
-    expect(screen.getByText("Map guidance")).toBeInTheDocument();
+    expect(screen.getByText("Accessibility")).toBeInTheDocument();
   });
 
   it("opens the details panel with backend project data when a marker is clicked", async () => {
