@@ -4,6 +4,7 @@ import { usePostHog } from "@posthog/react";
 
 import { DistrictOverviewSheet } from "../districts/DistrictOverviewSheet";
 import type { MapMarker } from "../../shared/map/mapTypes";
+import { MAP_QUERY_DISTRICT_PIN_FILTER } from "../../shared/map/mapNavigateFromAddressSearch";
 import { AppShell } from "../../shared/ui/AppShell";
 import { CityMap } from "./CityMap";
 import { ProjectDetailsPanel } from "./ProjectDetailsPanel";
@@ -52,9 +53,20 @@ export function MapPage() {
     return { latitude, longitude };
   }, [searchParams]);
   const districtSheetFocusLabel = searchParams.get("focusLabel")?.trim() || null;
-  /** Address search + geocoded point set this together with `districtFocus`; narrow map pins to that district. */
-  const addressDrivenDistrictPinsId =
-    addressFocusPoint !== null && districtFocusId !== null ? districtFocusId : null;
+  const districtPinFilterIntent = searchParams.get(MAP_QUERY_DISTRICT_PIN_FILTER);
+  /** Geocoded address (with `districtFocus`) or landing district pick (`districtPinFilter=1`); narrow pins to that district. */
+  const addressDrivenDistrictPinsId = useMemo((): number | null => {
+    if (districtFocusId === null) {
+      return null;
+    }
+    if (addressFocusPoint !== null) {
+      return districtFocusId;
+    }
+    if (districtPinFilterIntent === "1") {
+      return districtFocusId;
+    }
+    return null;
+  }, [addressFocusPoint, districtFocusId, districtPinFilterIntent]);
   const { boundaries, projectCards, projectMarkers } = useMapData();
 
   useEffect(() => {
@@ -122,6 +134,7 @@ export function MapPage() {
     if (districtId === null) {
       nextParams.delete("districtFocus");
       nextParams.delete("showDistrictProfile");
+      nextParams.delete(MAP_QUERY_DISTRICT_PIN_FILTER);
     } else {
       nextParams.set("districtFocus", String(districtId));
       nextParams.set("showDistrictProfile", shouldOpenProfile ? "1" : "0");
@@ -192,6 +205,7 @@ export function MapPage() {
             nextParams.delete("focusLat");
             nextParams.delete("focusLng");
             nextParams.delete("focusLabel");
+            nextParams.delete(MAP_QUERY_DISTRICT_PIN_FILTER);
             setSearchParams(nextParams, { replace: true });
           }}
         />
