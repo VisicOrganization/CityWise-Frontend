@@ -17,6 +17,7 @@ import { AppShell } from "../../shared/ui/AppShell";
 import { SearchIcon } from "../../shared/ui/visicIcons";
 
 import { LandingCommentBlue, LandingCommentGreen, LandingCommentGrey } from "./LandingCommentBubbles";
+import { LandingDistrictSelect } from "./LandingDistrictSelect";
 
 /** Pin positions as % of the hero (centered on each icon); tuned to sit on the map artwork. */
 const LANDING_PINS = [
@@ -352,6 +353,7 @@ export function LandingPage() {
             <p className="landing-search-subtitle">
               Only addresses within the City of Los Angeles are supported
             </p>
+            <LandingDistrictSelect />
           </div>
         </div>
       </section>

@@ -130,7 +130,7 @@ interface CityMapProps {
   activeDistrictId: number | null;
   /** Geocoded address from landing; used to zoom before district GeoJSON is ready, and as fallback. */
   addressFocusPoint?: { latitude: number; longitude: number } | null;
-  /** When set (address search set focus + district in URL), project pin filters default to this district only. */
+  /** When set (geocoded address or landing `districtPinFilter=1` + `districtFocus`), project pin filters default to this district only. */
   addressDrivenDistrictPinsId?: number | null;
   /** Increments when map should re-center on current district. */
   districtRefocusSignal?: number;

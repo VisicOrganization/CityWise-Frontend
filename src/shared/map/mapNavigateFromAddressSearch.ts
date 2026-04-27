@@ -3,6 +3,13 @@ import type { NavigateFunction } from "react-router-dom";
 import { searchAddresses, type GeocodeSearchResult } from "./geocodeSearch";
 import { findDistrictIdForPoint, loadDistrictBoundaries } from "./districtBoundaries";
 
+/**
+ * When present with `districtFocus`, the map should show project pins in that district only
+ * (same as a completed address search that found a city district). Cleared on in-map
+ * district selection like `focusLat` / `focusLng`.
+ */
+export const MAP_QUERY_DISTRICT_PIN_FILTER = "districtPinFilter" as const;
+
 export async function buildMapSearchParamsFromAddress(
   queryLabel: string,
   selectedResult?: GeocodeSearchResult,
@@ -51,6 +58,21 @@ export async function navigateToMapFromAddressSearch(
   }
 
   const nextParams = await buildMapSearchParamsFromAddress(trimmedQuery, selectedResult);
+  navigate(`/map?${nextParams.toString()}`);
+}
+
+export function navigateToMapForDistrictFocus(
+  navigate: NavigateFunction,
+  options: { districtId: number; focusLabel: string },
+) {
+  const nextParams = new URLSearchParams();
+  nextParams.set("districtFocus", String(options.districtId));
+  nextParams.set("showDistrictProfile", "1");
+  nextParams.set(MAP_QUERY_DISTRICT_PIN_FILTER, "1");
+  const label = options.focusLabel.trim();
+  if (label) {
+    nextParams.set("focusLabel", label);
+  }
   navigate(`/map?${nextParams.toString()}`);
 }
 

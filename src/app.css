@@ -685,6 +685,90 @@ a {
   color: rgba(0, 0, 0, 0.6);
 }
 
+.landing-district-pick {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: min(40.65rem, calc(100% - 1.25rem));
+  margin: 0.75rem auto 0;
+  text-align: center;
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: clamp(0.8125rem, 0.16rem + 1.9vw, 1.0625rem);
+  animation: landing-fade-in-soft 520ms ease-out 350ms both;
+}
+
+.landing-district-pick-trigger-wrap {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.landing-district-pick-trigger {
+  display: inline-block;
+  margin: 0;
+  min-height: 2.5rem;
+  padding: 0.35em 0.4em 0.3em;
+  border: 0;
+  background: none;
+  color: #1d865e;
+  font-family: "Public Sans", "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 0.95em;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  text-align: center;
+  text-decoration: underline;
+  text-decoration-color: #1d865e;
+  text-decoration-thickness: 0.1em;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.landing-district-pick-trigger:hover:not(:disabled) {
+  color: #176e4d;
+  text-decoration-color: #176e4d;
+}
+
+.landing-district-pick-trigger:focus-visible {
+  color: #176e4d;
+  text-decoration-color: #176e4d;
+  border-radius: 4px;
+  box-shadow: 0 0 0 2px rgba(29, 134, 94, 0.45);
+}
+
+.landing-district-pick-trigger:disabled {
+  cursor: not-allowed;
+  color: rgba(29, 134, 94, 0.45);
+  text-decoration-color: rgba(29, 134, 94, 0.35);
+}
+
+.landing-district-pick-list.landing-search-results--overlay {
+  z-index: 41;
+}
+
+.landing-district-pick-option {
+  transition: background-color 120ms ease-out;
+}
+
+.landing-district-pick-option:hover {
+  background: rgba(29, 134, 94, 0.06) !important;
+}
+
+.landing-district-pick-line-primary {
+  font-weight: 600;
+}
+
+.landing-district-pick-error {
+  margin: 0.45rem 0 0;
+  text-align: center;
+  color: #b91c1c;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
 .landing-search-subtitle {
   margin: 1rem auto 0;
   max-width: min(40.65rem, calc(100% - 1.25rem));
@@ -5623,6 +5707,7 @@ a {
   .landing-hero .landing-centerpiece h1,
   .landing-hero .landing-tagline,
   .landing-hero .landing-search,
+  .landing-hero .landing-district-pick,
   .landing-hero .landing-search-results button,
   .landing-search-results--overlay button {
     animation: none !important;

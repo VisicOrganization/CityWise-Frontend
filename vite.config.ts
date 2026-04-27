@@ -9,5 +9,9 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: "./src/test/setup.ts",
     exclude: [...defaultExclude, "**/.claude/**"],
+    /** Align with map/geocode test mocks; avoids machine-specific `.env` breaking CI. */
+    env: {
+      VITE_API_BASE_URL: "http://localhost:18100",
+    },
   },
 });
