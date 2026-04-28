@@ -598,10 +598,10 @@ a {
 }
 
 .landing-tagline {
-  max-width: min(52rem, 100%);
+  max-width: min(40rem, 100%);
   margin: 0.67em auto 0;
   font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
-  font-size: 1em;
+  font-size: 0.75em;
   font-weight: 400;
   line-height: 1.35;
   color: rgba(0, 0, 0, 0.6);
@@ -619,7 +619,7 @@ a {
   box-sizing: border-box;
   width: 100%;
   max-width: min(40.65rem, calc(100% - 1.25rem));
-  margin: 1.75rem auto 0;
+  margin: 1rem auto 0;
   padding: 0.6em 0.55em 0.6em 0.95em;
   border-radius: 999px;
   background: #ffffff;
@@ -768,17 +768,6 @@ a {
   font-size: 0.8rem;
   line-height: 1.4;
   font-weight: 500;
-}
-
-.landing-search-subtitle {
-  margin: 1rem auto 0;
-  max-width: min(40.65rem, calc(100% - 1.25rem));
-  color: #6b7280;
-  font-size: 0.85rem;
-  line-height: 1.5;
-  text-align: center;
-  font-style: italic;
-  animation: landing-fade-in-soft 520ms ease-out 330ms both;
 }
 
 .district-open-map {
