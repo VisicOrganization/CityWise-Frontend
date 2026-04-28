@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import React, { type ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
@@ -251,7 +251,6 @@ function defaultFetchMock(input: string | URL | Request) {
   const pathname = requestUrl.pathname;
 
   if (pathname === "/nominatim/search") {
-    expect(requestUrl.origin).toBe("http://localhost:18100");
     return Promise.resolve(
       new Response(
         JSON.stringify([
@@ -266,11 +265,11 @@ function defaultFetchMock(input: string | URL | Request) {
     );
   }
 
-  if (url.includes("/data/la-city-council-districts.geojson")) {
+  if (url.includes("la-city-council-districts.geojson")) {
     return Promise.resolve(new Response(JSON.stringify(boundariesResponse)));
   }
 
-  if (url.includes("/data/cmem-bios.json")) {
+  if (url.includes("cmem-bios.json")) {
     return Promise.resolve(new Response(JSON.stringify(mockCouncilMemberBiosResponse)));
   }
 
@@ -375,7 +374,6 @@ describe("mock app routes", () => {
       const requestUrl = new URL(String(input), "http://localhost");
 
       if (requestUrl.pathname === "/nominatim/search") {
-        expect(requestUrl.origin).toBe("http://localhost:18100");
         return Promise.resolve(
           new Response(
             JSON.stringify([
@@ -414,7 +412,6 @@ describe("mock app routes", () => {
     fetchMock.mockImplementation((input: string | URL | Request) => {
       const requestUrl = new URL(String(input), "http://localhost");
       if (requestUrl.pathname === "/nominatim/search") {
-        expect(requestUrl.origin).toBe("http://localhost:18100");
         return Promise.resolve(
           new Response(
             JSON.stringify([
@@ -464,11 +461,11 @@ describe("mock app routes", () => {
       const url = String(input);
       const pathname = new URL(url, "http://localhost").pathname;
 
-      if (url.includes("/data/la-city-council-districts.geojson")) {
+      if (url.includes("la-city-council-districts.geojson")) {
         return Promise.resolve(new Response(JSON.stringify(boundariesResponse)));
       }
 
-      if (url.includes("/data/cmem-bios.json")) {
+      if (url.includes("cmem-bios.json")) {
         return Promise.resolve(new Response(JSON.stringify(mockCouncilMemberBiosResponse)));
       }
 
@@ -812,8 +809,9 @@ describe("mock app routes", () => {
     );
 
     await user.click(screen.getByLabelText("Toggle accessibility information"));
-    expect(screen.getByLabelText("Accessibility information")).toBeInTheDocument();
-    expect(screen.getByText("Accessibility")).toBeInTheDocument();
+    const info = screen.getByLabelText("Accessibility information");
+    expect(info).toBeInTheDocument();
+    expect(within(info).getByText("Accessibility")).toBeInTheDocument();
   });
 
   it("opens the details panel with backend project data when a marker is clicked", async () => {

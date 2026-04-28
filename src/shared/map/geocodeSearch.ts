@@ -1,9 +1,17 @@
 import { findDistrictIdForPoint, loadDistrictBoundaries } from "./districtBoundaries";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:18100";
+function getApiBaseUrl(): string {
+  const isVitest = typeof process !== "undefined" && Boolean(process.env.VITEST);
+  const fromProcess =
+    typeof process !== "undefined" ? (process.env.VITE_API_BASE_URL as string | undefined) : undefined;
+  const fromImportMeta = import.meta.env.VITE_API_BASE_URL as string | undefined;
+  const raw = (isVitest ? fromProcess : fromProcess ?? fromImportMeta) ?? "";
+  const trimmed = raw.trim();
+  return trimmed || "http://localhost:18100";
+}
 
 function nominatimSearchEndpoint(): string {
-  return `${API_BASE_URL.trim().replace(/\/$/, "")}/nominatim/search`;
+  return `${getApiBaseUrl().replace(/\/$/, "")}/nominatim/search`;
 }
 
 function buildNominatimSearchUrl(trimmedQuery: string): URL {

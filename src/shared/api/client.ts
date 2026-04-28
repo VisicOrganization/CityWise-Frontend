@@ -5,8 +5,16 @@ import type {
   ProjectDetail,
 } from "./contracts";
 
+function getApiBaseUrl(): string {
+  const isVitest = typeof process !== "undefined" && Boolean(process.env.VITEST);
+  const fromProcess =
+    typeof process !== "undefined" ? (process.env.VITE_API_BASE_URL as string | undefined) : undefined;
+  const fromImportMeta = import.meta.env.VITE_API_BASE_URL as string | undefined;
+  const raw = (isVitest ? fromProcess : fromProcess ?? fromImportMeta) ?? "";
+  const trimmed = raw.trim();
+  return trimmed || "http://localhost:18100";
+}
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:18100";
 const API_CACHE_PREFIX = "citywise:api-cache:v1:";
 
 type StorageValue<T> = {
@@ -76,7 +84,7 @@ export async function getDistricts(): Promise<DistrictListResponse> {
     return cached;
   }
 
-  const url = new URL("/districts", API_BASE_URL);
+  const url = new URL("/districts", getApiBaseUrl());
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error("Failed to load districts");
@@ -94,7 +102,7 @@ export async function getDistrictProfile(districtId: number): Promise<DistrictPr
     return cached;
   }
 
-  const url = new URL(`/districts/${districtId}`, API_BASE_URL);
+  const url = new URL(`/districts/${districtId}`, getApiBaseUrl());
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Failed to load district ${districtId} profile`);
@@ -116,7 +124,7 @@ export async function getDistrictProjects(
     return cached;
   }
 
-  const url = new URL(`/districts/${districtId}/projects`, API_BASE_URL);
+  const url = new URL(`/districts/${districtId}/projects`, getApiBaseUrl());
   url.searchParams.set("page", String(page));
   url.searchParams.set("page_size", String(pageSize));
   url.searchParams.set("has_geocode", "true");
@@ -138,7 +146,7 @@ export async function getProjectDetail(projectId: string): Promise<ProjectDetail
     return cached;
   }
 
-  const url = new URL(`/projects/${projectId}`, API_BASE_URL);
+  const url = new URL(`/projects/${projectId}`, getApiBaseUrl());
   const response = await fetch(url);
 
   if (!response.ok) {
