@@ -3,6 +3,7 @@
 :root {
   font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
   color: #17324d;
+  --cw-tooltip-delay: 350ms;
   background:
     linear-gradient(180deg, rgba(253, 251, 246, 0.92), rgba(246, 248, 251, 0.96)),
     radial-gradient(circle at top left, rgba(64, 184, 133, 0.13), transparent 24rem);
@@ -1436,6 +1437,49 @@ a {
   line-height: 1;
 }
 
+/* Stacked control buttons: hover/focus tooltip to the left of the icon */
+.map-figma-ctrl-tooltip-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  line-height: 0;
+}
+
+.map-figma-ctrl-tooltip {
+  position: absolute;
+  right: calc(100% + 0.45rem);
+  top: 50%;
+  z-index: 20;
+  transform: translateY(-50%);
+  padding: 4px 7px;
+  border-radius: 3px;
+  background: #5e5e5e;
+  color: #ffffff;
+  font-family: "Public Sans", "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 120ms ease,
+    visibility 120ms ease;
+  transition-delay: 0ms;
+}
+
+/* Hover only — :focus-within kept tooltips stuck after mouse click (focus remained on button). */
+.map-figma-ctrl-tooltip-wrap:hover .map-figma-ctrl-tooltip,
+.map-figma-ctrl-tooltip-wrap:has(.map-figma-ctrl-btn:focus-visible) .map-figma-ctrl-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: var(--cw-tooltip-delay, 350ms);
+}
+
 .map-figma-flyout {
   position: absolute;
   top: 0;
@@ -1448,6 +1492,134 @@ a {
   border: 1px solid rgba(227, 227, 227, 0.9);
   box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.25);
   text-align: left;
+}
+
+.map-figma-flyout--info {
+  width: 450px;
+  max-width: min(450px, calc(100vw - 3.25rem));
+  padding: 8px 16px 16px;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+.map-guidance-topbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 21px;
+  margin-bottom: 16px;
+}
+
+.map-guidance-topbar::after {
+  content: "";
+  position: absolute;
+  left: -16px;
+  right: -16px;
+  bottom: -8px;
+  height: 1px;
+  background: rgba(227, 227, 227, 0.9);
+}
+
+.map-guidance-topbar-title {
+  font-family: "Public Sans", "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1;
+  color: #000000;
+}
+
+.map-guidance-close-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.map-guidance-close-btn:focus-visible {
+  outline: 2px solid rgba(29, 134, 94, 0.65);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.map-guidance-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.map-guidance-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.map-guidance-section-title {
+  margin: 0;
+  font-family: "Public Sans", "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.1;
+  color: #000000;
+}
+
+.map-guidance-section-body {
+  margin: 0;
+  font-family: "Schibsted Grotesk", "Public Sans", "Segoe UI", sans-serif;
+  font-size: 0.75rem;
+  font-weight: 350;
+  line-height: 1.35;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.map-guidance-icons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 12px;
+}
+
+.map-guidance-icon-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.map-guidance-icon-img {
+  flex: 0 0 auto;
+  width: 39px;
+  height: 48px;
+  filter: drop-shadow(0px 1.333px 1.333px rgba(0, 0, 0, 0.25));
+}
+
+.map-guidance-icon-label {
+  font-family: "Schibsted Grotesk", "Public Sans", "Segoe UI", sans-serif;
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.2;
+  color: rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+}
+
+.map-guidance-howto {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.map-guidance-howto p {
+  margin: 0;
 }
 
 .map-figma-flyout .map-utility-header {
@@ -2168,6 +2340,8 @@ a {
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  /* Align overview, timeline, and other inset blocks to the same horizontal padding */
+  --project-sidebar-pad-x: 18px;
 }
 
 .project-sidebar-footer-cta {
@@ -2328,6 +2502,8 @@ a {
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.02em;
+  /* Slightly more reserve than 28px sidebar title for the same icon */
+  padding-inline-end: calc(12px + 16px + 0.45em);
 }
 
 /* Figma 1179:4793 category — Public Sans Regular 24px */
@@ -2949,7 +3125,7 @@ a {
   overflow: visible;
   margin: 0;
   box-sizing: border-box;
-  padding: 24px 24px 16px 24px;
+  padding: 24px 18px 10px 18px;
 }
 
 /* Title row: title left, status + icon stack right */
@@ -2959,21 +3135,27 @@ a {
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  margin: 0 0 12px;
+  margin: 0 0 6px;
   padding: 0;
 }
 
 .project-sidebar-title-cluster {
+  display: flex;
   flex: 1 1 auto;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
   min-width: 0;
   max-width: 100%;
 }
 
-/* Collapsed sidebar title — 28px bold, room for multi-line title + inline external link */
+/* Collapsed sidebar title — 28px bold; link icon flows inline after text (wraps with last line when it fits) */
 .project-sidebar-title {
+  box-sizing: border-box;
   margin: 0;
   max-width: 100%;
-  padding-right: 8px;
+  /* Reserve end space so the external-link icon is not orphaned on its own line (narrow columns) */
+  padding-inline-end: calc(12px + 16px + 0.35em);
   font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
   font-size: 28px;
   font-weight: 700;
@@ -2985,6 +3167,15 @@ a {
   hyphens: auto;
 }
 
+.project-sidebar-title-text {
+  display: inline;
+}
+
+.project-sidebar-title .project-title-external-link {
+  margin-inline-start: 0.2em;
+  white-space: nowrap;
+}
+
 .project-title-link {
   color: inherit;
   text-decoration: none;
@@ -2992,23 +3183,6 @@ a {
 
 .project-title-link:hover,
 .project-title-link:focus-visible {
-  text-decoration: underline;
-}
-
-.project-source-link {
-  display: inline-block;
-  margin-top: 0.35rem;
-  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
-  font-size: 0.875rem;
-  font-weight: 500;
-  line-height: 1.2;
-  color: #9ca3af;
-  text-decoration: none;
-}
-
-.project-source-link:hover,
-.project-source-link:focus-visible {
-  color: #6b7280;
   text-decoration: underline;
 }
 
@@ -3056,7 +3230,52 @@ a {
   overflow: visible;
 }
 
-/* Figma: dark control + label pill on hover (Timeline View / Voting Record) */
+/* Voting record control (voting_expand.svg — full control opens voting) */
+.project-sidebar-voting-expand {
+  box-sizing: border-box;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  line-height: 0;
+  border-radius: 13px;
+  transition:
+    background-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.project-sidebar-voting-expand__img {
+  display: block;
+  width: 75px;
+  height: auto;
+  max-width: 100%;
+  vertical-align: top;
+}
+
+.project-sidebar-voting-expand:hover:not(:disabled):not(.is-active) {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.project-sidebar-voting-expand:focus-visible {
+  z-index: 1;
+  outline: 2px solid var(--ps-forest, #1d865e);
+  outline-offset: 2px;
+}
+
+.project-sidebar-voting-expand:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.project-sidebar-voting-expand.is-active {
+  box-shadow: inset 0 0 0 999px rgba(29, 134, 94, 0.12);
+}
+
 .project-sidebar-tool-btn-with-hint {
   position: relative;
   display: inline-flex;
@@ -3073,10 +3292,10 @@ a {
   transform: translateX(-50%);
   padding: 4px 7px;
   border-radius: 3px;
-  background: #2d2d2d;
+  background: #5E5E5E;
   color: #ffffff;
   font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 400;
   line-height: 1.2;
   white-space: nowrap;
@@ -3087,11 +3306,21 @@ a {
   transition:
     opacity 120ms ease,
     visibility 120ms ease;
+  transition-delay: 0ms;
 }
 
 .project-sidebar-tool-btn-with-hint:hover .project-sidebar-tool-btn-hint {
   opacity: 1;
   visibility: visible;
+  transition-delay: var(--cw-tooltip-delay, 750ms);
+}
+
+/* Edge expand / close: same chip, to the right of the control (see project-sidebar-edge-controls) */
+.project-sidebar-tool-btn-hint--right {
+  top: 50%;
+  left: calc(100% + 4px);
+  right: auto;
+  transform: translateY(-50%);
 }
 
 .project-sidebar-tool-btn {
@@ -3236,12 +3465,13 @@ a {
   border-color: rgba(107, 114, 128, 0.35);
 }
 
-/* Category — full width below title row, gray body text */
+/* Category — under title, same column as title (wraps; aligns with status / Voting column) */
 .project-sidebar-category {
   margin: 0;
   padding: 0;
+  min-width: 0;
   font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 400;
   line-height: normal;
   color: #6b7280;
@@ -3523,8 +3753,8 @@ a {
 }
 
 .project-sidebar-figma-scroll .project-sidebar-overview {
-  margin-top: 24px;
-  padding: 0 18px;
+  margin-top: 10px;
+  padding: 0 var(--project-sidebar-pad-x, 18px);
 }
 
 .project-sidebar-figma-scroll .project-sidebar-status {
@@ -3532,11 +3762,14 @@ a {
 }
 
 .project-sidebar-figma-scroll .project-h-timeline {
-  padding: 0 14.5px;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 0 var(--project-sidebar-pad-x, 18px);
 }
 
 .project-sidebar-figma-scroll .project-sidebar-timeline-fallback {
-  padding: 0 18px;
+  padding: 0 var(--project-sidebar-pad-x, 18px);
 }
 
 .project-sidebar-overview {
@@ -3665,14 +3898,23 @@ a {
   margin-top: 1.5rem;
 }
 
+.project-h-timeline--mini {
+  --h-timeline-dash-w: 2.65rem;
+  --h-timeline-seg-bleed: 4px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
 .project-h-timeline-track {
   width: 100%;
+  min-width: 0;
 }
 
 .project-h-timeline-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   width: 100%;
 }
@@ -3706,6 +3948,7 @@ a {
   word-break: break-word;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
 }
 
@@ -3721,12 +3964,13 @@ a {
   word-break: break-word;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   min-width: 0;
 }
 
 .project-h-timeline-label-link:hover {
-  color: #374151;
+  color: rgba(0, 0, 0, 0.75);
 }
 
 .project-h-timeline-label-bottom {
@@ -3747,8 +3991,142 @@ a {
   min-height: 16px;
 }
 
-.project-h-timeline-bar--continuous {
-  min-height: 18px;
+.project-h-timeline-bar--segmented {
+  min-height: 0;
+}
+
+.project-h-timeline-bar-mid {
+  position: relative;
+  width: 100%;
+  min-height: 20px;
+}
+
+.project-h-timeline--mini .project-h-timeline-bar-mid--with-expand {
+  overflow: visible;
+}
+
+.project-h-timeline-expand-row {
+  width: 100%;
+  margin-bottom: 0;
+  text-align: center;
+}
+
+.project-h-timeline-expand-link {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: normal;
+  color: var(--ps-forest, #1d865e);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.project-h-timeline-expand-link:hover {
+  color: #166a4b;
+}
+
+.project-h-timeline-line-between-nodes {
+  position: absolute;
+  left: calc(100% / var(--h-timeline-n, 4) / 2);
+  right: calc(100% / var(--h-timeline-n, 4) / 2);
+  top: 50%;
+  z-index: 0;
+  height: 4px;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.project-h-timeline-line-segments {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 4px;
+}
+
+.project-h-timeline--mini .project-h-timeline-line-between-nodes {
+  right: 0;
+  left: 0;
+}
+
+.project-h-timeline--mini .project-h-timeline-line-segments {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 4px;
+}
+
+.project-h-timeline-seg-slot {
+  position: absolute;
+  z-index: 0;
+  height: 4px;
+  pointer-events: none;
+}
+
+.project-h-timeline-seg-slot-solid {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background-color: var(--ps-forest, #1d865e);
+}
+
+.project-h-timeline--mini .project-h-timeline-seg-slot .project-h-timeline-seg-bridge {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  min-width: 0;
+  flex: unset;
+}
+
+.project-h-timeline-seg {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.project-h-timeline-seg--solid {
+  height: 4px;
+  border-radius: 2px;
+  background-color: var(--ps-forest, #1d865e);
+}
+
+.project-h-timeline-seg--dashed {
+  align-self: center;
+  height: 0;
+  border: 0;
+  border-top: 4px dashed var(--ps-forest, #1d865e);
+  border-radius: 0;
+  background: none;
+}
+
+/* Middle inter-node gap only: short dashed span sized to the “Timeline” label */
+.project-h-timeline-seg-bridge {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  min-width: 0;
+}
+
+.project-h-timeline-seg-bridge-slab {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 4px;
+  border-radius: 2px;
+  background-color: var(--ps-forest, #1d865e);
+}
+
+.project-h-timeline-seg-bridge-dash {
+  flex: 0 0 var(--h-timeline-dash-w, 2.75rem);
+  align-self: center;
+  height: 0;
+  border: 0;
+  border-top: 4px dashed var(--ps-forest, #1d865e);
+  border-radius: 0;
+  background: none;
 }
 
 .project-h-timeline-line-full {
@@ -3799,6 +4177,7 @@ a {
   width: 100%;
   min-height: 16px;
   align-items: center;
+  justify-items: center;
 }
 
 .project-h-timeline-node-cell {
@@ -3826,34 +4205,169 @@ a {
 }
 
 .project-h-timeline--mini .project-h-timeline-label-top {
-  font-size: 0.625rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 0 2px;
+  font-size: 8px;
   font-weight: 500;
   color: rgba(0, 0, 0, 0.6);
-  padding: 0 4px;
+}
+
+.project-h-timeline--mini .project-h-timeline-label-top-inner {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  max-width: 64px;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.project-h-timeline--mini .project-h-timeline-label-top-inner:not(:has(.project-h-timeline-label-link)) {
+  display: -webkit-box;
+  max-width: 64px;
+  min-width: 0;
+  overflow: hidden;
+  text-align: center;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.project-h-timeline--mini .project-h-timeline-label-top-inner .project-h-timeline-label-link {
+  display: -webkit-box;
+  max-width: 64px;
+  min-width: 0;
+  overflow: hidden;
+  text-align: center;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
 }
 
 .project-h-timeline--mini .project-h-timeline-label-bottom {
-  font-size: 0.5625rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 0 2px;
+  font-size: 8px;
   font-weight: 500;
   color: rgba(0, 0, 0, 0.6);
-  padding: 0 4px;
+}
+
+.project-h-timeline--mini .project-h-timeline-label-bottom-inner {
+  display: block;
+  max-width: 64px;
+  min-width: 0;
+  text-align: center;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.project-h-timeline--mini .project-h-timeline-labels-top,
+.project-h-timeline--mini .project-h-timeline-labels-bottom,
+.project-h-timeline--mini .project-h-timeline-nodes {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  column-gap: 0;
+}
+
+.project-h-timeline--mini .project-h-timeline-label-top,
+.project-h-timeline--mini .project-h-timeline-label-bottom,
+.project-h-timeline--mini .project-h-timeline-node-cell {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Four milestones: tighter 1–2 / wider middle / slightly looser 3–4 (ratios match MiniHorizontalTimeline segment math) */
+.project-h-timeline--mini .project-h-timeline-container--four .project-h-timeline-labels-top .project-h-timeline-label-top:nth-child(1),
+.project-h-timeline--mini .project-h-timeline-container--four .project-h-timeline-labels-bottom .project-h-timeline-label-bottom:nth-child(1),
+.project-h-timeline--mini .project-h-timeline-container--four .project-h-timeline-nodes .project-h-timeline-node-cell:nth-child(1) {
+  flex: 0.36 1 0;
+}
+
+.project-h-timeline--mini .project-h-timeline-container--four .project-h-timeline-labels-top .project-h-timeline-label-top:nth-child(2),
+.project-h-timeline--mini .project-h-timeline-container--four .project-h-timeline-labels-bottom .project-h-timeline-label-bottom:nth-child(2),
+.project-h-timeline--mini .project-h-timeline-container--four .project-h-timeline-nodes .project-h-timeline-node-cell:nth-child(2) {
+  flex: 0.98 1 0;
+}
+
+.project-h-timeline--mini .project-h-timeline-container--four .project-h-timeline-labels-top .project-h-timeline-label-top:nth-child(3),
+.project-h-timeline--mini .project-h-timeline-container--four .project-h-timeline-labels-bottom .project-h-timeline-label-bottom:nth-child(3),
+.project-h-timeline--mini .project-h-timeline-container--four .project-h-timeline-nodes .project-h-timeline-node-cell:nth-child(3) {
+  flex: 0.94 1 0;
+}
+
+.project-h-timeline--mini .project-h-timeline-container--four .project-h-timeline-labels-top .project-h-timeline-label-top:nth-child(4),
+.project-h-timeline--mini .project-h-timeline-container--four .project-h-timeline-labels-bottom .project-h-timeline-label-bottom:nth-child(4),
+.project-h-timeline--mini .project-h-timeline-container--four .project-h-timeline-nodes .project-h-timeline-node-cell:nth-child(4) {
+  flex: 0.42 1 0;
+}
+
+.project-h-timeline--mini .project-h-timeline-nodes {
+  align-items: center;
+  min-height: 20px;
+}
+
+.project-h-timeline--mini .project-h-timeline-node-cell {
+  justify-content: center;
 }
 
 .project-h-timeline--mini .project-h-timeline-labels-top {
-  margin-bottom: 6px;
+  margin-bottom: 0;
 }
 
 .project-h-timeline--mini .project-h-timeline-labels-bottom {
-  margin-top: 6px;
+  margin-top: 2px;
+}
+
+/* Pin “Timeline” to the top edge of the track (above the line) so copy sits closer to the bar */
+.project-h-timeline--mini .project-h-timeline-bar-mid--with-expand .project-h-timeline-expand-row {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  transform: translateY(-100%);
+  pointer-events: none;
+}
+
+.project-h-timeline--mini .project-h-timeline-bar-mid--with-expand .project-h-timeline-expand-link {
+  padding: 0;
+  line-height: 1.15;
+  pointer-events: auto;
+  font-size: 12px;
 }
 
 .project-h-timeline--mini .project-h-timeline-node {
-  width: 10px;
-  height: 10px;
+  width: 14px;
+  height: 14px;
+}
+
+.project-h-timeline--mini .project-h-timeline-node--completed {
+  box-sizing: border-box;
+  background-color: #fff;
+  border: 2.5px solid var(--ps-forest, #1d865e);
 }
 
 .project-h-timeline--mini .project-h-timeline-node--upcoming {
-  border-width: 2px;
+  box-sizing: border-box;
+  border-width: 2.5px;
 }
 
 /* Expanded vertical timeline: below header, scrolls; header + toggles stay visible */

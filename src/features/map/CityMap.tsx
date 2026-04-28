@@ -80,6 +80,13 @@ const DEFAULT_VIEW_STATE: ViewState = {
 
 const DEFAULT_DISTRICT_IDS = Array.from({ length: 15 }, (_, index) => index + 1);
 
+const MAP_GUIDANCE_ICON_ITEMS = [
+  { label: "Public Works", src: "/images/pins/green-pin.svg" },
+  { label: "Infrastructure", src: "/images/pins/orange-pin.svg" },
+  { label: "Housing", src: "/images/pins/brown-pin.svg" },
+  { label: "Transportation", src: "/images/pins/blue-pin.svg" },
+] as const;
+
 function buildHighlightLayer(activeDistrictId: number) {
   return {
     ...districtHighlightLayer,
@@ -172,7 +179,6 @@ export function CityMap({
   const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null);
   const [searchDismissSignal, setSearchDismissSignal] = useState(0);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isDistrictFilterOpen, setIsDistrictFilterOpen] = useState(false);
   const [pillPortraitFailed, setPillPortraitFailed] = useState(false);
@@ -239,6 +245,15 @@ export function CityMap({
     .filter(Boolean)
     .join("");
 
+  const mapGuidanceHowToUse = useMemo(
+    () => [
+      "Hover pins to preview project names.",
+      "Click pins to open project details.",
+      "Click a district to view its projects.",
+    ],
+    [],
+  );
+
   const setMapInstance = useCallback((instance: MapRef | null) => {
     mapRef.current = instance;
     setIsMapReady(Boolean(instance));
@@ -265,7 +280,6 @@ export function CityMap({
   useEffect(() => {
     if (districtOverviewOpen) {
       setIsInfoOpen(false);
-      setIsMenuOpen(false);
       setIsDistrictFilterOpen(false);
     }
   }, [districtOverviewOpen]);
@@ -562,39 +576,44 @@ export function CityMap({
             : "is-hidden"
         }`}
       >
-        <button
-          type="button"
-          className="map-district-pill"
-          onClick={() => {
-            if (pillDistrictId != null) {
-              onOpenDistrictOverview(pillDistrictId);
-            }
-          }}
-          aria-label={pillDistrictId != null ? `Open District ${pillDistrictId} overview` : "District overview hidden"}
-          aria-hidden={showDistrictPill && !districtOverviewOpen ? undefined : true}
-          tabIndex={showDistrictPill && !districtOverviewOpen ? 0 : -1}
-        >
-          <span className="map-district-avatar" aria-hidden="true">
-            {portraitSrc && !pillPortraitFailed ? (
-              <img
-                src={portraitSrc}
-                alt=""
-                className="map-district-avatar-img"
-                onError={() => setPillPortraitFailed(true)}
-              />
-            ) : (
-              <span className="map-district-avatar-initials">{initials}</span>
-            )}
-          </span>
-          <span className="map-district-pill-copy">
-            <span className="map-district-pill-name">{displayedName}</span>
-            <span className="map-district-pill-sep" aria-hidden="true">
-              {" "}
-              •{" "}
+        <span className="project-sidebar-tool-btn-with-hint">
+          <button
+            type="button"
+            className="map-district-pill"
+            onClick={() => {
+              if (pillDistrictId != null) {
+                onOpenDistrictOverview(pillDistrictId);
+              }
+            }}
+            aria-label={pillDistrictId != null ? `Open District ${pillDistrictId} overview` : "District overview hidden"}
+            aria-hidden={showDistrictPill && !districtOverviewOpen ? undefined : true}
+            tabIndex={showDistrictPill && !districtOverviewOpen ? 0 : -1}
+          >
+            <span className="map-district-avatar" aria-hidden="true">
+              {portraitSrc && !pillPortraitFailed ? (
+                <img
+                  src={portraitSrc}
+                  alt=""
+                  className="map-district-avatar-img"
+                  onError={() => setPillPortraitFailed(true)}
+                />
+              ) : (
+                <span className="map-district-avatar-initials">{initials}</span>
+              )}
             </span>
-            <span className="map-district-pill-district">{displayedLabel}</span>
+            <span className="map-district-pill-copy">
+              <span className="map-district-pill-name">{displayedName}</span>
+              <span className="map-district-pill-sep" aria-hidden="true">
+                {" "}
+                •{" "}
+              </span>
+              <span className="map-district-pill-district">{displayedLabel}</span>
+            </span>
+          </button>
+          <span className="project-sidebar-tool-btn-hint" aria-hidden="true">
+            District Overview
           </span>
-        </button>
+        </span>
       </div>
 
       {districtOverviewOpen || hideMapChrome ? null : (
@@ -606,87 +625,134 @@ export function CityMap({
           <div className="map-control-stack map-control-stack--figma" aria-label="Map controls">
             <div className="map-figma-controls-wrap">
               <div className="map-control-pill map-control-pill--stacked">
-                <button
-                  type="button"
-                  className={`map-figma-ctrl-btn ${isMenuOpen ? "is-active" : ""}`}
-                  aria-label="Map menu"
-                  aria-expanded={isMenuOpen}
-                  onClick={() => {
-                    setIsMenuOpen((current) => !current);
-                    setIsInfoOpen(false);
-                    setIsDistrictFilterOpen(false);
-                  }}
-                >
-                  <img src="/menu-icon.svg" alt="" width={18} height={12} />
-                </button>
-                <span className="map-control-pill-rule" aria-hidden="true" />
-                <button
-                  type="button"
-                  className={`map-figma-ctrl-btn ${isInfoOpen ? "is-active" : ""}`}
-                  aria-label="Toggle accessibility information"
-                  aria-expanded={isInfoOpen}
-                  onClick={() => {
-                    setIsInfoOpen((current) => !current);
-                    setIsMenuOpen(false);
-                    setIsDistrictFilterOpen(false);
-                  }}
-                >
-                  <InfoIcon className="map-figma-info-icon" width={18} height={18} aria-hidden />
-                </button>
-                <span className="map-control-pill-rule" aria-hidden="true" />
-                <button
-                  type="button"
-                  className={`map-figma-ctrl-btn ${isDistrictFilterOpen ? "is-active" : ""}`}
-                  aria-label="Filter projects by district"
-                  aria-expanded={isDistrictFilterOpen}
-                  onClick={() => {
-                    setIsDistrictFilterOpen((current) => !current);
-                    setIsMenuOpen(false);
-                    setIsInfoOpen(false);
-                  }}
-                >
-                  <span className="map-figma-filter-label" aria-hidden>
-                    CD
+                <span className="map-figma-ctrl-tooltip-wrap">
+                  <span className="map-figma-ctrl-tooltip" aria-hidden="true">
+                    Filter Coming Soon
                   </span>
-                </button>
+                  <button type="button" className="map-figma-ctrl-btn" aria-label="Map filter (coming soon)">
+                    <img src="/menu-icon.svg" alt="" width={18} height={12} />
+                  </button>
+                </span>
+                <span className="map-control-pill-rule" aria-hidden="true" />
+                <span className="map-figma-ctrl-tooltip-wrap">
+                  <span className="map-figma-ctrl-tooltip" aria-hidden="true">
+                    Accessibility
+                  </span>
+                  <button
+                    type="button"
+                    className={`map-figma-ctrl-btn ${isInfoOpen ? "is-active" : ""}`}
+                    aria-label="Toggle accessibility information"
+                    aria-expanded={isInfoOpen}
+                    onClick={() => {
+                      setIsInfoOpen((current) => !current);
+                      setIsDistrictFilterOpen(false);
+                    }}
+                  >
+                    <InfoIcon className="map-figma-info-icon" width={18} height={18} aria-hidden />
+                  </button>
+                </span>
+                <span className="map-control-pill-rule" aria-hidden="true" />
+                <span className="map-figma-ctrl-tooltip-wrap">
+                  <span className="map-figma-ctrl-tooltip" aria-hidden="true">
+                    District Filters
+                  </span>
+                  <button
+                    type="button"
+                    className={`map-figma-ctrl-btn ${isDistrictFilterOpen ? "is-active" : ""}`}
+                    aria-label="Filter projects by district"
+                    aria-expanded={isDistrictFilterOpen}
+                    onClick={() => {
+                      setIsDistrictFilterOpen((current) => !current);
+                      setIsInfoOpen(false);
+                    }}
+                  >
+                    <span className="map-figma-filter-label" aria-hidden>
+                      CD
+                    </span>
+                  </button>
+                </span>
               </div>
 
               <div className="map-control-pill map-control-pill--stacked">
-                <button type="button" className="map-figma-ctrl-btn" aria-label="Zoom in" onClick={() => handleZoom(0.65)}>
-                  <img src="/zoom-in-icon.svg" alt="" width={18} height={18} />
-                </button>
+                <span className="map-figma-ctrl-tooltip-wrap">
+                  <span className="map-figma-ctrl-tooltip" aria-hidden="true">
+                    Zoom In
+                  </span>
+                  <button
+                    type="button"
+                    className="map-figma-ctrl-btn"
+                    aria-label="Zoom in"
+                    onClick={() => handleZoom(0.65)}
+                  >
+                    <img src="/zoom-in-icon.svg" alt="" width={18} height={18} />
+                  </button>
+                </span>
                 <span className="map-control-pill-rule" aria-hidden="true" />
-                <button type="button" className="map-figma-ctrl-btn" aria-label="Zoom out" onClick={() => handleZoom(-0.65)}>
-                  <img src="/zoom-out-icon.svg" alt="" width={18} height={18} />
-                </button>
+                <span className="map-figma-ctrl-tooltip-wrap">
+                  <span className="map-figma-ctrl-tooltip" aria-hidden="true">
+                    Zoom Out
+                  </span>
+                  <button
+                    type="button"
+                    className="map-figma-ctrl-btn"
+                    aria-label="Zoom out"
+                    onClick={() => handleZoom(-0.65)}
+                  >
+                    <img src="/zoom-out-icon.svg" alt="" width={18} height={18} />
+                  </button>
+                </span>
               </div>
-
-              {isMenuOpen ? (
-                <div className="map-figma-flyout map-figma-flyout--menu" aria-label="Map menu">
-                  <div className="map-utility-header">
-                    <strong>Map menu</strong>
-                    <span>Quick tips</span>
-                  </div>
-                  <p>Use district shading for context and pins for council projects.</p>
-                  <ul className="map-utility-list">
-                    <li>Search for an address in the top-left control.</li>
-                    <li>Open the info button for map guidance.</li>
-                  </ul>
-                </div>
-              ) : null}
 
               {isInfoOpen ? (
                 <div className="map-figma-flyout map-figma-flyout--info" aria-label="Accessibility information">
-                  <div className="map-utility-header">
-                    <strong>Map guidance</strong>
-                    <span>Informational</span>
+                  <div className="map-guidance-topbar">
+                    <span className="map-guidance-topbar-title">Accessibility</span>
+                    <button
+                      type="button"
+                      className="map-guidance-close-btn"
+                      aria-label="Close map guidance"
+                      onClick={() => setIsInfoOpen(false)}
+                    >
+                      <span aria-hidden="true">×</span>
+                    </button>
                   </div>
-                  <p>Use the district overlays for geographic context and the project markers for quick detail checks.</p>
-                  <ul className="map-utility-list">
-                    <li>Hover markers to preview project names.</li>
-                    <li>Click markers to open project details.</li>
-                    <li>Click a district boundary to update the district overview pill.</li>
-                  </ul>
+
+                  <div className="map-guidance-sections">
+                    <section className="map-guidance-section" aria-label="Map guidance: map">
+                      <h4 className="map-guidance-section-title">Map</h4>
+                      <p className="map-guidance-section-body">
+                        Use the district overlays for geographic context and the project markers for quick detail checks.
+                      </p>
+                    </section>
+
+                    <section className="map-guidance-section" aria-label="Map guidance: icons">
+                      <h4 className="map-guidance-section-title">Icons</h4>
+                      <div className="map-guidance-icons" role="list" aria-label="Map icon legend">
+                        {MAP_GUIDANCE_ICON_ITEMS.map((item) => (
+                          <div key={item.label} className="map-guidance-icon-item" role="listitem">
+                            <img
+                              className="map-guidance-icon-img"
+                              src={item.src}
+                              alt=""
+                              width={26}
+                              height={32}
+                              draggable={false}
+                            />
+                            <span className="map-guidance-icon-label">{item.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+
+                    <section className="map-guidance-section" aria-label="Map guidance: how to use">
+                      <h4 className="map-guidance-section-title">How to Use</h4>
+                      <div className="map-guidance-section-body map-guidance-howto">
+                        {mapGuidanceHowToUse.map((line) => (
+                          <p key={line}>{line}</p>
+                        ))}
+                      </div>
+                    </section>
+                  </div>
                 </div>
               ) : null}
 

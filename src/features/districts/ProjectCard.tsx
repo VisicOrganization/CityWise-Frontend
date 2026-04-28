@@ -1,4 +1,4 @@
-import { ExternalLinkIcon } from "../../shared/ui/visicIcons";
+const PROJECT_TITLE_LINK_ICON_SRC = "/link_icon.svg";
 
 export type ProjectStatusVariant = "completed" | "planned" | "in_progress" | "default";
 
@@ -87,7 +87,14 @@ export function ProjectCard({
                 className="district-overview-project-card__external-link"
                 aria-label="Open project document in new tab"
               >
-                <ExternalLinkIcon width={18} height={18} className="district-overview-project-card__external-icon" aria-hidden />
+                <img
+                  src={PROJECT_TITLE_LINK_ICON_SRC}
+                  alt=""
+                  width={18}
+                  height={18}
+                  decoding="async"
+                  className="district-overview-project-card__external-icon"
+                />
               </a>
             ) : null}
             <span className={statusBadgeClasses(statusVariant)}>{statusLabel}</span>

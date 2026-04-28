@@ -128,9 +128,6 @@ export function MapAddressSearch({ dismissSignal, onExpandedChange }: MapAddress
               autoFocus
             />
           </div>
-          <p className="map-address-search-subtitle">
-            Only addresses within the City of Los Angeles are supported
-          </p>
           {showOutOfCityWarning ? (
             <p className="map-address-search-warning" role="status">
               Only addresses within LA city are allowed

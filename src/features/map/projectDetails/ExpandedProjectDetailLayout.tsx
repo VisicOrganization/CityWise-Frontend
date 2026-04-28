@@ -85,34 +85,29 @@ function ProjectHeader({
       <div className="project-sidebar-title-band" style={{ alignItems: "flex-start", justifyContent: "space-between" }}>
         <div className="project-sidebar-title-cluster" style={{ minWidth: 0 }}>
           <h1 className="project-sidebar-title">
-            {title}
+            <span className="project-sidebar-title-text">{title}</span>
             {externalUrl ? (
               <>
                 {" "}
                 <a
-                  className="project-title-external-link"
-                  href={externalUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Open primary project document in a new tab"
-                >
-                  <img
-                    className="project-title-external-link__icon"
-                    src={PROJECT_TITLE_LINK_ICON_SRC}
-                    alt=""
-                    width={16}
-                    height={16}
-                    decoding="async"
-                  />
-                </a>
+                className="project-title-external-link"
+                href={externalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Open primary project document in a new tab"
+              >
+                <img
+                  className="project-title-external-link__icon"
+                  src={PROJECT_TITLE_LINK_ICON_SRC}
+                  alt=""
+                  width={16}
+                  height={16}
+                  decoding="async"
+                />
+              </a>
               </>
             ) : null}
           </h1>
-          {externalUrl ? (
-            <a className="project-source-link" href={externalUrl} target="_blank" rel="noopener noreferrer">
-              View source
-            </a>
-          ) : null}
           {category.trim() ? <p className="project-sidebar-category">{category}</p> : null}
           {summary.trim() ? <p className="project-expanded-description">{summary}</p> : null}
         </div>
