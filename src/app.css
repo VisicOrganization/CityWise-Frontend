@@ -2528,6 +2528,11 @@ a {
   background: #f9fafb;
 }
 
+/* Extra breathing room at the bottom of the expanded timeline card (away from the card's grey border) */
+.project-expanded-sheet-scroll .project-saas-card--timeline {
+  padding-bottom: 44px;
+}
+
 /* Keep voting grid + timeline from interacting across section boundaries (flex growth) */
 .project-expanded-voting-record-block,
 .project-expanded-timeline-block {
@@ -4418,7 +4423,7 @@ a {
   align-items: center;
   position: relative;
   width: 100%;
-  padding: 24px 12px 0;
+  padding: 24px 12px 44px;
   margin-top: 0.5rem;
   box-sizing: border-box;
   overflow-wrap: break-word;
@@ -4463,8 +4468,8 @@ a {
 .project-v-timeline-line {
   position: absolute;
   left: 50%;
-  top: 0;
-  bottom: 0;
+  top: 9px;
+  bottom: 9px;
   width: 4px;
   transform: translateX(-50%);
   background-color: #2f855a;

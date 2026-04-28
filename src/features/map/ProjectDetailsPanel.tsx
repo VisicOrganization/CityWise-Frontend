@@ -324,7 +324,7 @@ export function ProjectDetailsPanel({
     const sidebarRect = sidebarEl.getBoundingClientRect();
     const btnRect = btnEl.getBoundingClientRect();
     const left = Math.round(sidebarRect.right + VOTE_POPOVER_GAP_PX);
-    let top = Math.round(btnRect.top);
+    let top = Math.round(btnRect.bottom + VOTE_POPOVER_GAP_PX);
     const edgeMargin = 12;
     const maxHeight = Math.max(
       160,
