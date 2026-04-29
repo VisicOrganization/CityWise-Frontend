@@ -5,9 +5,12 @@ import posthog from "posthog-js";
 import { PostHogProvider } from "@posthog/react";
 
 import App from "./app/App";
+import { maintainCityWiseLocalStorageForNewDay } from "./shared/storage/cityWiseLocalStorage";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./tailwind.css";
 import "./app.css";
+
+maintainCityWiseLocalStorageForNewDay();
 
 const posthogToken = import.meta.env.VITE_PUBLIC_POSTHOG_TOKEN;
 const posthogHost = import.meta.env.VITE_PUBLIC_POSTHOG_HOST;
