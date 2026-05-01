@@ -598,10 +598,10 @@ a {
 }
 
 .landing-tagline {
-  max-width: min(52rem, 100%);
+  max-width: min(40rem, 100%);
   margin: 0.67em auto 0;
   font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
-  font-size: 1em;
+  font-size: 0.75em;
   font-weight: 400;
   line-height: 1.35;
   color: rgba(0, 0, 0, 0.6);
@@ -619,7 +619,7 @@ a {
   box-sizing: border-box;
   width: 100%;
   max-width: min(40.65rem, calc(100% - 1.25rem));
-  margin: 1.75rem auto 0;
+  margin: 1rem auto 0;
   padding: 0.6em 0.55em 0.6em 0.95em;
   border-radius: 999px;
   background: #ffffff;
@@ -768,17 +768,6 @@ a {
   font-size: 0.8rem;
   line-height: 1.4;
   font-weight: 500;
-}
-
-.landing-search-subtitle {
-  margin: 1rem auto 0;
-  max-width: min(40.65rem, calc(100% - 1.25rem));
-  color: #6b7280;
-  font-size: 0.85rem;
-  line-height: 1.5;
-  text-align: center;
-  font-style: italic;
-  animation: landing-fade-in-soft 520ms ease-out 330ms both;
 }
 
 .district-open-map {
@@ -2526,6 +2515,11 @@ a {
 .project-expanded-sheet-scroll .project-saas-card--votes,
 .project-expanded-sheet-scroll .project-saas-card--timeline {
   background: #f9fafb;
+}
+
+/* Extra breathing room at the bottom of the expanded timeline card (away from the card's grey border) */
+.project-expanded-sheet-scroll .project-saas-card--timeline {
+  padding-bottom: 44px;
 }
 
 /* Keep voting grid + timeline from interacting across section boundaries (flex growth) */
@@ -4418,7 +4412,7 @@ a {
   align-items: center;
   position: relative;
   width: 100%;
-  padding: 24px 12px 0;
+  padding: 24px 12px 44px;
   margin-top: 0.5rem;
   box-sizing: border-box;
   overflow-wrap: break-word;
@@ -4463,8 +4457,8 @@ a {
 .project-v-timeline-line {
   position: absolute;
   left: 50%;
-  top: 0;
-  bottom: 0;
+  top: 9px;
+  bottom: 9px;
   width: 4px;
   transform: translateX(-50%);
   background-color: #2f855a;

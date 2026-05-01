@@ -350,9 +350,6 @@ export function LandingPage() {
                   document.body,
                 )
               : null}
-            <p className="landing-search-subtitle">
-              Only addresses within the City of Los Angeles are supported
-            </p>
             <LandingDistrictSelect />
           </div>
         </div>
