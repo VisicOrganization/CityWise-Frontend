@@ -43,7 +43,6 @@ Local development:
   - district overview: `http://localhost:15173/districts/11`
 
 Validation commands:
-- after substantive edits, run lint, typecheck, and tests before finishing work (do not skip unless the user defers)
 - run lint with `npm run lint`
 - run tests with `npm run test`
 - run a type check with `npm run typecheck`
