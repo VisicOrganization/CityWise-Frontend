@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { clearApiCacheForTests, getDistrictProjects, getProjectDetail } from "./client";
+import { clearApiCacheForTests, fetchCouncilMembers, getDistrictProjects, getProjectDetail } from "./client";
 
 const fetchMock = vi.fn();
 vi.stubGlobal("fetch", fetchMock);
@@ -164,5 +164,64 @@ describe("api client", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(secondResponse).toEqual(firstResponse);
+  });
+
+  it("requests council members without is_active when using the default active filter", async () => {
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({ items: [] })));
+
+    await fetchCouncilMembers();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
+    expect(requestUrl.pathname).toBe("/council-members");
+    expect(requestUrl.searchParams.has("is_active")).toBe(false);
+  });
+
+  it("requests council members with is_active=false when inactive members are requested", async () => {
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({ items: [] })));
+
+    await fetchCouncilMembers({ isActive: false });
+
+    const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
+    expect(requestUrl.searchParams.get("is_active")).toBe("false");
+  });
+
+  it("returns empty council members when the response is not OK", async () => {
+    fetchMock.mockResolvedValue(new Response("", { status: 503 }));
+
+    const result = await fetchCouncilMembers();
+
+    expect(result.items).toEqual([]);
+  });
+
+  it("parses council members items from a successful response", async () => {
+    fetchMock.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          items: [
+            {
+              id: 1,
+              district_id: 11,
+              name: "Ada Lovelace",
+              first_name: null,
+              last_name: null,
+              email: null,
+              phone_number: null,
+              website: null,
+              about: null,
+              impact_summary: null,
+              profile_pic: null,
+              is_active: "Y",
+            },
+          ],
+        }),
+      ),
+    );
+
+    const result = await fetchCouncilMembers();
+
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0]?.district_id).toBe(11);
+    expect(result.items[0]?.name).toBe("Ada Lovelace");
   });
 });

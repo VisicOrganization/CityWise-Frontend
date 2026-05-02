@@ -1,0 +1,16 @@
+---
+description: Run lint, typecheck, and tests after substantive frontend edits before finishing a task.
+alwaysApply: true
+---
+
+# Validate after changes
+
+After making substantive edits to this repository (TypeScript/React source, tests, or config that affects builds), **run the full local validation suite** and fix any failures before considering the work done:
+
+1. `npm run lint`
+2. `npm run typecheck`
+3. `npm run test`
+
+For larger or release-sensitive changes, also run `npm run build`.
+
+Do not skip these steps at the end of a coding session unless the user explicitly asks to defer validation. If a command fails, diagnose and fix before moving on.
