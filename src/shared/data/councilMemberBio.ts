@@ -1,3 +1,5 @@
+import type { DistrictProfile } from "../api/contracts";
+
 export interface CouncilMemberBio {
   cd: number;
   name: string;
@@ -70,4 +72,37 @@ export function parseCouncilMemberBiosPayload(data: unknown): CouncilMemberBio[]
   }
 
   return result;
+}
+
+function displayNameFromProfile(profile: DistrictProfile): string {
+  const fromName = profile.name.trim();
+  if (fromName) {
+    return fromName;
+  }
+  return [profile.first_name?.trim(), profile.last_name?.trim()].filter(Boolean).join(" ");
+}
+
+/** Maps API `DistrictProfile` into the `CouncilMemberBio` view model (one row per `district_id` when building a map). */
+export function councilMemberBioFromDistrictProfile(profile: DistrictProfile): CouncilMemberBio {
+  const websiteRaw = (profile.website ?? "").trim();
+  return {
+    cd: profile.district_id,
+    name: displayNameFromProfile(profile),
+    email: (profile.email ?? "").trim(),
+    phoneNumber: (profile.phone_number ?? "").trim(),
+    websiteHref: normalizeCouncilWebsiteUrl(profile.website),
+    websiteDisplay: websiteRaw,
+    aboutMe: (profile.about ?? "").trim(),
+    profilePic: profile.profile_pic?.trim() ? profile.profile_pic.trim() : null,
+  };
+}
+
+export function biosMapFromDistrictProfiles(items: DistrictProfile[]): Map<number, CouncilMemberBio> {
+  const map = new Map<number, CouncilMemberBio>();
+  for (const profile of items) {
+    if (!map.has(profile.district_id)) {
+      map.set(profile.district_id, councilMemberBioFromDistrictProfile(profile));
+    }
+  }
+  return map;
 }

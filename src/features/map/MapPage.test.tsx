@@ -232,19 +232,6 @@ function buildEmptyDistrictResponse(districtId: number) {
   };
 }
 
-/** Static bios used in tests; CD 11 aligns with district 11 scenarios. */
-const mockCouncilMemberBiosResponse = [
-  {
-    Name: "Jordan Alvarez",
-    Email: "jordan.alvarez.bios@lacity.org",
-    "Phone Number": "(213) 473-7011",
-    "Website Link": "https://cd11.lacity.gov/",
-    "About Me": "Council member bio from static data file.",
-    "Top 3 Impacts": "1. Example impact for tests.",
-    CD: 11,
-  },
-];
-
 function defaultFetchMock(input: string | URL | Request) {
   const url = String(input);
   const requestUrl = new URL(url, "http://localhost");
@@ -269,10 +256,6 @@ function defaultFetchMock(input: string | URL | Request) {
     return Promise.resolve(new Response(JSON.stringify(boundariesResponse)));
   }
 
-  if (url.includes("cmem-bios.json")) {
-    return Promise.resolve(new Response(JSON.stringify(mockCouncilMemberBiosResponse)));
-  }
-
   if (pathname === "/districts") {
     return Promise.resolve(new Response(JSON.stringify({ district_ids: [11, 12] })));
   }
@@ -288,10 +271,10 @@ function defaultFetchMock(input: string | URL | Request) {
               name: "Jordan Alvarez",
               first_name: null,
               last_name: null,
-              email: null,
+              email: "jordan.alvarez.bios@lacity.org",
               phone_number: "(213) 473-7011",
               website: "https://cd11.lacity.gov/",
-              about: null,
+              about: "Council member bio from static data file.",
               impact_summary: null,
               profile_pic: null,
               is_active: "Y",
@@ -495,12 +478,33 @@ describe("mock app routes", () => {
         return Promise.resolve(new Response(JSON.stringify(boundariesResponse)));
       }
 
-      if (url.includes("cmem-bios.json")) {
-        return Promise.resolve(new Response(JSON.stringify(mockCouncilMemberBiosResponse)));
-      }
-
       if (pathname === "/districts") {
         return Promise.resolve(new Response(JSON.stringify({ district_ids: [11, 12] })));
+      }
+
+      if (pathname === "/council-members") {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              items: [
+                {
+                  id: 1,
+                  district_id: 11,
+                  name: "Jordan Alvarez",
+                  first_name: null,
+                  last_name: null,
+                  email: "jordan.alvarez.bios@lacity.org",
+                  phone_number: "(213) 473-7011",
+                  website: "https://cd11.lacity.gov/",
+                  about: "Council member bio from static data file.",
+                  impact_summary: null,
+                  profile_pic: null,
+                  is_active: "Y",
+                },
+              ],
+            }),
+          ),
+        );
       }
 
       if (pathname.match(/^\/districts\/(\d+)$/)) {

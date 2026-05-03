@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { normalizeCouncilWebsiteUrl, parseCouncilMemberBiosPayload } from "./councilMemberBio";
+import {
+  biosMapFromDistrictProfiles,
+  councilMemberBioFromDistrictProfile,
+  normalizeCouncilWebsiteUrl,
+  parseCouncilMemberBiosPayload,
+} from "./councilMemberBio";
 
 describe("normalizeCouncilWebsiteUrl", () => {
   it("returns null for empty input", () => {
@@ -55,5 +60,81 @@ describe("parseCouncilMemberBiosPayload", () => {
     ]);
     expect(rows).toHaveLength(1);
     expect(rows[0]?.profilePic).toBe("https://example.com/p.jpg");
+  });
+});
+
+describe("councilMemberBioFromDistrictProfile", () => {
+  const baseProfile = {
+    id: 1,
+    district_id: 11,
+    name: "Jordan Alvarez",
+    first_name: null,
+    last_name: null,
+    email: "j@example.org",
+    phone_number: "(213) 555-0100",
+    website: "cd11.lacity.gov",
+    about: "About text",
+    impact_summary: null,
+    profile_pic: " https://img.example/p.png ",
+    is_active: "Y",
+  };
+
+  it("maps API fields to CouncilMemberBio", () => {
+    const bio = councilMemberBioFromDistrictProfile(baseProfile);
+    expect(bio.cd).toBe(11);
+    expect(bio.name).toBe("Jordan Alvarez");
+    expect(bio.email).toBe("j@example.org");
+    expect(bio.phoneNumber).toBe("(213) 555-0100");
+    expect(bio.websiteHref).toBe("https://cd11.lacity.gov");
+    expect(bio.websiteDisplay).toBe("cd11.lacity.gov");
+    expect(bio.aboutMe).toBe("About text");
+    expect(bio.profilePic).toBe("https://img.example/p.png");
+  });
+
+  it("uses first and last name when name is blank", () => {
+    const bio = councilMemberBioFromDistrictProfile({
+      ...baseProfile,
+      name: "  ",
+      first_name: "Ada",
+      last_name: "Lovelace",
+    });
+    expect(bio.name).toBe("Ada Lovelace");
+  });
+});
+
+describe("biosMapFromDistrictProfiles", () => {
+  it("keeps the first profile per district_id", () => {
+    const map = biosMapFromDistrictProfiles([
+      {
+        id: 1,
+        district_id: 11,
+        name: "First",
+        first_name: null,
+        last_name: null,
+        email: null,
+        phone_number: null,
+        website: null,
+        about: null,
+        impact_summary: null,
+        profile_pic: null,
+        is_active: "Y",
+      },
+      {
+        id: 2,
+        district_id: 11,
+        name: "Second",
+        first_name: null,
+        last_name: null,
+        email: null,
+        phone_number: null,
+        website: null,
+        about: null,
+        impact_summary: null,
+        profile_pic: null,
+        is_active: "Y",
+      },
+    ]);
+    expect(map.size).toBe(1);
+    expect(map.get(11)?.name).toBe("First");
   });
 });
