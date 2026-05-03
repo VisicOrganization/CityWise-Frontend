@@ -43,7 +43,7 @@ export function VerticalTimelineView({ items, onOverviewClick }: VerticalTimelin
         onClick={onOverviewClick}
         aria-label="Back to project overview"
       >
-        Overview
+        Back to Overview
       </button>
 
       <div className="project-v-timeline-inner">
