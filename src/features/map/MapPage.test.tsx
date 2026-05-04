@@ -397,7 +397,7 @@ describe("mock app routes", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText("Visualize Your Council Member's Impact")).toBeInTheDocument();
+    expect(screen.getByText("Visualize Your Council District's Impact")).toBeInTheDocument();
     const input = screen.getByLabelText("Search address");
     await user.type(input, "123 Main St");
     expect(input).toHaveValue("123 Main St");
