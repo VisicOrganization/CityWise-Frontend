@@ -1,6 +1,7 @@
 import type { ProjectDetail } from "../../../shared/api/contracts";
 import { formatName } from "../../../shared/formatPersonName";
 import { CardHorizontalTimeline, milestonesToCardTimelineNodes } from "./CardHorizontalTimeline";
+import { formatMoversListLine } from "./formatMoversListLine";
 import { formatProjectDateLong } from "./formatProjectDate";
 import { SidebarVoteTallyValue, sidebarHasVoteTallyDisplay } from "./sidebarVoteTally";
 import { StatusBadge } from "./StatusBadge";
@@ -195,11 +196,13 @@ function ProjectOverviewCard({
   detail: ProjectDetail;
   voteTally: { yes: number; no: number; absent: number };
 }) {
+  const moversLine = formatMoversListLine(detail);
   const showOverviewMeta =
     detail.project.district_id != null ||
     Boolean(detail.project.meeting_date) ||
     (typeof detail.project.vote_action === "string" && detail.project.vote_action.trim().length > 0) ||
-    sidebarHasVoteTallyDisplay(detail);
+    sidebarHasVoteTallyDisplay(detail) ||
+    moversLine != null;
 
   return (
     <section className={`project-saas-card project-saas-card--votes ${cardHoverClassName()}`} aria-labelledby="expanded-overview-heading">
@@ -237,24 +240,13 @@ function ProjectOverviewCard({
                 </dd>
               </div>
             ) : null}
+            {moversLine != null ? (
+              <div className="project-sidebar-meta-row">
+                <dt>Movers:</dt>
+                <dd>{moversLine}</dd>
+              </div>
+            ) : null}
           </dl>
-        ) : null}
-
-        {detail.movers.primary.length > 0 ? (
-          <div className="project-sidebar-movers">
-            <h4 className="project-sidebar-movers-label">Primary Movers:</h4>
-            <p className="project-sidebar-movers-text">
-              {detail.movers.primary.map((m) => formatName(m.name)).join(", ")}
-            </p>
-          </div>
-        ) : null}
-        {detail.movers.secondary.length > 0 ? (
-          <div className="project-sidebar-movers">
-            <h4 className="project-sidebar-movers-label">Secondary Movers:</h4>
-            <p className="project-sidebar-movers-text">
-              {detail.movers.secondary.map((m) => formatName(m.name)).join(", ")}
-            </p>
-          </div>
         ) : null}
       </div>
     </section>

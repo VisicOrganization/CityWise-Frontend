@@ -17,6 +17,7 @@ import {
 import { VerticalTimelineView } from "./projectDetails/VerticalTimelineView";
 import { StatusBadge } from "./projectDetails/StatusBadge";
 import { ExpandedProjectDetailLayout } from "./projectDetails/ExpandedProjectDetailLayout";
+import { formatMoversListLine } from "./projectDetails/formatMoversListLine";
 import { SidebarVoteTallyValue, sidebarHasVoteTallyDisplay } from "./projectDetails/sidebarVoteTally";
 import { useMobileProjectSidebarLayout } from "./useMobileProjectSidebarLayout";
 
@@ -305,6 +306,11 @@ export function ProjectDetailsPanel({
 
     return parseVoteGivenTally(detail.project.vote_given) ?? tallied;
   }, [detail]);
+
+  const moversOverviewLine = useMemo(
+    () => (detail ? formatMoversListLine(detail) : null),
+    [detail],
+  );
 
   const primaryMoverId = detail?.movers?.primary?.[0]?.id ?? null;
 
@@ -703,7 +709,8 @@ export function ProjectDetailsPanel({
                       (detail.project.district_id != null ||
                         detail.project.meeting_date ||
                         (typeof detail.project.vote_action === "string" && detail.project.vote_action.trim()) ||
-                        sidebarHasVoteTallyDisplay(detail)) ? (
+                        sidebarHasVoteTallyDisplay(detail) ||
+                        moversOverviewLine != null) ? (
                         <dl className="project-sidebar-meta">
                           {detail.project.district_id != null ? (
                             <div className="project-sidebar-meta-row">
@@ -731,23 +738,13 @@ export function ProjectDetailsPanel({
                               </dd>
                             </div>
                           ) : null}
+                          {moversOverviewLine != null ? (
+                            <div className="project-sidebar-meta-row">
+                              <dt>Movers:</dt>
+                              <dd>{moversOverviewLine}</dd>
+                            </div>
+                          ) : null}
                         </dl>
-                      ) : null}
-                      {detail && detail.movers.primary.length > 0 ? (
-                        <div className="project-sidebar-movers">
-                          <h4 className="project-sidebar-movers-label">Primary Movers:</h4>
-                          <p className="project-sidebar-movers-text">
-                            {detail.movers.primary.map((m) => formatName(m.name)).join(", ")}
-                          </p>
-                        </div>
-                      ) : null}
-                      {detail && detail.movers.secondary.length > 0 ? (
-                        <div className="project-sidebar-movers">
-                          <h4 className="project-sidebar-movers-label">Secondary Movers:</h4>
-                          <p className="project-sidebar-movers-text">
-                            {detail.movers.secondary.map((m) => formatName(m.name)).join(", ")}
-                          </p>
-                        </div>
                       ) : null}
                     </section>
 

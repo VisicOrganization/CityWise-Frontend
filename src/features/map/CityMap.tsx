@@ -23,7 +23,7 @@ import {
   districtLabelsLayer,
   districtOutlineLayer,
 } from "../../shared/map/districtLayers";
-import type { MapMarker, MarkerCategory } from "../../shared/map/mapTypes";
+import { markerCategoryLabel, type MapMarker, type MarkerCategory } from "../../shared/map/mapTypes";
 import { InfoIcon } from "../../shared/ui/visicIcons";
 
 const LIGHT_BASE_MAP_STYLE: StyleSpecification = {
@@ -539,8 +539,9 @@ export function CityMap({
                   {showHoverCard ? (
                     <span className="map-marker-hover-card" role="tooltip">
                       <span className="map-marker-hover-title">{formatProjectTitleForDisplay(marker.label)}</span>
+                      <span className="map-marker-hover-category">{markerCategoryLabel(marker.category)}</span>
                       {marker.summary.trim() ? (
-                        <p className="map-marker-hover-summary">{marker.summary}</p>
+                        <p className="map-marker-hover-description">{marker.summary}</p>
                       ) : null}
                       <span className="map-marker-hover-cta">Click to learn more.</span>
                     </span>

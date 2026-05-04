@@ -397,7 +397,7 @@ describe("mock app routes", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText("Visualize Your Council Member's Impact")).toBeInTheDocument();
+    expect(screen.getByText("Visualize Your Council District's Impact")).toBeInTheDocument();
     const input = screen.getByLabelText("Search address");
     await user.type(input, "123 Main St");
     expect(input).toHaveValue("123 Main St");
@@ -846,7 +846,7 @@ describe("mock app routes", () => {
               },
               movers: {
                 primary: [{ id: 7, name: "TRACI PARK", district_id: 11 }],
-                secondary: [],
+                secondary: [{ id: 8, name: "HEATHER HUTT", district_id: 10 }],
                 other: [],
               },
               votes: [
@@ -905,7 +905,9 @@ describe("mock app routes", () => {
       "https://cityclerk.lacity.org/council-file/25-0358",
     );
     expect(
-      await screen.findByText(formatPersonNameForDisplay("TRACI PARK")),
+      await screen.findByText(
+        `${formatPersonNameForDisplay("TRACI PARK")} (Primary), ${formatPersonNameForDisplay("HEATHER HUTT")} (Secondary)`,
+      ),
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /Open expanded timeline overview/i }));

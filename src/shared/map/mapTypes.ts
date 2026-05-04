@@ -1,10 +1,21 @@
 export type MarkerCategory = "housing" | "transit" | "parks";
 
+/** Display label for map hover and other UI (matches ProjectDetailsPanel base category). */
+export function markerCategoryLabel(category: MarkerCategory): string {
+  if (category === "housing") {
+    return "Housing";
+  }
+  if (category === "transit") {
+    return "Transportation";
+  }
+  return "Infrastructure";
+}
+
 export interface MapMarker {
   id: string;
   category: MarkerCategory;
   label: string;
-  /** Short description for map hover card (from project card summary). */
+  /** Project description text for the map hover card (from project card summary). */
   summary: string;
   longitude: number;
   latitude: number;

@@ -246,9 +246,9 @@ export function LandingPage() {
 
         <div className="landing-hero-content">
           <div className="landing-centerpiece">
-            <h1>Visualize Your Council Member&apos;s Impact</h1>
+            <h1>Visualize Your Council District&apos;s Impact</h1>
             <p className="landing-tagline">
-              CityWise simplifies confusing government data and projects to guide informed decisions.
+              CityWise simplifies LA council legislation data so you can understand what goes on behind the scenes.
             </p>
 
             <form
