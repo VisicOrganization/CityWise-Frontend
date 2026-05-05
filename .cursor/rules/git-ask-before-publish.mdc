@@ -1,0 +1,15 @@
+---
+description: Ask the user for explicit approval before git commit, push, PR creation, or merge.
+alwaysApply: true
+---
+
+# Ask before publishing git changes
+
+Do **not** run `git commit`, `git push`, create or open a pull request (`gh pr create`, equivalent), or **merge** code (including merging a PR, completing a merge, or pushing to `main`) unless the user has **clearly approved** that step in the current task or conversation.
+
+- If the user asked only to implement or fix something, **stop with the diff or summary** and ask whether they want a commit, push, and/or PR.
+- If they said "commit" but not "push", **ask before pushing**.
+- If they said "push" but not "open a PR", **ask before opening a PR** unless they already asked for a PR in the same message.
+- **Never merge** without an explicit instruction to merge (or complete the merge) for that change.
+
+When in doubt, ask once with a short checklist (commit / push / PR / merge) instead of assuming.

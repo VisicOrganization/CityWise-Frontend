@@ -1,4 +1,5 @@
 import type {
+  CouncilMembersListResponse,
   DistrictListResponse,
   DistrictProfile,
   DistrictProjectsResponse,
@@ -111,6 +112,37 @@ export async function getDistrictProfile(districtId: number): Promise<DistrictPr
   const data = (await response.json()) as DistrictProfile;
   writeToCache(cacheKey, data);
   return data;
+}
+
+/**
+ * `GET /council-members`. Omits `is_active` when requesting the default (active members only).
+ * Non-OK or malformed responses resolve to an empty `items` list.
+ */
+export async function fetchCouncilMembers(options?: {
+  isActive?: boolean;
+}): Promise<CouncilMembersListResponse> {
+  const url = new URL("/council-members", getApiBaseUrl());
+  if (options?.isActive === false) {
+    url.searchParams.set("is_active", "false");
+  }
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      return { items: [] };
+    }
+    const data = (await response.json()) as unknown;
+    if (!data || typeof data !== "object" || !("items" in data)) {
+      return { items: [] };
+    }
+    const items = (data as { items: unknown }).items;
+    if (!Array.isArray(items)) {
+      return { items: [] };
+    }
+    return { items: items as DistrictProfile[] };
+  } catch {
+    return { items: [] };
+  }
 }
 
 export async function getDistrictProjects(

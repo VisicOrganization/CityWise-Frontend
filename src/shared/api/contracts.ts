@@ -45,14 +45,27 @@ export interface DistrictListResponse {
   district_ids: number[];
 }
 
+/**
+ * Council member / district representative from `GET /districts/{district_id}` or each element of
+ * `GET /council-members` `items` (same JSON shape).
+ */
 export interface DistrictProfile {
+  id: number;
   district_id: number;
   name: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
   website: string | null;
   phone_number: string | null;
   about: string | null;
   impact_summary: string | null;
   profile_pic: string | null;
+  is_active: string | null;
+}
+
+export interface CouncilMembersListResponse {
+  items: DistrictProfile[];
 }
 
 export interface ProjectMember {

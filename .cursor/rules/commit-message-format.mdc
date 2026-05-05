@@ -1,0 +1,18 @@
+---
+description: Commit message prefix and no Cursor attribution trailers.
+alwaysApply: true
+---
+
+# Commit messages (CityWise-Frontend)
+
+When you draft or suggest a **git commit message** for this repo:
+
+1. **Line 1** must be exactly: `# made with cursor` (no extra characters on that line).
+2. **Line 2 onward:** blank line optional, then the real subject and body (imperative subject, details as needed).
+
+3. **Never** append or include Cursor marketing or attribution trailers, including:
+   - `Made with [Cursor](https://cursor.com)` (markdown link form)
+   - `Made with Cursor`, `Made-with: Cursor`, `🤖 Generated with Cursor`, or similar
+   - `Co-authored-by: Cursor`, `Co-authored-by: cursor[bot]`, or similar footers unless the user explicitly asks for them.
+
+Humans can turn off IDE-injected commit trailers in **Cursor Settings → Agent → Attribution** (disable commit attribution). This rule covers **agent-composed** messages either way.

@@ -1,4 +1,4 @@
-import type { CouncilMemberBio } from "../../shared/data/councilMemberBio";
+import type { DistrictProfile } from "../../shared/api/contracts";
 import { formatPersonNameForDisplay } from "../../shared/formatPersonName";
 
 export type CouncilDistrictRow = {
@@ -9,30 +9,42 @@ export type CouncilDistrictRow = {
   focusLabel: string;
 };
 
-function makeRow(districtId: number, bio: CouncilMemberBio): CouncilDistrictRow {
-  const nameLine = formatPersonNameForDisplay(bio.name);
-  const districtLine = `Council District ${districtId}`;
-  return {
-    districtId,
-    nameLine,
-    districtLine,
-    focusLabel: `${nameLine} — ${districtLine}`,
-  };
+function councilMemberLabelFromProfile(member: DistrictProfile): string {
+  const fromName = member.name.trim();
+  if (fromName) {
+    return formatPersonNameForDisplay(fromName);
+  }
+  const fromParts = [member.first_name?.trim(), member.last_name?.trim()].filter(Boolean).join(" ");
+  if (fromParts) {
+    return formatPersonNameForDisplay(fromParts);
+  }
+  return "Council member";
 }
 
 /**
- * All council members from `cmem-bios.json` for the landing district dropdown, sorted by district (1–15).
+ * Landing council directory from `GET /council-members`. When several rows share a `district_id`,
+ * the first in API order is used so the picker stays one row per district.
  */
-export function sortedCouncilRowsFromBios(
-  biosByDistrict: Map<number, CouncilMemberBio>,
-): CouncilDistrictRow[] {
-  const sortedIds = [...biosByDistrict.keys()].sort((a, b) => a - b);
-  const rows: CouncilDistrictRow[] = [];
-  for (const id of sortedIds) {
-    const bio = biosByDistrict.get(id);
-    if (bio) {
-      rows.push(makeRow(id, bio));
+export function sortedCouncilRowsFromProfiles(members: DistrictProfile[]): CouncilDistrictRow[] {
+  const byDistrict = new Map<number, DistrictProfile>();
+  for (const member of members) {
+    if (!byDistrict.has(member.district_id)) {
+      byDistrict.set(member.district_id, member);
     }
   }
-  return rows;
+  const sortedIds = [...byDistrict.keys()].sort((a, b) => a - b);
+  return sortedIds.map((districtId) => {
+    const member = byDistrict.get(districtId);
+    if (!member) {
+      throw new Error(`Missing council member for district ${districtId}`);
+    }
+    const nameLine = councilMemberLabelFromProfile(member);
+    const districtLine = `Council District ${districtId}`;
+    return {
+      districtId,
+      nameLine,
+      districtLine,
+      focusLabel: `${nameLine} — ${districtLine}`,
+    };
+  });
 }

@@ -3,9 +3,9 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePostHog } from "@posthog/react";
 
-import { loadCouncilMemberBiosMapOnce } from "../districts/useCouncilMemberBios";
+import { fetchCouncilMembers } from "../../shared/api/client";
 import { navigateToMapForDistrictFocus } from "../../shared/map/mapNavigateFromAddressSearch";
-import { sortedCouncilRowsFromBios, type CouncilDistrictRow } from "./councilDistrictSearch";
+import { sortedCouncilRowsFromProfiles, type CouncilDistrictRow } from "./councilDistrictSearch";
 
 const LANDING_DISTRICT_LISTBOX_ID = "landing-council-district-suggestions";
 const SUGGESTIONS_VIEWPORT_BOTTOM_GUTTER = 16;
@@ -31,20 +31,21 @@ export function LandingDistrictSelect() {
 
   useEffect(() => {
     let ignore = false;
-    void loadCouncilMemberBiosMapOnce()
-      .then((map) => {
-        if (!ignore) {
-          setRows(sortedCouncilRowsFromBios(map));
-          setLoadError(false);
-          setIsReady(true);
-        }
-      })
-      .catch(() => {
-        if (!ignore) {
-          setLoadError(true);
-          setIsReady(true);
-        }
-      });
+
+    void fetchCouncilMembers().then(({ items }) => {
+      if (ignore) {
+        return;
+      }
+      if (items.length > 0) {
+        setRows(sortedCouncilRowsFromProfiles(items));
+        setLoadError(false);
+      } else {
+        setRows([]);
+        setLoadError(true);
+      }
+      setIsReady(true);
+    });
+
     return () => {
       ignore = true;
     };
@@ -147,7 +148,7 @@ export function LandingDistrictSelect() {
       </div>
       {loadError ? (
         <p className="landing-district-pick-error" role="alert">
-          Council directory is unavailable. Please try again later.
+          Council members could not be loaded. Check that the API is running and try again.
         </p>
       ) : null}
       {panelOpen && panelLayout && !loadError
