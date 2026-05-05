@@ -4,7 +4,7 @@ export type NormalizedProjectStatus = "completed" | "in_progress" | "planned" | 
 
 export function normalizeProjectStatus(raw: string | null | undefined): NormalizedProjectStatus {
   const s = raw?.trim().toLowerCase().replace(/[\s-]+/g, "_") ?? "";
-  if (s === "completed" || s === "complete") {
+  if (s === "completed" || s === "complete" || s === "passed" || s === "pass") {
     return "completed";
   }
   if (s.includes("progress") || s === "in_progress") {
@@ -18,7 +18,11 @@ export function normalizeProjectStatus(raw: string | null | undefined): Normaliz
 
 export function statusLabelForDisplay(raw: string | null | undefined): string {
   const n = normalizeProjectStatus(raw);
+  const rawNorm = raw?.trim().toLowerCase().replace(/[\s-]+/g, "_") ?? "";
   if (n === "completed") {
+    if (rawNorm === "passed" || rawNorm === "pass") {
+      return "Passed";
+    }
     return "Completed";
   }
   if (n === "in_progress") {

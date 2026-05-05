@@ -3,6 +3,7 @@ import { usePostHog } from "@posthog/react";
 import { normalizeCouncilWebsiteUrl } from "../../shared/data/councilMemberBio";
 import { formatPersonNameForDisplay } from "../../shared/formatPersonName";
 import { formatProjectTitleForDisplay } from "../../shared/formatProjectTitleForDisplay";
+import { normalizeProjectStatus, statusLabelForDisplay } from "../map/projectDetails/StatusBadge";
 import { RecentProjects } from "./RecentProjects";
 import { useCouncilMemberBios } from "./useCouncilMemberBios";
 import { useDistrictProfile } from "./useDistrictProfile";
@@ -22,7 +23,7 @@ function formatDate(value: string | null): string {
 }
 
 function formatCompletion(status: string, lastChangedDate: string | null): string {
-  if (status === "completed" && lastChangedDate) {
+  if (normalizeProjectStatus(status) === "completed" && lastChangedDate) {
     return formatDate(lastChangedDate);
   }
 
@@ -43,25 +44,11 @@ function formatProjectCategory(topics: string[] | undefined, status: string): st
     return topic;
   }
 
-  if (status === "planned") {
+  if (normalizeProjectStatus(status) === "planned") {
     return "Transportation";
   }
 
   return formatStatus(status);
-}
-
-function projectStatusVariant(status: string): "completed" | "planned" | "in_progress" | "default" {
-  const normalized = status.toLowerCase().replace(/[\s-]+/g, "_");
-  if (normalized === "completed") {
-    return "completed";
-  }
-  if (normalized === "planned") {
-    return "planned";
-  }
-  if (normalized.includes("progress") || status.toLowerCase().includes("progress")) {
-    return "in_progress";
-  }
-  return "default";
 }
 
 interface DistrictOverviewSheetProps {
@@ -261,8 +248,8 @@ export function DistrictOverviewSheet({
                   id: project.id,
                   title: formatProjectTitleForDisplay(project.title),
                   titleHref: project.url ?? null,
-                  statusLabel: formatStatus(project.status),
-                  statusVariant: projectStatusVariant(project.status),
+                  statusLabel: statusLabelForDisplay(project.status),
+                  statusVariant: normalizeProjectStatus(project.status),
                   subtitle: formatProjectCategory(project.address_info?.topics, project.status),
                   description: project.summary,
                   startDate: formatDate(project.start_date),
