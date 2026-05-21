@@ -109,6 +109,9 @@ function ProjectHeader({
               </>
             ) : null}
           </h1>
+          {detail.project.id ? (
+            <p className="project-sidebar-council-file">Council File {detail.project.id}</p>
+          ) : null}
           {category.trim() ? <p className="project-sidebar-category">{category}</p> : null}
           {summary.trim() ? <p className="project-expanded-description">{summary}</p> : null}
         </div>

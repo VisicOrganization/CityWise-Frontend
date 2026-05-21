@@ -3469,6 +3469,18 @@ a {
   border-color: rgba(107, 114, 128, 0.35);
 }
 
+/* Council file id — small grey line directly under sidebar title */
+.project-sidebar-council-file {
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: normal;
+  color: #6b7280;
+}
+
 /* Category — under title, same column as title (wraps; aligns with status / Voting column) */
 .project-sidebar-category {
   margin: 0;
