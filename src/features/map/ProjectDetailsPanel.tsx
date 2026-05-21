@@ -258,6 +258,7 @@ export function ProjectDetailsPanel({
 
   const rawTitle = detail?.project.title ?? marker?.label ?? "Project details";
   const title = useMemo(() => formatProjectTitleForDisplay(rawTitle), [rawTitle]);
+  const councilFileId = detail?.project.id ?? marker?.projectId ?? null;
   const summary = detail?.project.summary ?? marker?.summary ?? "";
   const status = detail?.project.status ?? "loading";
 
@@ -557,6 +558,9 @@ export function ProjectDetailsPanel({
                           </>
                         ) : null}
                       </h2>
+                      {councilFileId ? (
+                        <p className="project-sidebar-council-file">Council File {councilFileId}</p>
+                      ) : null}
                       <p className="project-sidebar-category">{category}</p>
                     </div>
                     <div className="project-sidebar-status-column">
