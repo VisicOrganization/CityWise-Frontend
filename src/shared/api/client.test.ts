@@ -62,12 +62,62 @@ describe("api client", () => {
     expect(requestUrl.searchParams.get("page")).toBe("2");
     expect(requestUrl.searchParams.get("page_size")).toBe("5");
     expect(requestUrl.searchParams.get("has_geocode")).toBe("true");
+    expect(requestUrl.searchParams.get("boundary_filter")).toBeNull();
     expect(response.items[0]?.url).toBe("https://cityclerk.lacity.org/council-file/25-0358");
     expect(response.items[0]?.address_info?.geocode).toEqual({
       latitude: 34.05,
       longitude: -118.25,
       provider: "census",
     });
+  });
+
+  it("requests citywide boundary filtering when requested", async () => {
+    fetchMock.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          district_id: 11,
+          page: 1,
+          page_size: 100,
+          total: 0,
+          total_pages: 0,
+          items: [],
+        }),
+      ),
+    );
+
+    await getDistrictProjects(11, 1, 100, { boundaryFilter: "citywide" });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
+    expect(requestUrl.pathname).toBe("/districts/11/projects");
+    expect(requestUrl.searchParams.get("has_geocode")).toBe("true");
+    expect(requestUrl.searchParams.get("boundary_filter")).toBe("citywide");
+  });
+
+  it("caches district projects separately by boundary filter", async () => {
+    fetchMock.mockImplementation(() =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify({
+            district_id: 11,
+            page: 1,
+            page_size: 100,
+            total: 0,
+            total_pages: 0,
+            items: [],
+          }),
+        ),
+      ),
+    );
+
+    await getDistrictProjects(11, 1, 100);
+    await getDistrictProjects(11, 1, 100, { boundaryFilter: "citywide" });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const defaultRequestUrl = new URL(String(fetchMock.mock.calls[0][0]));
+    const citywideRequestUrl = new URL(String(fetchMock.mock.calls[1][0]));
+    expect(defaultRequestUrl.searchParams.get("boundary_filter")).toBeNull();
+    expect(citywideRequestUrl.searchParams.get("boundary_filter")).toBe("citywide");
   });
 
   it("accepts project detail responses where address_info.geocode is null", async () => {

@@ -13,7 +13,10 @@ let cachedBoundariesPromise: Promise<DistrictBoundaryCollection> | null = null;
 let cachedProjectCardsPromise: Promise<DistrictProjectCard[]> | null = null;
 
 async function loadDistrictProjectCards(districtId: number): Promise<DistrictProjectCard[]> {
-  const firstPage = await getDistrictProjects(districtId, 1, MAP_PROJECTS_PER_DISTRICT);
+  const firstPage = await getDistrictProjects(districtId, 1, MAP_PROJECTS_PER_DISTRICT, {
+    hasGeocode: true,
+    boundaryFilter: "citywide",
+  });
   return firstPage.items.slice(0, MAP_PROJECTS_PER_DISTRICT);
 }
 

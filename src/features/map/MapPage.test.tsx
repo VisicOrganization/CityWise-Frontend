@@ -566,6 +566,17 @@ describe("mock app routes", () => {
     expect(await screen.findByLabelText("Council File 25-0358")).toBeInTheDocument();
     expect(screen.getByLabelText("Council File 25-0400")).toBeInTheDocument();
     expect(screen.getByLabelText("Council File 25-0501")).toBeInTheDocument();
+
+    const projectListRequests = fetchMock.mock.calls
+      .map(([input]) => new URL(String(input), "http://localhost"))
+      .filter((requestUrl) => /^\/districts\/\d+\/projects$/.test(requestUrl.pathname));
+    expect(projectListRequests.length).toBeGreaterThan(0);
+    expect(projectListRequests.every((requestUrl) => requestUrl.searchParams.get("has_geocode") === "true")).toBe(
+      true,
+    );
+    expect(
+      projectListRequests.every((requestUrl) => requestUrl.searchParams.get("boundary_filter") === "citywide"),
+    ).toBe(true);
   });
 
   it("updates the district pill when a project pin is clicked", async () => {
