@@ -145,12 +145,22 @@ export async function fetchCouncilMembers(options?: {
   }
 }
 
+export type DistrictProjectsBoundaryFilter = "none" | "district" | "citywide";
+
+export interface GetDistrictProjectsOptions {
+  hasGeocode?: boolean;
+  boundaryFilter?: DistrictProjectsBoundaryFilter;
+}
+
 export async function getDistrictProjects(
   districtId: number,
   page: number,
   pageSize: number,
+  options?: GetDistrictProjectsOptions,
 ): Promise<DistrictProjectsResponse> {
-  const cacheKey = `district-projects:${districtId}:${page}:${pageSize}:has_geocode=true`;
+  const hasGeocode = options?.hasGeocode ?? true;
+  const boundaryFilter = options?.boundaryFilter ?? "none";
+  const cacheKey = `district-projects:${districtId}:${page}:${pageSize}:has_geocode=${hasGeocode}:boundary_filter=${boundaryFilter}`;
   const cached = readFromCache<DistrictProjectsResponse>(cacheKey);
   if (cached) {
     return cached;
@@ -159,7 +169,10 @@ export async function getDistrictProjects(
   const url = new URL(`/districts/${districtId}/projects`, getApiBaseUrl());
   url.searchParams.set("page", String(page));
   url.searchParams.set("page_size", String(pageSize));
-  url.searchParams.set("has_geocode", "true");
+  url.searchParams.set("has_geocode", String(hasGeocode));
+  if (boundaryFilter !== "none") {
+    url.searchParams.set("boundary_filter", boundaryFilter);
+  }
 
   const response = await fetch(url);
   if (!response.ok) {
