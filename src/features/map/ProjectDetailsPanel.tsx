@@ -2,11 +2,12 @@ import { createPortal } from "react-dom";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { usePostHog } from "@posthog/react";
 
+import { ScopedChatPanel } from "../chat/ScopedChatPanel";
 import type { ProjectDetail } from "../../shared/api/contracts";
 import { formatName } from "../../shared/formatPersonName";
 import { formatProjectTitleForDisplay } from "../../shared/formatProjectTitleForDisplay";
 import type { MapMarker } from "../../shared/map/mapTypes";
-import { CloseIcon } from "../../shared/ui/visicIcons";
+import { ChatBubbleIcon, CloseIcon } from "../../shared/ui/visicIcons";
 import { formatProjectDateLong, formatUsNumericDate } from "./projectDetails/formatProjectDate";
 import { MiniHorizontalTimeline } from "./projectDetails/MiniHorizontalTimeline";
 import {
@@ -214,11 +215,13 @@ export function ProjectDetailsPanel({
   const [timelineViewOpen, setTimelineViewOpen] = useState(false);
   const [sidebarWidthExpanded, setSidebarWidthExpanded] = useState(false);
   const [mobileSidebarClosing, setMobileSidebarClosing] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const isMobileLayout = useMobileProjectSidebarLayout();
 
   useEffect(() => {
     setTimelineViewOpen(false);
     setSidebarWidthExpanded(false);
+    setIsChatOpen(false);
   }, [detail?.project.id]);
 
   useEffect(() => {
@@ -259,6 +262,19 @@ export function ProjectDetailsPanel({
   const rawTitle = detail?.project.title ?? marker?.label ?? "Project details";
   const title = useMemo(() => formatProjectTitleForDisplay(rawTitle), [rawTitle]);
   const councilFileId = detail?.project.id ?? marker?.projectId ?? null;
+  const chatScopeId =
+    detail?.project.source_council_file_id ?? detail?.project.id ?? marker?.projectId ?? null;
+  const chatCouncilFileLabel = councilFileId ? `Council File ${councilFileId}` : title;
+
+  const openProjectChat = useCallback(() => {
+    setIsVotingPopoverOpen(false);
+    setTimelineViewOpen(false);
+    setIsChatOpen(true);
+    posthog?.capture("project_chat_opened", {
+      project_id: detail?.project.id,
+      council_file_id: chatScopeId,
+    });
+  }, [chatScopeId, detail?.project.id, posthog]);
   const summary = detail?.project.summary ?? marker?.summary ?? "";
   const status = detail?.project.status ?? "loading";
 
@@ -476,6 +492,7 @@ export function ProjectDetailsPanel({
                 horizontalMilestones={horizontalMilestones}
                 onCollapse={() => setSidebarWidthExpanded(false)}
                 onExploreMap={onExploreMap}
+                onOpenChat={openProjectChat}
               />
             ) : (
               <div className="project-expanded-root project-expanded-root--loading">
@@ -568,6 +585,22 @@ export function ProjectDetailsPanel({
                       <div className="project-sidebar-tool-row">
                         {isMobileLayout ? (
                           <>
+                            <span className="project-sidebar-tool-btn-with-hint">
+                              <button
+                                type="button"
+                                className={`project-sidebar-tool-btn project-sidebar-tool-btn--32 ${
+                                  isChatOpen ? "is-active" : ""
+                                }`}
+                                aria-label="Ask about this council file"
+                                disabled={!detail || !chatScopeId}
+                                onClick={openProjectChat}
+                              >
+                                <ChatBubbleIcon className="project-sidebar-header-icon-img" width={18} height={18} />
+                              </button>
+                              <span className="project-sidebar-tool-btn-hint" aria-hidden="true">
+                                Ask about this file
+                              </span>
+                            </span>
                             {detail && horizontalMilestones.length > 0 ? (
                               <span className="project-sidebar-tool-btn-with-hint">
                                 <button
@@ -643,7 +676,24 @@ export function ProjectDetailsPanel({
                             </span>
                           </>
                         ) : (
-                          <span className="project-sidebar-tool-btn-with-hint">
+                          <>
+                            <span className="project-sidebar-tool-btn-with-hint">
+                              <button
+                                type="button"
+                                className={`project-sidebar-tool-btn project-sidebar-tool-btn--32 ${
+                                  isChatOpen ? "is-active" : ""
+                                }`}
+                                aria-label="Ask about this council file"
+                                disabled={!detail || !chatScopeId}
+                                onClick={openProjectChat}
+                              >
+                                <ChatBubbleIcon className="project-sidebar-header-icon-img" width={18} height={18} />
+                              </button>
+                              <span className="project-sidebar-tool-btn-hint" aria-hidden="true">
+                                Ask about this file
+                              </span>
+                            </span>
+                            <span className="project-sidebar-tool-btn-with-hint">
                             <button
                               ref={voteButtonRef}
                               type="button"
@@ -677,6 +727,7 @@ export function ProjectDetailsPanel({
                               View Voting Record
                             </span>
                           </span>
+                          </>
                         )}
                       </div>
                     </div>
@@ -790,6 +841,11 @@ export function ProjectDetailsPanel({
                 </div>
 
                 <div className="project-sidebar-footer-cta">
+                  {detail && chatScopeId ? (
+                    <button type="button" className="project-sidebar-ask-chat" onClick={openProjectChat}>
+                      Ask about this file
+                    </button>
+                  ) : null}
                   <button type="button" className="project-sidebar-explore-map" onClick={handleCloseProjectSidebar}>
                     Explore Map
                   </button>
@@ -875,6 +931,16 @@ export function ProjectDetailsPanel({
         ) : null}
       </div>
       {votingRecordPortal}
+      {chatScopeId ? (
+        <ScopedChatPanel
+          scopeType="project"
+          scopeId={chatScopeId}
+          scopeLabel={chatCouncilFileLabel}
+          headerTitle="Ask about this council file"
+          isOpen={isChatOpen}
+          onClose={() => setIsChatOpen(false)}
+        />
+      ) : null}
     </>
   );
 }

@@ -36,6 +36,7 @@ interface ExpandedProjectDetailLayoutProps {
   horizontalMilestones: TimelineMilestoneModel[];
   onCollapse: () => void;
   onExploreMap: () => void;
+  onOpenChat?: () => void;
 }
 
 function cardHoverClassName() {
@@ -336,6 +337,7 @@ export function ExpandedProjectDetailLayout({
   horizontalMilestones,
   onCollapse,
   onExploreMap,
+  onOpenChat,
 }: ExpandedProjectDetailLayoutProps) {
   return (
     <div className="project-expanded-dock font-schibsted">
@@ -381,6 +383,11 @@ export function ExpandedProjectDetailLayout({
           <TimelineCard milestones={horizontalMilestones} />
 
           <div className="project-expanded-footer">
+            {onOpenChat ? (
+              <button type="button" className="project-expanded-ask-chat" onClick={onOpenChat}>
+                Ask about this file
+              </button>
+            ) : null}
             <PrimaryButton onClick={onExploreMap}>Open Map</PrimaryButton>
           </div>
         </div>
