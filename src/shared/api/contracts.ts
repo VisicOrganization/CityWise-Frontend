@@ -29,6 +29,7 @@ export interface DistrictProjectCard {
   secondary_movers: string[];
   document_count: number;
   primary_address: string | null;
+  affiliations?: Array<{ category: string; items: string[] }>;
   address_info?: ProjectAddressInfo | null;
 }
 
@@ -66,6 +67,28 @@ export interface DistrictProfile {
 
 export interface CouncilMembersListResponse {
   items: DistrictProfile[];
+}
+
+export interface MemberAffiliationFile {
+  project_id: string;
+  title: string;
+  url: string | null;
+  has_geocode: boolean;
+  role: string | null;
+}
+
+export interface MemberAffiliationRow {
+  category: string;
+  full_name: string;
+  file_count: number;
+  percent_of_total: number;
+  files: MemberAffiliationFile[];
+}
+
+export interface MemberAffiliations {
+  member_id: number;
+  total_files: number;
+  items: MemberAffiliationRow[];
 }
 
 export interface ProjectMember {
@@ -124,6 +147,10 @@ export interface ProjectDetail {
     title: string | null;
     date: string | null;
     source: string;
+  }>;
+  affiliations: Array<{
+    category: string;
+    items: string[];
   }>;
   address_info: ProjectAddressInfo | null;
 }

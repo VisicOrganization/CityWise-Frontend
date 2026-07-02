@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { usePostHog } from "@posthog/react";
 
 import { DistrictOverviewSheet } from "../districts/DistrictOverviewSheet";
+import { getProjectDetail } from "../../shared/api/client";
 import type { MapMarker } from "../../shared/map/mapTypes";
 import { MAP_QUERY_DISTRICT_PIN_FILTER } from "../../shared/map/mapNavigateFromAddressSearch";
 import { AppShell } from "../../shared/ui/AppShell";
@@ -18,6 +19,7 @@ export function MapPage() {
   const posthog = usePostHog();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeMarker, setActiveMarker] = useState<MapMarker | null>(null);
+  const [focusMarker, setFocusMarker] = useState<MapMarker | null>(null);
   const [activeDistrictId, setActiveDistrictId] = useState<number | null>(null);
   const [isProjectSidebarOpen, setIsProjectSidebarOpen] = useState(true);
   const [isProjectSidebarExpanded, setIsProjectSidebarExpanded] = useState(false);
@@ -68,6 +70,14 @@ export function MapPage() {
     return null;
   }, [addressFocusPoint, districtFocusId, districtPinFilterIntent]);
   const { boundaries, projectCards, projectMarkers } = useMapData();
+  // Markers rendered on the map: the preloaded set, plus any one-off "View on Map" target that
+  // wasn't in the preloaded set (projects load capped per district).
+  const markersForMap = useMemo(() => {
+    if (!focusMarker || projectMarkers.some((m) => m.id === focusMarker.id)) {
+      return projectMarkers;
+    }
+    return [...projectMarkers, focusMarker];
+  }, [projectMarkers, focusMarker]);
 
   useEffect(() => {
     if (activeMarker) {
@@ -163,10 +173,33 @@ export function MapPage() {
     }, DISTRICT_SHEET_ANIMATION_MS);
   }
 
-  function handleSelectProjectFromDistrictOverview(projectId: string) {
-    const marker = projectMarkers.find((m) => m.kind === "project" && m.projectId === projectId) ?? null;
+  async function handleSelectProjectFromDistrictOverview(projectId: string) {
+    let marker = projectMarkers.find((m) => m.kind === "project" && m.projectId === projectId) ?? null;
     if (!marker) {
-      return;
+      // Not in the preloaded markers (e.g. beyond the per-district cap); build one from detail.
+      try {
+        const detail = await getProjectDetail(projectId);
+        const geocode = detail.address_info?.geocode;
+        if (!geocode) {
+          return;
+        }
+        marker = {
+          id: `project-${projectId}`,
+          projectId,
+          districtId: detail.project.district_id,
+          kind: "project",
+          category: "housing",
+          label: detail.project.title,
+          summary: detail.project.summary ?? "",
+          primaryAddress: detail.address_info?.primary_address ?? null,
+          affiliations: detail.affiliations ?? [],
+          longitude: geocode.longitude,
+          latitude: geocode.latitude,
+        };
+        setFocusMarker(marker);
+      } catch {
+        return;
+      }
     }
     if (districtFocusId !== null) {
       setDistrictFocus(districtFocusId, false);
@@ -179,7 +212,7 @@ export function MapPage() {
       <section className="map-demo-screen">
         <CityMap
           boundaries={boundaries}
-          markers={projectMarkers}
+          markers={markersForMap}
           activeMarkerId={activeMarker?.id ?? null}
           activeDistrictId={activeDistrictId}
           districtRefocusSignal={districtRefocusSignal}

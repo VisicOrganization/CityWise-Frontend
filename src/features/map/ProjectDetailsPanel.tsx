@@ -17,6 +17,7 @@ import {
 import { VerticalTimelineView } from "./projectDetails/VerticalTimelineView";
 import { StatusBadge } from "./projectDetails/StatusBadge";
 import { ExpandedProjectDetailLayout } from "./projectDetails/ExpandedProjectDetailLayout";
+import { ProjectAffiliationChips, hasAnyAffiliations } from "./projectDetails/ProjectAffiliations";
 import { formatMoversListLine } from "./projectDetails/formatMoversListLine";
 import { SidebarVoteTallyValue, sidebarHasVoteTallyDisplay } from "./projectDetails/sidebarVoteTally";
 import { useMobileProjectSidebarLayout } from "./useMobileProjectSidebarLayout";
@@ -751,6 +752,15 @@ export function ProjectDetailsPanel({
                         </dl>
                       ) : null}
                     </section>
+
+                    {detail && hasAnyAffiliations(detail.affiliations) ? (
+                      <section
+                        className="project-sidebar-overview"
+                        aria-label="Committees and departments"
+                      >
+                        <ProjectAffiliationChips affiliations={detail.affiliations} />
+                      </section>
+                    ) : null}
 
                     {detail && horizontalMilestones.length > 0 ? (
                       <MiniHorizontalTimeline

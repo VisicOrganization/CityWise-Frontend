@@ -23,7 +23,8 @@ import {
   districtLabelsLayer,
   districtOutlineLayer,
 } from "../../shared/map/districtLayers";
-import { markerCategoryLabel, type MapMarker, type MarkerCategory } from "../../shared/map/mapTypes";
+import { type MapMarker, type MarkerCategory } from "../../shared/map/mapTypes";
+import { ProjectAffiliationChips, AFFILIATION_CATEGORY_ORDER } from "./projectDetails/ProjectAffiliations";
 import { InfoIcon } from "../../shared/ui/visicIcons";
 
 const LIGHT_BASE_MAP_STYLE: StyleSpecification = {
@@ -130,6 +131,25 @@ function buildDistrictFillDimLayer() {
   } satisfies typeof districtFillLayer;
 }
 
+/** Checkbox that can render the indeterminate (partial) state, which has no React prop. */
+function TristateCheckbox({
+  checked,
+  indeterminate,
+  onChange,
+}: {
+  checked: boolean;
+  indeterminate: boolean;
+  onChange: () => void;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.indeterminate = indeterminate;
+    }
+  }, [indeterminate]);
+  return <input ref={ref} type="checkbox" checked={checked} onChange={onChange} />;
+}
+
 interface CityMapProps {
   boundaries: DistrictBoundaryCollection | null;
   markers: MapMarker[];
@@ -187,6 +207,9 @@ export function CityMap({
     () => new Set(DEFAULT_DISTRICT_IDS),
   );
   const [lastTouchedDistrictId, setLastTouchedDistrictId] = useState<number | null>(null);
+  const [selectedBodies, setSelectedBodies] = useState<Set<string>>(new Set());
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const hasInitializedCategoryFilterRef = useRef(false);
   const hasInitializedDistrictFilterRef = useRef(false);
   const previousActiveDistrictIdForPillRef = useRef<number | null | undefined>(undefined);
 
@@ -199,10 +222,45 @@ export function CityMap({
     });
     return (ids.size > 0 ? [...ids] : DEFAULT_DISTRICT_IDS).sort((a, b) => a - b);
   }, [markers]);
-  const visibleMarkers = useMemo(
-    () => markers.filter((marker) => marker.districtId != null && selectedDistrictIds.has(marker.districtId)),
-    [markers, selectedDistrictIds],
-  );
+  // Specific bodies (e.g. "Fire Department") present on loaded pins, grouped by category in canonical order.
+  const availableBodyGroups = useMemo(() => {
+    // NB: `Map` is shadowed by the react-map-gl import in this file, so use a plain object.
+    const byCategory: Record<string, Set<string>> = {};
+    markers.forEach((marker) =>
+      marker.affiliations.forEach((group) => {
+        const set = (byCategory[group.category] ??= new Set<string>());
+        group.items.forEach((name) => set.add(name));
+      }),
+    );
+    const orderedCats = AFFILIATION_CATEGORY_ORDER.filter((category) => category in byCategory);
+    const extras = Object.keys(byCategory)
+      .filter((category) => !AFFILIATION_CATEGORY_ORDER.includes(category))
+      .sort();
+    return [...orderedCats, ...extras].map((category) => ({
+      category,
+      bodies: [...byCategory[category]].sort(),
+    }));
+  }, [markers]);
+  const allBodies = useMemo(() => availableBodyGroups.flatMap((group) => group.bodies), [availableBodyGroups]);
+  const visibleMarkers = useMemo(() => {
+    // The body filter only narrows once the user deselects something; "all selected" shows every pin
+    // (including pins that have no affiliations).
+    const bodyFilterActive = allBodies.length > 0 && !allBodies.every((body) => selectedBodies.has(body));
+    return markers.filter((marker) => {
+      // Always keep the actively-selected project visible (e.g. opened via "View on Map" from the
+      // district overview), even if it falls outside the current district/category pin filters.
+      if (marker.id === activeMarkerId) {
+        return true;
+      }
+      if (marker.districtId == null || !selectedDistrictIds.has(marker.districtId)) {
+        return false;
+      }
+      if (!bodyFilterActive) {
+        return true;
+      }
+      return marker.affiliations.some((group) => group.items.some((name) => selectedBodies.has(name)));
+    });
+  }, [markers, selectedDistrictIds, selectedBodies, allBodies, activeMarkerId]);
   const selectedDistrictIdList = useMemo(() => [...selectedDistrictIds], [selectedDistrictIds]);
   const activeFilterDistrictIds = useMemo(
     () => availableDistrictIds.filter((id) => selectedDistrictIds.has(id)),
@@ -301,6 +359,14 @@ export function CityMap({
       hasInitializedDistrictFilterRef.current = true;
     }
   }, [availableDistrictIds, addressDrivenDistrictPinsId]);
+
+  useEffect(() => {
+    if (allBodies.length === 0 || hasInitializedCategoryFilterRef.current) {
+      return;
+    }
+    setSelectedBodies(new Set(allBodies));
+    hasInitializedCategoryFilterRef.current = true;
+  }, [allBodies]);
 
   useEffect(() => {
     if (!activeMarkerId) {
@@ -512,6 +578,9 @@ export function CityMap({
           const markerZIndex = activeMarkerId === marker.id ? 4 : showHoverCard ? 6 : 1;
           const titleColor = PIN_TITLE_COLOR[marker.category];
           const pinSrc = PIN_SRC[marker.category];
+          const markerCouncilNameRaw =
+            marker.districtId != null ? biosByDistrict?.get(marker.districtId)?.name?.trim() || "" : "";
+          const markerCouncilName = markerCouncilNameRaw ? formatPersonNameForDisplay(markerCouncilNameRaw) : null;
 
           return (
             <Marker
@@ -539,27 +608,39 @@ export function CityMap({
                   {showHoverCard ? (
                     <span className="map-marker-hover-card" role="tooltip">
                       <span className="map-marker-hover-title">{formatProjectTitleForDisplay(marker.label)}</span>
-                      <span className="map-marker-hover-category">{markerCategoryLabel(marker.category)}</span>
-                      {marker.summary.trim() ? (
-                        <p className="map-marker-hover-description">{marker.summary}</p>
+                      {marker.primaryAddress?.trim() ? (
+                        <span className="map-marker-hover-address">{marker.primaryAddress}</span>
+                      ) : null}
+                      {markerCouncilName || marker.districtId != null ? (
+                        <span className="map-marker-hover-member">
+                          {markerCouncilName ?? "Council Member"}
+                          {marker.districtId != null ? ` · District ${marker.districtId}` : ""}
+                        </span>
+                      ) : null}
+                      {marker.affiliations.length > 0 ? (
+                        <span className="map-marker-hover-chips">
+                          <ProjectAffiliationChips affiliations={marker.affiliations} density="comfortable" />
+                        </span>
                       ) : null}
                       <span className="map-marker-hover-cta">Click to learn more.</span>
                     </span>
                   ) : null}
-                  <span
-                    className={`map-marker-district-badge ${activeMarkerId === marker.id ? "is-active" : ""}`.trim()}
-                    aria-hidden
-                  >
-                    {marker.districtId ?? ""}
+                  <span className={`map-marker-pin-visual ${showHoverCard ? "is-hovered" : ""}`.trim()}>
+                    <span
+                      className={`map-marker-district-badge ${activeMarkerId === marker.id ? "is-active" : ""}`.trim()}
+                      aria-hidden
+                    >
+                      {marker.districtId ?? ""}
+                    </span>
+                    <img
+                      className="map-marker-pin-img"
+                      src={pinSrc}
+                      alt=""
+                      width={39}
+                      height={48}
+                      draggable={false}
+                    />
                   </span>
-                  <img
-                    className="map-marker-pin-img"
-                    src={pinSrc}
-                    alt=""
-                    width={39}
-                    height={48}
-                    draggable={false}
-                  />
                   {/* <span className="map-marker-side-title" style={{ color: titleColor }}>
                     {marker.label}
                   </span> */}
@@ -806,6 +887,106 @@ export function CityMap({
                       </label>
                     ))}
                   </div>
+
+                  {availableBodyGroups.length > 0 ? (
+                    <div className="map-district-filter-categories">
+                      <div className="map-utility-header">
+                        <strong>Categories</strong>
+                        <span>Pins</span>
+                      </div>
+                      <p>Filter pins by the specific bodies (committees, departments, etc.) involved.</p>
+                      <div className="map-district-filter-actions" role="group" aria-label="Category filter quick actions">
+                        <button
+                          type="button"
+                          className="map-district-filter-action-btn"
+                          onClick={() => setSelectedBodies(new Set(allBodies))}
+                        >
+                          Select all
+                        </button>
+                        <button
+                          type="button"
+                          className="map-district-filter-action-btn"
+                          onClick={() => setSelectedBodies(new Set<string>())}
+                        >
+                          Deselect all
+                        </button>
+                      </div>
+                      <div className="map-category-filter-list">
+                        {availableBodyGroups.map((group) => {
+                          const allSelected = group.bodies.every((body) => selectedBodies.has(body));
+                          const someSelected = group.bodies.some((body) => selectedBodies.has(body));
+                          const isExpanded = expandedCategories.has(group.category);
+                          return (
+                            <div key={group.category} className="map-category-filter-group">
+                              <div className="map-category-filter-head">
+                                <label className="map-district-filter-option map-category-filter-head-label">
+                                  <TristateCheckbox
+                                    checked={allSelected}
+                                    indeterminate={someSelected && !allSelected}
+                                    onChange={() =>
+                                      setSelectedBodies((current) => {
+                                        const next = new Set(current);
+                                        if (allSelected) {
+                                          group.bodies.forEach((body) => next.delete(body));
+                                        } else {
+                                          group.bodies.forEach((body) => next.add(body));
+                                        }
+                                        return next;
+                                      })
+                                    }
+                                  />
+                                  <span>{group.category}</span>
+                                </label>
+                                <button
+                                  type="button"
+                                  className="map-category-filter-toggle"
+                                  aria-expanded={isExpanded}
+                                  aria-label={`${isExpanded ? "See less of" : "See more of"} ${group.category}`}
+                                  onClick={() =>
+                                    setExpandedCategories((current) => {
+                                      const next = new Set(current);
+                                      if (next.has(group.category)) {
+                                        next.delete(group.category);
+                                      } else {
+                                        next.add(group.category);
+                                      }
+                                      return next;
+                                    })
+                                  }
+                                >
+                                  {isExpanded ? "See less" : "See more"}
+                                </button>
+                              </div>
+                              {isExpanded ? (
+                              <div className="map-category-filter-items">
+                                {group.bodies.map((body) => (
+                                  <label key={body} className="map-district-filter-option">
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedBodies.has(body)}
+                                      onChange={() =>
+                                        setSelectedBodies((current) => {
+                                          const next = new Set(current);
+                                          if (next.has(body)) {
+                                            next.delete(body);
+                                          } else {
+                                            next.add(body);
+                                          }
+                                          return next;
+                                        })
+                                      }
+                                    />
+                                    <span>{body}</span>
+                                  </label>
+                                ))}
+                              </div>
+                              ) : null}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
             </div>

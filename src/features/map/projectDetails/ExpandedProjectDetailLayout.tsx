@@ -6,6 +6,7 @@ import { formatProjectDateLong } from "./formatProjectDate";
 import { SidebarVoteTallyValue, sidebarHasVoteTallyDisplay } from "./sidebarVoteTally";
 import { StatusBadge } from "./StatusBadge";
 import type { TimelineMilestoneModel } from "./timelineMilestones";
+import { ProjectAffiliationChips, hasAnyAffiliations } from "./ProjectAffiliations";
 import { useMemo } from "react";
 
 const SIDEBAR_COLLAPSE_ICON_SRC = "/collapse-icon.svg";
@@ -256,6 +257,23 @@ function ProjectOverviewCard({
   );
 }
 
+function AffiliationsCard({ detail }: { detail: ProjectDetail }) {
+  if (!hasAnyAffiliations(detail.affiliations)) {
+    return null;
+  }
+
+  return (
+    <section
+      className={`project-saas-card project-saas-card--votes ${cardHoverClassName()}`}
+      aria-label="Committees and departments"
+    >
+      <div className="project-expanded-voting-record-block">
+        <ProjectAffiliationChips affiliations={detail.affiliations} />
+      </div>
+    </section>
+  );
+}
+
 function TimelineItem({
   date,
   label,
@@ -377,6 +395,8 @@ export function ExpandedProjectDetailLayout({
               votingRecordFooter={votingRecordFooter}
             />
           </section>
+
+          <AffiliationsCard detail={detail} />
 
           <TimelineCard milestones={horizontalMilestones} />
 
