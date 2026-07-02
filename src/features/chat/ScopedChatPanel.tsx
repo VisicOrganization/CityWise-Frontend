@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 
 import type { ChatIndexStatus, ChatScopeType } from "../../shared/api/chatContracts";
 import { CloseIcon } from "../../shared/ui/visicIcons";
@@ -31,6 +31,49 @@ function preparingTitle(index: ChatIndexStatus | null): string {
   return "Preparing documents for chat…";
 }
 
+function preparingStatusLine(
+  index: ChatIndexStatus | null,
+  isMetaLoading: boolean,
+  pdfProgressLabel: string | null,
+): string {
+  if (isMetaLoading) {
+    return "Loading chat…";
+  }
+  const message = index?.message?.trim();
+  if (message && pdfProgressLabel && !message.includes(pdfProgressLabel)) {
+    return `${message} (${pdfProgressLabel})`;
+  }
+  return message || pdfProgressLabel || "Queued for indexing…";
+}
+
+function formatLastIndexed(lastIndexedAt: string | null): string | null {
+  if (!lastIndexedAt) {
+    return null;
+  }
+  const date = new Date(lastIndexedAt);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}
+
+function formatSourceLabel(source: string): string {
+  try {
+    const url = new URL(source);
+    const lastSegment = url.pathname.split("/").filter(Boolean).pop();
+    return lastSegment ? `${url.hostname} · ${lastSegment}` : url.hostname;
+  } catch {
+    return source;
+  }
+}
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+const MIN_PANEL_WIDTH = 320;
+const MAX_PANEL_WIDTH_VW = 0.9;
+const CLOSE_ANIMATION_MS = 200;
+
 export function ScopedChatPanel({
   scopeType,
   scopeId,
@@ -42,7 +85,14 @@ export function ScopedChatPanel({
   const titleId = useId();
   const inputId = useId();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+  const lastQuestionRef = useRef<string | null>(null);
+  const resizeStateRef = useRef<{ startX: number; startWidth: number } | null>(null);
   const [draft, setDraft] = useState("");
+  const [panelWidth, setPanelWidth] = useState<number | null>(null);
+  const [shouldRender, setShouldRender] = useState(isOpen);
+  const [isClosing, setIsClosing] = useState(false);
 
   const {
     subtitle,
@@ -64,6 +114,7 @@ export function ScopedChatPanel({
   const isChatReady = Boolean(index?.is_ready);
   const isIndexError = index?.status === "error";
   const pdfProgressLabel = index ? formatPdfProgress(index) : null;
+  const lastIndexedLabel = index ? formatLastIndexed(index.last_indexed_at) : null;
   const progressPercent =
     index?.progress_percent != null && Number.isFinite(index.progress_percent)
       ? Math.max(0, Math.min(100, index.progress_percent))
@@ -81,7 +132,39 @@ export function ScopedChatPanel({
     }
   }, [messages, isSending, isMetaLoading, index?.message]);
 
-  if (!isOpen) {
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    previouslyFocusedRef.current = document.activeElement as HTMLElement | null;
+    const focusTimer = window.setTimeout(() => {
+      panelRef.current?.focus();
+    }, 0);
+    return () => {
+      window.clearTimeout(focusTimer);
+      previouslyFocusedRef.current?.focus?.();
+      previouslyFocusedRef.current = null;
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setShouldRender(true);
+      setIsClosing(false);
+      return;
+    }
+    if (!shouldRender) {
+      return;
+    }
+    setIsClosing(true);
+    const closeTimer = window.setTimeout(() => {
+      setShouldRender(false);
+      setIsClosing(false);
+    }, CLOSE_ANIMATION_MS);
+    return () => window.clearTimeout(closeTimer);
+  }, [isOpen, shouldRender]);
+
+  if (!shouldRender) {
     return null;
   }
 
@@ -91,25 +174,117 @@ export function ScopedChatPanel({
     }
     const question = draft;
     setDraft("");
+    lastQuestionRef.current = question;
     void sendMessage(question);
   };
 
+  const handleRetrySend = () => {
+    if (!lastQuestionRef.current || isSending) {
+      return;
+    }
+    void sendMessage(lastQuestionRef.current);
+  };
+
+  const handlePanelKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key === "Escape") {
+      event.stopPropagation();
+      onClose();
+      return;
+    }
+    if (event.key !== "Tab" || !panelRef.current) {
+      return;
+    }
+    const focusable = Array.from(panelRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+    if (focusable.length === 0) {
+      event.preventDefault();
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
+
+  const handleResizePointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    const currentWidth = panelRef.current?.getBoundingClientRect().width ?? panelWidth ?? 448;
+    resizeStateRef.current = { startX: event.clientX, startWidth: currentWidth };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handleResizePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    if (!resizeStateRef.current) {
+      return;
+    }
+    const { startX, startWidth } = resizeStateRef.current;
+    const maxWidth = window.innerWidth * MAX_PANEL_WIDTH_VW;
+    const nextWidth = Math.min(maxWidth, Math.max(MIN_PANEL_WIDTH, startWidth + (startX - event.clientX)));
+    setPanelWidth(nextWidth);
+  };
+
+  const handleResizePointerUp = (event: PointerEvent<HTMLDivElement>) => {
+    resizeStateRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  };
+
   const panel = (
-    <div className="project-chat-root" role="presentation">
+    <div
+      className={`project-chat-root${isClosing ? " project-chat-root--closing" : ""}`}
+      role="presentation"
+    >
       <button type="button" className="project-chat-backdrop" aria-label="Close chat" onClick={onClose} />
       <section
+        ref={panelRef}
         className="project-chat-panel"
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
+        tabIndex={-1}
+        style={panelWidth != null ? { width: `${panelWidth}px` } : undefined}
         onClick={(event) => event.stopPropagation()}
+        onKeyDown={handlePanelKeyDown}
       >
+        <div
+          className="project-chat-resize-handle"
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize chat panel"
+          aria-valuenow={Math.round(panelWidth ?? 448)}
+          aria-valuemin={MIN_PANEL_WIDTH}
+          aria-valuemax={Math.round(window.innerWidth * MAX_PANEL_WIDTH_VW)}
+          tabIndex={0}
+          onPointerDown={handleResizePointerDown}
+          onPointerMove={handleResizePointerMove}
+          onPointerUp={handleResizePointerUp}
+          onPointerCancel={handleResizePointerUp}
+          onKeyDown={(event) => {
+            if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
+              return;
+            }
+            event.preventDefault();
+            event.stopPropagation();
+            const step = event.shiftKey ? 40 : 16;
+            const direction = event.key === "ArrowLeft" ? 1 : -1;
+            const base = panelWidth ?? panelRef.current?.getBoundingClientRect().width ?? 448;
+            const maxWidth = window.innerWidth * MAX_PANEL_WIDTH_VW;
+            setPanelWidth(Math.min(maxWidth, Math.max(MIN_PANEL_WIDTH, base + direction * step)));
+          }}
+        />
         <header className="project-chat-header">
           <div className="project-chat-header-text">
             <h2 id={titleId} className="project-chat-title">
               {headerTitle}
             </h2>
             <p className="project-chat-subtitle">{subtitle.trim() || scopeLabel}</p>
+            {isChatReady && lastIndexedLabel ? (
+              <p className="project-chat-updated">Documents last updated {lastIndexedLabel}</p>
+            ) : null}
           </div>
           <button type="button" className="project-chat-close" aria-label="Close chat" onClick={onClose}>
             <CloseIcon width={16} height={16} />
@@ -151,9 +326,8 @@ export function ScopedChatPanel({
                       style={progressPercent != null ? { width: `${progressPercent}%` } : undefined}
                     />
                   </div>
-                  {pdfProgressLabel ? <p className="project-chat-progress-label">{pdfProgressLabel}</p> : null}
                   <p className="project-chat-preparing-message">
-                    {isMetaLoading ? "Loading chat…" : index?.message ?? "Queued for indexing…"}
+                    {preparingStatusLine(index, isMetaLoading, pdfProgressLabel)}
                   </p>
                 </>
               )}
@@ -164,7 +338,7 @@ export function ScopedChatPanel({
             <div className="project-chat-starters" aria-label="Suggested questions">
               <p className="project-chat-starters-label">Suggested questions</p>
               <div className="project-chat-chip-row">
-                {starters.map((starter) => (
+                {starters.slice(0, 4).map((starter) => (
                   <button
                     key={starter}
                     type="button"
@@ -191,23 +365,24 @@ export function ScopedChatPanel({
                 <p className="project-chat-message-content">{message.content}</p>
                 {message.role === "assistant" && message.sources && message.sources.length > 0 ? (
                   <div className="project-chat-sources">
-                    <span className="project-chat-sources-label">Sources:</span>
-                    <ul className="project-chat-source-list">
-                      {message.sources.map((source) => (
+                    <span className="project-chat-sources-label">Sources</span>
+                    <ol className="project-chat-source-list">
+                      {message.sources.map((source, sourceIndex) => (
                         <li key={source}>
-                          <a href={source} target="_blank" rel="noopener noreferrer">
-                            {source}
+                          <a href={source} target="_blank" rel="noopener noreferrer" title={source}>
+                            <span className="project-chat-source-index">{sourceIndex + 1}</span>
+                            <span className="project-chat-source-label">{formatSourceLabel(source)}</span>
                           </a>
                         </li>
                       ))}
-                    </ul>
+                    </ol>
                   </div>
                 ) : null}
                 {message.role === "assistant" && message.followups && message.followups.length > 0 ? (
                   <div className="project-chat-followups">
                     <span className="project-chat-followups-label">Follow-ups:</span>
                     <div className="project-chat-chip-row">
-                      {message.followups.map((followup) => (
+                      {message.followups.slice(0, 4).map((followup) => (
                         <button
                           key={followup}
                           type="button"
@@ -230,9 +405,12 @@ export function ScopedChatPanel({
           </div>
 
           {sendError ? (
-            <p className="project-chat-send-error" role="alert">
-              {sendError}
-            </p>
+            <div className="project-chat-banner project-chat-banner--error project-chat-send-error" role="alert">
+              <p>{sendError}</p>
+              <button type="button" className="project-chat-retry-btn" onClick={handleRetrySend}>
+                Try again
+              </button>
+            </div>
           ) : null}
         </div>
 
@@ -265,6 +443,10 @@ export function ScopedChatPanel({
               Send
             </button>
           </div>
+          <p className="project-chat-footer-hint">
+            Enter to send · Shift + Enter for a new line. Answers are AI-generated — verify against the official
+            record.
+          </p>
         </footer>
       </section>
     </div>

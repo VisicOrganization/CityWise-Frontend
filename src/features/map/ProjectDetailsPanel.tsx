@@ -587,18 +587,38 @@ export function ProjectDetailsPanel({
                           <>
                             <span className="project-sidebar-tool-btn-with-hint">
                               <button
+                                ref={voteButtonRef}
                                 type="button"
                                 className={`project-sidebar-tool-btn project-sidebar-tool-btn--32 ${
-                                  isChatOpen ? "is-active" : ""
+                                  isVotingPopoverOpen ? "is-active" : ""
                                 }`}
-                                aria-label="Ask about this council file"
-                                disabled={!detail || !chatScopeId}
-                                onClick={openProjectChat}
+                                aria-label="Toggle voting record"
+                                aria-expanded={isVotingPopoverOpen}
+                                disabled={!detail}
+                                onClick={() => {
+                                  setTimelineViewOpen(false);
+                                  setIsVotingPopoverOpen((current) => {
+                                    if (!current) {
+                                      posthog?.capture("voting_record_opened", {
+                                        project_id: detail?.project.id,
+                                        project_title: title,
+                                      });
+                                    }
+                                    return !current;
+                                  });
+                                }}
                               >
-                                <ChatBubbleIcon className="project-sidebar-header-icon-img" width={18} height={18} />
+                                <img
+                                  className="project-sidebar-header-icon-img"
+                                  src={SIDEBAR_VOTING_ICON_SRC}
+                                  alt=""
+                                  width={18}
+                                  height={18}
+                                  decoding="async"
+                                />
                               </button>
                               <span className="project-sidebar-tool-btn-hint" aria-hidden="true">
-                                Ask about this file
+                                View Voting Record
                               </span>
                             </span>
                             {detail && horizontalMilestones.length > 0 ? (
@@ -638,61 +658,19 @@ export function ProjectDetailsPanel({
                                 </span>
                               </span>
                             ) : null}
-                            <span className="project-sidebar-tool-btn-with-hint">
-                              <button
-                                ref={voteButtonRef}
-                                type="button"
-                                className={`project-sidebar-tool-btn project-sidebar-tool-btn--32 ${
-                                  isVotingPopoverOpen ? "is-active" : ""
-                                }`}
-                                aria-label="Toggle voting record"
-                                aria-expanded={isVotingPopoverOpen}
-                                disabled={!detail}
-                                onClick={() => {
-                                  setTimelineViewOpen(false);
-                                  setIsVotingPopoverOpen((current) => {
-                                    if (!current) {
-                                      posthog?.capture("voting_record_opened", {
-                                        project_id: detail?.project.id,
-                                        project_title: title,
-                                      });
-                                    }
-                                    return !current;
-                                  });
-                                }}
-                              >
-                                <img
-                                  className="project-sidebar-header-icon-img"
-                                  src={SIDEBAR_VOTING_ICON_SRC}
-                                  alt=""
-                                  width={18}
-                                  height={18}
-                                  decoding="async"
-                                />
-                              </button>
-                              <span className="project-sidebar-tool-btn-hint" aria-hidden="true">
-                                View Voting Record
-                              </span>
-                            </span>
+                            <button
+                              type="button"
+                              className={`project-sidebar-chat-btn ${isChatOpen ? "is-active" : ""}`}
+                              aria-label="Chat about this council file"
+                              disabled={!detail || !chatScopeId}
+                              onClick={openProjectChat}
+                            >
+                              <ChatBubbleIcon width={16} height={16} />
+                              <span>Chat</span>
+                            </button>
                           </>
                         ) : (
                           <>
-                            <span className="project-sidebar-tool-btn-with-hint">
-                              <button
-                                type="button"
-                                className={`project-sidebar-tool-btn project-sidebar-tool-btn--32 ${
-                                  isChatOpen ? "is-active" : ""
-                                }`}
-                                aria-label="Ask about this council file"
-                                disabled={!detail || !chatScopeId}
-                                onClick={openProjectChat}
-                              >
-                                <ChatBubbleIcon className="project-sidebar-header-icon-img" width={18} height={18} />
-                              </button>
-                              <span className="project-sidebar-tool-btn-hint" aria-hidden="true">
-                                Ask about this file
-                              </span>
-                            </span>
                             <span className="project-sidebar-tool-btn-with-hint">
                             <button
                               ref={voteButtonRef}
@@ -727,6 +705,16 @@ export function ProjectDetailsPanel({
                               View Voting Record
                             </span>
                           </span>
+                            <button
+                              type="button"
+                              className={`project-sidebar-chat-btn ${isChatOpen ? "is-active" : ""}`}
+                              aria-label="Chat about this council file"
+                              disabled={!detail || !chatScopeId}
+                              onClick={openProjectChat}
+                            >
+                              <ChatBubbleIcon width={16} height={16} />
+                              <span>Chat</span>
+                            </button>
                           </>
                         )}
                       </div>
