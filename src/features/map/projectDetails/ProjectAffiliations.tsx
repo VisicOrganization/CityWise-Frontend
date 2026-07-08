@@ -46,20 +46,34 @@ interface DensitySpec {
   gap: number;
   chipPadding: string;
   chipFontSize: number;
-  groupMargin: number;
   labelMargin: number;
   labelFontSize: number;
   labelPadding: string;
 }
 
 const DENSITY_SPECS: Record<AffiliationDensity, DensitySpec> = {
-  compact: { gap: 6, chipPadding: "3px 10px", chipFontSize: 12, groupMargin: 12, labelMargin: 6, labelFontSize: 11, labelPadding: "0" },
-  comfortable: { gap: 10, chipPadding: "8px 16px", chipFontSize: 13, groupMargin: 16, labelMargin: 8, labelFontSize: 12, labelPadding: "4px 0" },
+  compact: { gap: 6, chipPadding: "3px 10px", chipFontSize: 12, labelMargin: 6, labelFontSize: 11, labelPadding: "0" },
+  comfortable: { gap: 10, chipPadding: "8px 16px", chipFontSize: 13, labelMargin: 8, labelFontSize: 12, labelPadding: "4px 0" },
 };
 
 export function hasAnyAffiliations(affiliations: Affiliations | undefined | null): boolean {
   // Guard against older cached payloads (localStorage) that predate this field.
   return Array.isArray(affiliations) && affiliations.some((group) => group.items.length > 0);
+}
+
+/**
+ * Sort affiliation groups into the canonical `AFFILIATION_CATEGORY_ORDER`, with any unknown/extra
+ * categories appended alphabetically after. Mirrors the `orderedCats`/`extras` logic already used
+ * in `CityMap.tsx` (`availableBodyGroups`) and `MemberAffiliationsTable.tsx` (`categoriesPresent`).
+ */
+function sortAffiliationGroups(affiliations: Affiliations): Affiliations {
+  const byCategory = new Map(affiliations.map((group) => [group.category, group]));
+  const orderedCats = AFFILIATION_CATEGORY_ORDER.filter((category) => byCategory.has(category));
+  const extras = affiliations
+    .map((group) => group.category)
+    .filter((category) => !AFFILIATION_CATEGORY_ORDER.includes(category))
+    .sort();
+  return [...orderedCats, ...extras].map((category) => byCategory.get(category)!);
 }
 
 function ChipGroup({
@@ -75,7 +89,7 @@ function ChipGroup({
 }) {
   if (names.length === 0) return null;
   return (
-    <div style={{ marginBottom: spec.groupMargin }}>
+    <div>
       <h4
         style={{
           fontSize: spec.labelFontSize,
@@ -135,17 +149,19 @@ export function ProjectAffiliationChips({
 }) {
   if (!hasAnyAffiliations(affiliations)) return null;
   const spec = DENSITY_SPECS[density];
+  const orderedGroups = sortAffiliationGroups(affiliations!).filter((group) => group.items.length > 0);
   return (
-    <>
-      {affiliations!.map((group) => (
-        <ChipGroup
-          key={group.category}
-          label={pluralizeCategory(group.category, group.items.length)}
-          style={CATEGORY_STYLES[group.category] ?? DEFAULT_STYLE}
-          names={group.items}
-          spec={spec}
-        />
+    <div className="project-affiliation-groups">
+      {orderedGroups.map((group) => (
+        <div className="project-affiliation-group" key={group.category}>
+          <ChipGroup
+            label={pluralizeCategory(group.category, group.items.length)}
+            style={CATEGORY_STYLES[group.category] ?? DEFAULT_STYLE}
+            names={group.items}
+            spec={spec}
+          />
+        </div>
       ))}
-    </>
+    </div>
   );
 }

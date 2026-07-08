@@ -656,7 +656,7 @@ export function CityMap({
           showDistrictPill && !districtOverviewOpen && isDistrictPillVisible && !isSearchExpanded
             ? "is-visible"
             : "is-hidden"
-        }`}
+        }${hideMapChrome ? " map-district-pill-shell--elevated" : ""}`}
       >
         <span className="project-sidebar-tool-btn-with-hint">
           <button

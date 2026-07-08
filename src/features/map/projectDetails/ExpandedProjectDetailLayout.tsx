@@ -1,7 +1,8 @@
 import type { ProjectDetail } from "../../../shared/api/contracts";
 import { formatName } from "../../../shared/formatPersonName";
 import { CardHorizontalTimeline, milestonesToCardTimelineNodes } from "./CardHorizontalTimeline";
-import { formatMoversListLine } from "./formatMoversListLine";
+import { buildMoverRows } from "./moverRows";
+import { MoversTable } from "./MoversTable";
 import { formatProjectDateLong } from "./formatProjectDate";
 import { SidebarVoteTallyValue, sidebarHasVoteTallyDisplay } from "./sidebarVoteTally";
 import { StatusBadge } from "./StatusBadge";
@@ -10,7 +11,6 @@ import { ProjectAffiliationChips, hasAnyAffiliations } from "./ProjectAffiliatio
 import { useMemo } from "react";
 
 const SIDEBAR_COLLAPSE_ICON_SRC = "/collapse-icon.svg";
-const PROJECT_TITLE_LINK_ICON_SRC = "/link_icon.svg";
 
 type VoteRow = {
   key: string;
@@ -37,6 +37,7 @@ interface ExpandedProjectDetailLayoutProps {
   horizontalMilestones: TimelineMilestoneModel[];
   onCollapse: () => void;
   onExploreMap: () => void;
+  isClosing?: boolean;
 }
 
 function cardHoverClassName() {
@@ -88,28 +89,17 @@ function ProjectHeader({
         <div className="project-sidebar-title-cluster" style={{ minWidth: 0 }}>
           <h1 className="project-sidebar-title">
             <span className="project-sidebar-title-text">{title}</span>
-            {externalUrl ? (
-              <>
-                {" "}
-                <a
-                className="project-title-external-link"
-                href={externalUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Open primary project document in a new tab"
-              >
-                <img
-                  className="project-title-external-link__icon"
-                  src={PROJECT_TITLE_LINK_ICON_SRC}
-                  alt=""
-                  width={16}
-                  height={16}
-                  decoding="async"
-                />
-              </a>
-              </>
-            ) : null}
           </h1>
+          {externalUrl ? (
+            <a
+              className="project-view-source-link"
+              href={externalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              View Source
+            </a>
+          ) : null}
           {detail.project.id ? (
             <p className="project-sidebar-council-file">Council File {detail.project.id}</p>
           ) : null}
@@ -200,13 +190,13 @@ function ProjectOverviewCard({
   detail: ProjectDetail;
   voteTally: { yes: number; no: number; absent: number };
 }) {
-  const moversLine = formatMoversListLine(detail);
+  const moverRows = buildMoverRows(detail);
   const showOverviewMeta =
     detail.project.district_id != null ||
-    Boolean(detail.project.meeting_date) ||
-    (typeof detail.project.vote_action === "string" && detail.project.vote_action.trim().length > 0) ||
+    Boolean(detail.project.start_date) ||
+    Boolean(detail.project.end_date) ||
     sidebarHasVoteTallyDisplay(detail) ||
-    moversLine != null;
+    moverRows.length > 0;
 
   return (
     <section className={`project-saas-card project-saas-card--votes ${cardHoverClassName()}`} aria-labelledby="expanded-overview-heading">
@@ -224,16 +214,16 @@ function ProjectOverviewCard({
                 <dd>{detail.project.district_id}</dd>
               </div>
             ) : null}
-            {detail.project.meeting_date ? (
+            {detail.project.start_date ? (
               <div className="project-sidebar-meta-row">
-                <dt>Meeting Date:</dt>
-                <dd>{formatProjectDateLong(detail.project.meeting_date)}</dd>
+                <dt>Start Date:</dt>
+                <dd>{formatProjectDateLong(detail.project.start_date)}</dd>
               </div>
             ) : null}
-            {typeof detail.project.vote_action === "string" && detail.project.vote_action.trim() ? (
+            {detail.project.end_date ? (
               <div className="project-sidebar-meta-row">
-                <dt>Vote Action:</dt>
-                <dd>{detail.project.vote_action.trim()}</dd>
+                <dt>End Date:</dt>
+                <dd>{formatProjectDateLong(detail.project.end_date)}</dd>
               </div>
             ) : null}
             {sidebarHasVoteTallyDisplay(detail) ? (
@@ -244,10 +234,12 @@ function ProjectOverviewCard({
                 </dd>
               </div>
             ) : null}
-            {moversLine != null ? (
-              <div className="project-sidebar-meta-row">
+            {moverRows.length > 0 ? (
+              <div className="project-sidebar-meta-row project-sidebar-meta-row--movers">
                 <dt>Movers:</dt>
-                <dd>{moversLine}</dd>
+                <dd>
+                  <MoversTable rows={moverRows} />
+                </dd>
               </div>
             ) : null}
           </dl>
@@ -264,10 +256,14 @@ function AffiliationsCard({ detail }: { detail: ProjectDetail }) {
 
   return (
     <section
-      className={`project-saas-card project-saas-card--votes ${cardHoverClassName()}`}
-      aria-label="Committees and departments"
+      className={`project-saas-card project-saas-card--votes project-expanded-affiliations-card ${cardHoverClassName()}`}
+      aria-labelledby="expanded-affiliations-heading"
     >
       <div className="project-expanded-voting-record-block">
+        <h2 id="expanded-affiliations-heading" className="project-saas-card-title project-saas-card-title--center">
+          Related Bodies
+        </h2>
+        <Divider className="mb-6" />
         <ProjectAffiliationChips affiliations={detail.affiliations} />
       </div>
     </section>
@@ -325,6 +321,7 @@ function TimelineCard({ milestones }: { milestones: TimelineMilestoneModel[] }) 
         {nodes.length > 0 ? (
           <div style={{ width: "100%" }}>
             <CardHorizontalTimeline nodes={nodes} />
+            {nodes.length > 1 ? <p className="project-card-htimeline-scroll-hint">Scroll to the right</p> : null}
             <div style={{ marginTop: 18, display: "none" }}>
               {/* reserved: timeline item list if needed */}
               {nodes.map((n) => (
@@ -354,9 +351,10 @@ export function ExpandedProjectDetailLayout({
   horizontalMilestones,
   onCollapse,
   onExploreMap,
+  isClosing,
 }: ExpandedProjectDetailLayoutProps) {
   return (
-    <div className="project-expanded-dock font-schibsted">
+    <div className={`project-expanded-dock font-schibsted${isClosing ? " is-closing" : ""}`}>
       <section
         className="project-expanded-bottom-sheet project-expanded-bottom-sheet--scroll"
         aria-label="Project details expanded"

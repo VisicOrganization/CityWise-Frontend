@@ -1,4 +1,5 @@
 import type {
+  AffiliationsMatrix,
   CouncilMembersListResponse,
   DistrictListResponse,
   DistrictProfile,
@@ -222,6 +223,25 @@ export async function getMemberAffiliations(memberId: number): Promise<MemberAff
   }
 
   const data = (await response.json()) as MemberAffiliations;
+  writeToCache(cacheKey, data);
+  return data;
+}
+
+export async function getAffiliationsMatrix(): Promise<AffiliationsMatrix> {
+  const cacheKey = "affiliations-matrix";
+  const cached = readFromCache<AffiliationsMatrix>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const url = new URL("/council-members/affiliations-matrix", getApiBaseUrl());
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error("Failed to load council member affiliations matrix");
+  }
+
+  const data = (await response.json()) as AffiliationsMatrix;
   writeToCache(cacheKey, data);
   return data;
 }

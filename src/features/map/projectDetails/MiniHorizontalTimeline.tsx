@@ -129,7 +129,7 @@ export function HorizontalTimelineTrack({ nodes, onExpandTimeline }: HorizontalT
                 onClick={onExpandTimeline}
                 aria-label="Open expanded timeline overview"
               >
-                Timeline
+                View Timeline
               </button>
             </div>
           ) : null}

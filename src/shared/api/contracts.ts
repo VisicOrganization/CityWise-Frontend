@@ -91,6 +91,39 @@ export interface MemberAffiliations {
   items: MemberAffiliationRow[];
 }
 
+/** One active council member row in `GET /council-members/affiliations-matrix`. */
+export interface AffiliationsMatrixMember {
+  member_id: number;
+  name: string;
+  district_id: number | null;
+  total_files: number;
+}
+
+/** One body (column/row) referenced across the matrix, pre-sorted by category then name. */
+export interface AffiliationsMatrixBody {
+  category: string;
+  full_name: string;
+}
+
+/** A single non-zero (member, body) intersection. Percent is member-normalized. */
+export interface AffiliationsMatrixCell {
+  member_id: number;
+  full_name: string;
+  file_count: number;
+  percent_of_total: number;
+}
+
+/**
+ * `GET /council-members/affiliations-matrix`. `cells` is sparse (only non-zero pairs);
+ * `percent_of_total` = `file_count / member.total_files * 100` (rounded to 1 decimal),
+ * so a member's cells relate to that member's own file total, not to other members.
+ */
+export interface AffiliationsMatrix {
+  members: AffiliationsMatrixMember[];
+  bodies: AffiliationsMatrixBody[];
+  cells: AffiliationsMatrixCell[];
+}
+
 export interface ProjectMember {
   id: number;
   name: string;
