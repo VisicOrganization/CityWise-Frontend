@@ -164,6 +164,19 @@ export function ChevronRightIcon(props: IconProps) {
   );
 }
 
+export function ChatBubbleIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
+      <path
+        d="M4.5 4.75H15.5C16.3284 4.75 17 5.42157 17 6.25V12.25C17 13.0784 16.3284 13.75 15.5 13.75H9.2L5.5 16.25V13.75H4.5C3.67157 13.75 3 13.0784 3 12.25V6.25C3 5.42157 3.67157 4.75 4.5 4.75Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function CloseIcon(props: IconProps) {
   return (
     <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" {...props}>
