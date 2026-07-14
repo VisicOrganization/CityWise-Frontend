@@ -130,6 +130,7 @@ const districtProjectsResponseByDistrict = {
         title: "Council File 25-0358",
         summary: "Wildfire recovery motion.",
         status: "planned",
+        category: "Housing",
         district_id: 11,
         last_changed_date: "2025-04-11",
         start_date: "2025-04-04",
@@ -897,6 +898,24 @@ describe("mock app routes", () => {
     expect(
       within(housingItem as HTMLElement).queryByText(/availability, affordability, and regulation/),
     ).toBeNull();
+  });
+
+  it("shows the project category on the marker hover card", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={["/map"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    await user.hover(await screen.findByLabelText("Council File 25-0358"));
+
+    // The card is the only role="tooltip" here; scope to it so the category legend
+    // (which also lists "Housing") can't satisfy the assertion instead.
+    const hoverCard = await screen.findByRole("tooltip");
+    expect(within(hoverCard).getByText("Housing")).toBeInTheDocument();
+    expect(within(hoverCard).getByText("Council File 25-0358")).toBeInTheDocument();
   });
 
   it("opens the details panel with backend project data when a marker is clicked", async () => {
