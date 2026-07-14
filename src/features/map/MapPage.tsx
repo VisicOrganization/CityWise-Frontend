@@ -2,9 +2,9 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { usePostHog } from "@posthog/react";
 
-import { CouncilmemberMatrix } from "../districts/CouncilmemberMatrix";
+// import { CouncilmemberMatrix } from "../districts/CouncilmemberMatrix";
 import { DistrictOverviewSheet } from "../districts/DistrictOverviewSheet";
-import { useAffiliationsMatrix } from "../districts/useAffiliationsMatrix";
+// import { useAffiliationsMatrix } from "../districts/useAffiliationsMatrix";
 import { getProjectDetail } from "../../shared/api/client";
 import type { MapMarker } from "../../shared/map/mapTypes";
 import { MAP_QUERY_DISTRICT_PIN_FILTER } from "../../shared/map/mapNavigateFromAddressSearch";
@@ -19,7 +19,7 @@ const DISTRICT_SHEET_ANIMATION_MS = 620;
 /** Desktop-only slide animation; mobile already animates its own close before calling onExploreMap. */
 const PROJECT_SIDEBAR_CLOSE_ANIMATION_MS = 320;
 /** Matches the councilmember-metadata sheet slide-out (reuses .district-sheet-dock timing). */
-const METADATA_SHEET_ANIMATION_MS = 620;
+// const METADATA_SHEET_ANIMATION_MS = 620;
 
 
 export function MapPage() {
@@ -34,10 +34,10 @@ export function MapPage() {
   const isMobileProjectSidebarLayout = useMobileProjectSidebarLayout();
   const projectSidebarCloseTimeoutRef = useRef<number | null>(null);
   const [districtRefocusSignal, setDistrictRefocusSignal] = useState(0);
-  const [isMetadataOpen, setIsMetadataOpen] = useState(false);
-  const [isMetadataClosing, setIsMetadataClosing] = useState(false);
-  const metadataCloseTimeoutRef = useRef<number | null>(null);
-  const { matrix, error: matrixError, isLoading: isMatrixLoading } = useAffiliationsMatrix(isMetadataOpen);
+  // const [isMetadataOpen, setIsMetadataOpen] = useState(false);
+  // const [isMetadataClosing, setIsMetadataClosing] = useState(false);
+  // const metadataCloseTimeoutRef = useRef<number | null>(null);
+  // const { matrix, error: matrixError, isLoading: isMatrixLoading } = useAffiliationsMatrix(isMetadataOpen);
   const [isDistrictOverviewClosing, setIsDistrictOverviewClosing] = useState(false);
   const districtOverviewCloseTimeoutRef = useRef<number | null>(null);
   const lastSyncedDistrictFocusFromUrlRef = useRef<number | null | undefined>(undefined);
@@ -134,33 +134,33 @@ export function MapPage() {
       if (projectSidebarCloseTimeoutRef.current !== null) {
         window.clearTimeout(projectSidebarCloseTimeoutRef.current);
       }
-      if (metadataCloseTimeoutRef.current !== null) {
-        window.clearTimeout(metadataCloseTimeoutRef.current);
-      }
+      // if (metadataCloseTimeoutRef.current !== null) {
+      //   window.clearTimeout(metadataCloseTimeoutRef.current);
+      // }
     };
   }, []);
 
-  function openMetadata() {
-    posthog?.capture("councilmember_metadata_opened");
-    if (metadataCloseTimeoutRef.current !== null) {
-      window.clearTimeout(metadataCloseTimeoutRef.current);
-      metadataCloseTimeoutRef.current = null;
-    }
-    setIsMetadataClosing(false);
-    setIsMetadataOpen(true);
-  }
+  // function openMetadata() {
+  //   posthog?.capture("councilmember_metadata_opened");
+  //   if (metadataCloseTimeoutRef.current !== null) {
+  //     window.clearTimeout(metadataCloseTimeoutRef.current);
+  //     metadataCloseTimeoutRef.current = null;
+  //   }
+  //   setIsMetadataClosing(false);
+  //   setIsMetadataOpen(true);
+  // }
 
-  function closeMetadata() {
-    if (!isMetadataOpen || isMetadataClosing) {
-      return;
-    }
-    setIsMetadataClosing(true);
-    metadataCloseTimeoutRef.current = window.setTimeout(() => {
-      setIsMetadataOpen(false);
-      setIsMetadataClosing(false);
-      metadataCloseTimeoutRef.current = null;
-    }, METADATA_SHEET_ANIMATION_MS);
-  }
+  // function closeMetadata() {
+  //   if (!isMetadataOpen || isMetadataClosing) {
+  //     return;
+  //   }
+  //   setIsMetadataClosing(true);
+  //   metadataCloseTimeoutRef.current = window.setTimeout(() => {
+  //     setIsMetadataOpen(false);
+  //     setIsMetadataClosing(false);
+  //     metadataCloseTimeoutRef.current = null;
+  //   }, METADATA_SHEET_ANIMATION_MS);
+  // }
 
   /** Slide-out the project sidebar before committing the state change that unmounts it. */
   function closeProjectSidebarWithAnimation(commit: () => void) {
@@ -341,6 +341,7 @@ export function MapPage() {
             />
           </>
         ) : null}
+        {/* Councilmember metadata matrix — temporarily disabled.
         {!isMetadataOpen ? (
           <button
             type="button"
@@ -389,6 +390,7 @@ export function MapPage() {
             </div>
           </>
         ) : null}
+        */}
       </section>
     </AppShell>
   );

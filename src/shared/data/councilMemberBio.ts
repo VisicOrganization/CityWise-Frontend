@@ -106,3 +106,52 @@ export function biosMapFromDistrictProfiles(items: DistrictProfile[]): Map<numbe
   }
   return map;
 }
+
+const NAME_SUFFIXES = new Set(["jr", "sr", "ii", "iii", "iv"]);
+
+/**
+ * First + last name only, lowercased. Movers on council files carry their own council
+ * member rows, whose names differ from the roster by case, punctuation, middle initials
+ * and suffixes ("CURREN D. PRICE, JR." vs "Curren D. Price Jr."; "JOHN S. LEE" vs
+ * "John Lee"), so those parts are dropped to let the two spellings meet.
+ * Returns "" when the name has no usable first/last pair.
+ */
+export function councilMemberNameKey(name: string): string {
+  const parts = name
+    .toLowerCase()
+    .replace(/[.,]/g, " ")
+    .split(/\s+/)
+    .filter((part) => part.length > 1 && !NAME_SUFFIXES.has(part));
+
+  if (parts.length < 2) {
+    return "";
+  }
+  return `${parts[0]} ${parts[parts.length - 1]}`;
+}
+
+/**
+ * Name → bio, for movers whose `district_id` is missing or the 0 "unknown" sentinel.
+ * Names shared by more than one member are dropped rather than guessed, so a mover
+ * never gets shown the wrong person's photo.
+ */
+export function biosMapByNameFromDistrictProfiles(
+  items: DistrictProfile[],
+): Map<string, CouncilMemberBio> {
+  const byName = new Map<string, CouncilMemberBio | null>();
+  for (const profile of items) {
+    const bio = councilMemberBioFromDistrictProfile(profile);
+    const key = councilMemberNameKey(bio.name);
+    if (!key) {
+      continue;
+    }
+    byName.set(key, byName.has(key) ? null : bio);
+  }
+
+  const resolved = new Map<string, CouncilMemberBio>();
+  for (const [key, bio] of byName) {
+    if (bio) {
+      resolved.set(key, bio);
+    }
+  }
+  return resolved;
+}

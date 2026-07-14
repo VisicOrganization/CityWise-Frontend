@@ -1,32 +1,29 @@
 import { useState } from "react";
 
+import { councilMemberNameKey } from "../../../shared/data/councilMemberBio";
 import { useCouncilMemberBios } from "../../districts/useCouncilMemberBios";
 
-function initialsFromName(name: string): string {
-  return name
-    .split(" ")
-    .map((part) => part[0])
-    .filter(Boolean)
-    .join("");
-}
+const NO_PROFILE_PICTURE_SRC = "/images/no-profile-picture.svg";
 
-/** Small councilmember headshot, keyed by district_id, with initials fallback. */
-export function CouncilMemberAvatar({
-  name,
-  districtId,
-}: {
-  name: string;
-  districtId: number | null;
-}) {
-  const { biosByDistrict } = useCouncilMemberBios();
+/**
+ * Small councilmember headshot for a project mover.
+ *
+ * Identity is the mover's name, never their `district_id`: movers include former members
+ * who still carry a district (e.g. Gilbert Cedillo, district 1), so keying on district
+ * would show whoever holds that seat today. Only a member on the current roster gets a
+ * headshot; everyone else gets the placeholder.
+ */
+export function CouncilMemberAvatar({ name }: { name: string }) {
+  const { biosByName } = useCouncilMemberBios();
   const [portraitFailed, setPortraitFailed] = useState(false);
-  const bio = districtId != null ? biosByDistrict?.get(districtId) : undefined;
+
+  const bio = biosByName?.get(councilMemberNameKey(name));
   const portraitSrc = bio?.profilePic?.trim() || null;
-  const initials = initialsFromName(name);
+  const showPortrait = portraitSrc !== null && !portraitFailed;
 
   return (
     <span className="project-mover-avatar" aria-hidden="true">
-      {portraitSrc && !portraitFailed ? (
+      {showPortrait ? (
         <img
           src={portraitSrc}
           alt=""
@@ -34,7 +31,7 @@ export function CouncilMemberAvatar({
           onError={() => setPortraitFailed(true)}
         />
       ) : (
-        <span className="project-mover-avatar-initials">{initials}</span>
+        <img src={NO_PROFILE_PICTURE_SRC} alt="" className="project-mover-avatar-placeholder" />
       )}
     </span>
   );

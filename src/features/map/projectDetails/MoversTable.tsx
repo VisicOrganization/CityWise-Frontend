@@ -12,7 +12,7 @@ export function MoversTable({ rows }: { rows: MoverRow[] }) {
       {rows.map((row) => (
         <div className="project-movers-table-row" role="row" key={row.key}>
           <span className="project-movers-table-cell project-movers-table-cell--avatar" role="cell">
-            <CouncilMemberAvatar name={row.name} districtId={row.districtId} />
+            <CouncilMemberAvatar name={row.name} />
           </span>
           <span className="project-movers-table-cell project-movers-table-cell--name" role="cell">
             {row.name}
