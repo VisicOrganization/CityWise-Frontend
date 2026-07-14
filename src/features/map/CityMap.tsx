@@ -26,6 +26,7 @@ import {
 import { categoryDescription } from "../../shared/data/categoryDescriptions";
 import { CATEGORY_COLOR, MARKER_CATEGORIES, type MapMarker, type MarkerCategory } from "../../shared/map/mapTypes";
 import { ProjectAffiliationChips, AFFILIATION_CATEGORY_ORDER } from "./projectDetails/ProjectAffiliations";
+import { CategoryPillStatic } from "../../shared/ui/CategoryPill";
 import { InfoIcon } from "../../shared/ui/visicIcons";
 
 const LIGHT_BASE_MAP_STYLE: StyleSpecification = {
@@ -609,9 +610,12 @@ export function CityMap({
                   {showHoverCard ? (
                     <span className="map-marker-hover-card" role="tooltip">
                       <span className="map-marker-hover-title">{formatProjectTitleForDisplay(marker.label)}</span>
-                      {marker.primaryAddress?.trim() ? (
+                      <span className="map-marker-hover-category">
+                        <CategoryPillStatic category={marker.category} />
+                      </span>
+                      {/* {marker.primaryAddress?.trim() ? (
                         <span className="map-marker-hover-address">{marker.primaryAddress}</span>
-                      ) : null}
+                      ) : null} */}
                       {markerCouncilName || marker.districtId != null ? (
                         <span className="map-marker-hover-member">
                           {markerCouncilName ?? "Council Member"}

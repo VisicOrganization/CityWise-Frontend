@@ -2089,6 +2089,11 @@ a {
   overflow: hidden;
 }
 
+.map-marker-hover-category {
+  display: block;
+  margin-top: 6px;
+}
+
 .map-marker-hover-address {
   display: block;
   margin-top: 4px;
