@@ -6,7 +6,7 @@ import { usePostHog } from "@posthog/react";
 import { DistrictOverviewSheet } from "../districts/DistrictOverviewSheet";
 // import { useAffiliationsMatrix } from "../districts/useAffiliationsMatrix";
 import { getProjectDetail } from "../../shared/api/client";
-import type { MapMarker } from "../../shared/map/mapTypes";
+import { toMarkerCategory, type MapMarker } from "../../shared/map/mapTypes";
 import { MAP_QUERY_DISTRICT_PIN_FILTER } from "../../shared/map/mapNavigateFromAddressSearch";
 import { AppShell } from "../../shared/ui/AppShell";
 import { CityMap } from "./CityMap";
@@ -256,7 +256,7 @@ export function MapPage() {
           projectId,
           districtId: detail.project.district_id,
           kind: "project",
-          category: "housing",
+          category: toMarkerCategory(detail.project.category),
           label: detail.project.title,
           summary: detail.project.summary ?? "",
           primaryAddress: detail.address_info?.primary_address ?? null,
@@ -271,6 +271,9 @@ export function MapPage() {
     }
     if (districtFocusId !== null) {
       setDistrictFocus(districtFocusId, false);
+    }
+    if (!marker) {
+      return;
     }
     void handleMarkerSelect(marker);
   }

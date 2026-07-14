@@ -5,11 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
-    "lint": "tsc --noEmit",
+    "build": "tsc --build --force && vite build",
+    "lint": "tsc --build --force",
     "preview": "vite preview",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --build --force"
   },
   "dependencies": {
     "@posthog/react": "^1.9.0",

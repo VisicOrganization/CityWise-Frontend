@@ -55,6 +55,7 @@ export function RecentProjects({ projects, isLoading, error, layoutVariant = "de
           titleHref={project.titleHref}
           statusLabel={project.statusLabel}
           statusVariant={project.statusVariant}
+          category={project.category}
           subtitle={project.subtitle}
           description={project.description}
           startDate={project.startDate}

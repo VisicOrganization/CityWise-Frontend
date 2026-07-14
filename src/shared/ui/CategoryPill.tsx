@@ -47,6 +47,21 @@ export function computeTooltipPosition(
 }
 
 /**
+ * The pill without its tooltip, for surfaces that cannot host one — the map marker hover card is
+ * `pointer-events: none`, so an interactive pill there could never be hovered or focused, and a
+ * focusable element inside a `role="tooltip"` is a screen-reader trap.
+ */
+export function CategoryPillStatic({ category }: { category: MarkerCategory }) {
+  const { background, color } = CATEGORY_PILL_COLOR[category];
+
+  return (
+    <span className="project-category-pill" style={{ background, color }}>
+      {category}
+    </span>
+  );
+}
+
+/**
  * The pill sits inside scroll containers that clip overflow (the project sidebar and the district
  * sheet), so the tooltip is portaled to the body and positioned with fixed coordinates. No z-index
  * can escape an ancestor's overflow clip, which is why this cannot be done in CSS alone.
