@@ -1579,10 +1579,46 @@ a {
 }
 
 .map-guidance-icon-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+}
+
+.map-guidance-icon-head {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   min-width: 0;
+}
+
+.map-guidance-icon-explain {
+  margin: 0 0 0 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: #2f68d2;
+  text-align: left;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.map-guidance-icon-explain:hover {
+  color: #1f4ea8;
+}
+
+.map-guidance-icon-description {
+  margin: 4px 0 0;
+  font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  line-height: 1.45;
+  color: rgba(0, 0, 0, 0.7);
 }
 
 .map-guidance-icon-img {
@@ -2505,12 +2541,9 @@ a {
   padding-inline-end: calc(12px + 16px + 0.45em);
 }
 
-/* Figma 1179:4793 category — Public Sans Regular 24px */
-.project-expanded-sheet-header .project-sidebar-category {
-  font-size: 24px;
-  font-weight: 400;
-  line-height: normal;
-  color: rgba(0, 0, 0, 0.6);
+.project-expanded-sheet-header .project-category-pill {
+  padding: 6px 16px;
+  font-size: 15px;
 }
 
 /* Figma 1179:4841 / 1179:4804 — cards, #e3e3e3 border, px 32 py 24, 12px radius, 1px shadow */
@@ -3539,16 +3572,66 @@ a {
   color: #6b7280;
 }
 
-/* Category — under title, same column as title (wraps; aligns with status / Voting column) */
-.project-sidebar-category {
-  margin: 0;
-  padding: 0;
-  min-width: 0;
+/* Category pill — under title; background/text color set per category from CATEGORY_PILL_COLOR */
+.category-pill-wrap {
+  position: relative;
+  display: inline-flex;
+  align-self: flex-start;
+  max-width: 100%;
+}
+
+.project-category-pill {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 4px 12px;
+  border-radius: 999px;
   font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+  transition: transform 130ms ease;
+}
+
+.project-category-pill.is-active {
+  transform: scale(1.06);
+}
+
+/*
+ * Portaled to <body> and fixed-positioned by CategoryPill: the pill's scroll containers clip
+ * overflow, and no z-index escapes that. Coordinates are set inline; this rule is appearance only.
+ */
+.category-pill-tooltip {
+  position: fixed;
+  z-index: 1000;
+  width: max-content;
+  max-width: min(280px, calc(100vw - 24px));
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #1f2937;
+  color: #ffffff;
+  font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
+  font-size: 12px;
   font-weight: 400;
-  line-height: normal;
-  color: #6b7280;
+  line-height: 1.45;
+  white-space: normal;
+  text-align: left;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .project-category-pill {
+    transition: none;
+  }
+
+  .project-category-pill.is-active {
+    transform: none;
+  }
 }
 
 .project-sidebar-cat-icon {
@@ -3826,7 +3909,8 @@ a {
   color: #b91c1c;
 }
 
-.project-sidebar-figma-scroll .project-sidebar-overview {
+.project-sidebar-figma-scroll .project-sidebar-overview,
+.project-sidebar-figma-scroll .project-sidebar-about {
   margin-top: 10px;
   padding: 0 var(--project-sidebar-pad-x, 18px);
 }
@@ -3846,7 +3930,8 @@ a {
   padding: 0 var(--project-sidebar-pad-x, 18px);
 }
 
-.project-sidebar-overview {
+.project-sidebar-overview,
+.project-sidebar-about {
   margin-top: 1.25rem;
 }
 
@@ -5405,9 +5490,21 @@ a {
 
 .district-overview-project-card__top-actions {
   display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.district-overview-project-card__top-actions-row {
+  display: flex;
   align-items: center;
   gap: 0.5rem;
-  flex-shrink: 0;
+}
+
+/* Wrapper defaults to align-self: flex-start for the sidebar; here it sits flush right under the status badge. */
+.district-overview-project-card__top-actions .category-pill-wrap {
+  align-self: flex-end;
 }
 
 .district-overview-project-card__external-link {

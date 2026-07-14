@@ -1,3 +1,6 @@
+import type { MarkerCategory } from "../../shared/map/mapTypes";
+import { CategoryPill } from "../../shared/ui/CategoryPill";
+
 const PROJECT_TITLE_LINK_ICON_SRC = "/link_icon.svg";
 
 export type ProjectStatusVariant = "completed" | "planned" | "in_progress" | "default";
@@ -9,6 +12,7 @@ export interface ProjectCardProps {
   titleHref?: string | null;
   statusLabel: string;
   statusVariant: ProjectStatusVariant;
+  category?: MarkerCategory | null;
   subtitle: string;
   description: string;
   startDate: string;
@@ -55,6 +59,7 @@ export function ProjectCard({
   titleHref,
   statusLabel,
   statusVariant,
+  category = null,
   subtitle,
   description,
   startDate,
@@ -79,25 +84,28 @@ export function ProjectCard({
             <span className="district-overview-project-card__subtitle">{subtitle}</span>
           </div>
           <div className="district-overview-project-card__top-actions">
-            {externalUrl ? (
-              <a
-                href={externalUrl}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="district-overview-project-card__external-link"
-                aria-label="Open project document in new tab"
-              >
-                <img
-                  src={PROJECT_TITLE_LINK_ICON_SRC}
-                  alt=""
-                  width={18}
-                  height={18}
-                  decoding="async"
-                  className="district-overview-project-card__external-icon"
-                />
-              </a>
-            ) : null}
-            <span className={statusBadgeClasses(statusVariant)}>{statusLabel}</span>
+            <div className="district-overview-project-card__top-actions-row">
+              {externalUrl ? (
+                <a
+                  href={externalUrl}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="district-overview-project-card__external-link"
+                  aria-label="Open project document in new tab"
+                >
+                  <img
+                    src={PROJECT_TITLE_LINK_ICON_SRC}
+                    alt=""
+                    width={18}
+                    height={18}
+                    decoding="async"
+                    className="district-overview-project-card__external-icon"
+                  />
+                </a>
+              ) : null}
+              <span className={statusBadgeClasses(statusVariant)}>{statusLabel}</span>
+            </div>
+            {category ? <CategoryPill category={category} /> : null}
           </div>
         </div>
 

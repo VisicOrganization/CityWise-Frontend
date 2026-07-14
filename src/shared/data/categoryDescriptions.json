@@ -1,0 +1,29 @@
+{
+  "Housing": {
+    "description": "Covers all matters related to where people live in Los Angeles, including the availability, affordability, and regulation of residential spaces. Look for files involving homelessness, rent, tenant rights, housing development, zoning, or wildfire-related rebuilding efforts."
+  },
+  "Education": {
+    "description": "Covers the city's role in supporting learning opportunities and academic institutions, primarily through funding, partnerships, and community programming. Note that LAUSD is independently governed; city council files in this category tend to focus on school safety, joint-use agreements, or youth academic programs rather than curriculum."
+  },
+  "Infrastructure": {
+    "description": "Encompasses the physical systems and networks that keep the city functioning, from streets to utilities. Files in this category typically involve construction, maintenance contracts, capital improvement projects, or repair programs for city-owned assets."
+  },
+  "Public Resources": {
+    "description": "Covers publicly accessible spaces, services, and amenities that enrich daily life for Angelenos. Files here typically involve city-owned facilities, public-facing programs, or community beautification efforts."
+  },
+  "Equity & Community Works": {
+    "description": "Covers the city's efforts to ensure all Angelenos are represented, celebrated, and protected regardless of background or identity. Files here reflect the city's role in fostering inclusive civic life and upholding civil rights."
+  },
+  "Environmental": {
+    "description": "Addresses the city's responsibility to protect natural resources, reduce pollution, and prepare for climate change. Files typically involve long-term sustainability planning, environmental regulations, or green infrastructure investments."
+  },
+  "Public Safety": {
+    "description": "Covers the city's systems for protecting residents from crime, emergencies, and health crises. Files in this category typically involve law enforcement, fire services, emergency infrastructure, or public health facilities."
+  },
+  "Economic": {
+    "description": "Covers policies and programs that shape the financial health of businesses and workers in Los Angeles. Files here typically involve commerce, labor, taxation, or economic development initiatives."
+  },
+  "Miscellaneous": {
+    "description": "Used only when no other category clearly fits the dominant theme—for example, a council district office request or administrative matter unrelated to the topics above."
+  }
+}

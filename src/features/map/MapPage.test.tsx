@@ -864,6 +864,37 @@ describe("mock app routes", () => {
     expect(within(info).getByText("Accessibility")).toBeInTheDocument();
   });
 
+  it("reveals a category description from the accessibility icon legend", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={["/map"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByLabelText("Toggle accessibility information"));
+    const legend = screen.getByLabelText("Map icon legend");
+
+    const housingItem = within(legend).getByText("Housing").closest(".map-guidance-icon-item");
+    expect(housingItem).not.toBeNull();
+
+    const explain = within(housingItem as HTMLElement).getByRole("button", { name: "What does this mean" });
+    expect(explain).toHaveAttribute("aria-expanded", "false");
+
+    await user.click(explain);
+
+    expect(explain).toHaveAttribute("aria-expanded", "true");
+    expect(
+      within(housingItem as HTMLElement).getByText(/availability, affordability, and regulation of residential spaces/),
+    ).toBeInTheDocument();
+
+    await user.click(explain);
+    expect(
+      within(housingItem as HTMLElement).queryByText(/availability, affordability, and regulation/),
+    ).toBeNull();
+  });
+
   it("opens the details panel with backend project data when a marker is clicked", async () => {
     const user = userEvent.setup();
     const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
