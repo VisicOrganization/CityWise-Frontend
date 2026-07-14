@@ -1,8 +1,10 @@
 import type {
+  AffiliationsMatrix,
   CouncilMembersListResponse,
   DistrictListResponse,
   DistrictProfile,
   DistrictProjectsResponse,
+  MemberAffiliations,
   ProjectDetail,
 } from "./contracts";
 
@@ -16,7 +18,10 @@ function getApiBaseUrl(): string {
   return trimmed || "http://localhost:18100";
 }
 
-const API_CACHE_PREFIX = "citywise:api-cache:v1:";
+// Bump the version whenever the API response shape changes so stale localStorage
+// payloads are ignored (v2: added project `affiliations`; v3: member-affiliation file
+// `has_geocode` + `role`).
+const API_CACHE_PREFIX = "citywise:api-cache:v3:";
 
 type StorageValue<T> = {
   data: T;
@@ -199,6 +204,44 @@ export async function getProjectDetail(projectId: string): Promise<ProjectDetail
   }
 
   const data = (await response.json()) as ProjectDetail;
+  writeToCache(cacheKey, data);
+  return data;
+}
+
+export async function getMemberAffiliations(memberId: number): Promise<MemberAffiliations> {
+  const cacheKey = `member-affiliations:${memberId}`;
+  const cached = readFromCache<MemberAffiliations>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const url = new URL(`/council-members/${memberId}/affiliations`, getApiBaseUrl());
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Failed to load affiliations for council member ${memberId}`);
+  }
+
+  const data = (await response.json()) as MemberAffiliations;
+  writeToCache(cacheKey, data);
+  return data;
+}
+
+export async function getAffiliationsMatrix(): Promise<AffiliationsMatrix> {
+  const cacheKey = "affiliations-matrix";
+  const cached = readFromCache<AffiliationsMatrix>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const url = new URL("/council-members/affiliations-matrix", getApiBaseUrl());
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error("Failed to load council member affiliations matrix");
+  }
+
+  const data = (await response.json()) as AffiliationsMatrix;
   writeToCache(cacheKey, data);
   return data;
 }

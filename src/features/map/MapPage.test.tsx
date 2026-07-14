@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import React, { type ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
@@ -700,7 +700,9 @@ describe("mock app routes", () => {
 
     await user.click(screen.getByTestId("mock-empty-map-click"));
 
-    expect(screen.queryByLabelText("Project details")).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByLabelText("Project details")).not.toBeInTheDocument();
+    });
     randomSpy.mockRestore();
   });
 
@@ -770,7 +772,9 @@ describe("mock app routes", () => {
 
     await user.click(screen.getByTestId("mock-boundary-click"));
 
-    expect(screen.queryByLabelText("Project details")).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByLabelText("Project details")).not.toBeInTheDocument();
+    });
     expect(await screen.findByLabelText("Open District 11 overview")).toHaveTextContent(
       /jordan\s+alvarez\s*•\s*district\s+11/i,
     );
@@ -981,15 +985,14 @@ describe("mock app routes", () => {
     await user.click(screen.getByLabelText("Council File 25-0358"));
 
     expect(await screen.findByLabelText("Project details")).toBeInTheDocument();
-    expect(screen.getByLabelText("Open primary project document in a new tab")).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "View Source" })).toHaveAttribute(
       "href",
       "https://cityclerk.lacity.org/council-file/25-0358",
     );
-    expect(
-      await screen.findByText(
-        `${formatPersonNameForDisplay("TRACI PARK")} (Primary), ${formatPersonNameForDisplay("HEATHER HUTT")} (Secondary)`,
-      ),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(formatPersonNameForDisplay("TRACI PARK"))).toBeInTheDocument();
+    expect(screen.getByText(formatPersonNameForDisplay("HEATHER HUTT"))).toBeInTheDocument();
+    expect(screen.getByText("Primary Mover")).toBeInTheDocument();
+    expect(screen.getByText("Mover")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /Open expanded timeline overview/i }));
     const motionNodes = await screen.findAllByText("Motion introduced.");

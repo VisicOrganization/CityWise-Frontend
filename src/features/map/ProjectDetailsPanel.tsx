@@ -19,7 +19,9 @@ import {
 import { VerticalTimelineView } from "./projectDetails/VerticalTimelineView";
 import { StatusBadge } from "./projectDetails/StatusBadge";
 import { ExpandedProjectDetailLayout } from "./projectDetails/ExpandedProjectDetailLayout";
-import { formatMoversListLine } from "./projectDetails/formatMoversListLine";
+import { ProjectAffiliationChips, hasAnyAffiliations } from "./projectDetails/ProjectAffiliations";
+import { buildMoverRows } from "./projectDetails/moverRows";
+import { MoversTable } from "./projectDetails/MoversTable";
 import { SidebarVoteTallyValue, sidebarHasVoteTallyDisplay } from "./projectDetails/sidebarVoteTally";
 import { useMobileProjectSidebarLayout } from "./useMobileProjectSidebarLayout";
 
@@ -29,7 +31,6 @@ const SIDEBAR_TIMELINE_ICON_SRC = "/images/timeline-icon.svg";
 const SIDEBAR_VOTING_ICON_SRC = "/images/voting-icon.svg";
 const SIDEBAR_EXPAND_ICON_SRC = "/expand-icon.svg";
 const SIDEBAR_COLLAPSE_ICON_SRC = "/collapse-icon.svg";
-const PROJECT_TITLE_LINK_ICON_SRC = "/link_icon.svg";
 
 function normalizeVoteGroup(vote: string | null): "Yes" | "No" | "Absent" {
   const normalized = vote?.trim().toLowerCase();
@@ -85,6 +86,8 @@ interface ProjectDetailsPanelProps {
   detail: ProjectDetail | null;
   isLoading: boolean;
   errorMessage: string | null;
+  /** Desktop slide-out in progress (see `MapPage`'s `closeProjectSidebarWithAnimation`). */
+  isClosing?: boolean;
   onExploreMap: () => void;
   onExpandedChange?: (isExpanded: boolean) => void;
 }
@@ -171,11 +174,13 @@ export function ProjectDetailsPanel({
   detail,
   isLoading,
   errorMessage,
+  isClosing = false,
   onExploreMap,
   onExpandedChange,
 }: ProjectDetailsPanelProps) {
   const posthog = usePostHog();
   const MOBILE_SIDEBAR_CLOSE_ANIMATION_MS = 620;
+  const EXPANDED_COLLAPSE_ANIMATION_MS = 620;
   const sidebarRef = useRef<HTMLElement>(null);
   const voteButtonRef = useRef<HTMLButtonElement>(null);
   const [isVotingPopoverOpen, setIsVotingPopoverOpen] = useState(false);
@@ -187,6 +192,7 @@ export function ProjectDetailsPanel({
   const [timelineViewOpen, setTimelineViewOpen] = useState(false);
   const [sidebarWidthExpanded, setSidebarWidthExpanded] = useState(false);
   const [mobileSidebarClosing, setMobileSidebarClosing] = useState(false);
+  const [isExpandedClosing, setIsExpandedClosing] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const isMobileLayout = useMobileProjectSidebarLayout();
 
@@ -230,6 +236,17 @@ export function ProjectDetailsPanel({
       onExploreMap();
     }, MOBILE_SIDEBAR_CLOSE_ANIMATION_MS);
   }, [isMobileLayout, mobileSidebarClosing, onExploreMap]);
+
+  const handleCollapseExpanded = useCallback(() => {
+    if (isExpandedClosing) {
+      return;
+    }
+    setIsExpandedClosing(true);
+    window.setTimeout(() => {
+      setSidebarWidthExpanded(false);
+      setIsExpandedClosing(false);
+    }, EXPANDED_COLLAPSE_ANIMATION_MS);
+  }, [isExpandedClosing]);
 
   const rawTitle = detail?.project.title ?? marker?.label ?? "Project details";
   const title = useMemo(() => formatProjectTitleForDisplay(rawTitle), [rawTitle]);
@@ -296,8 +313,8 @@ export function ProjectDetailsPanel({
     return parseVoteGivenTally(detail.project.vote_given) ?? tallied;
   }, [detail]);
 
-  const moversOverviewLine = useMemo(
-    () => (detail ? formatMoversListLine(detail) : null),
+  const moverRows = useMemo(
+    () => (detail ? buildMoverRows(detail) : []),
     [detail],
   );
 
@@ -436,7 +453,9 @@ export function ProjectDetailsPanel({
       <div
         className={`project-sidebar-host${sidebarWidthExpanded ? " project-sidebar-host--expanded" : ""}${
           isMobileLayout && !sidebarWidthExpanded ? " project-sidebar-host--mobile-enter" : ""
-        }${mobileSidebarClosing ? " project-sidebar-host--mobile-closing" : ""}`}
+        }${mobileSidebarClosing ? " project-sidebar-host--mobile-closing" : ""}${
+          !isMobileLayout && !sidebarWidthExpanded ? " project-sidebar-host--desktop-enter" : ""
+        }${isClosing && !isMobileLayout && !sidebarWidthExpanded ? " project-sidebar-host--desktop-closing" : ""}`}
       >
         <aside
           ref={sidebarRef}
@@ -448,7 +467,7 @@ export function ProjectDetailsPanel({
             sidebarWidthExpanded ? " project-sidebar-inner--saas-expanded" : ""
           }${sidebarAuxExpanded ? " project-sidebar-inner--timeline-expanded" : ""}`}
         >
-          {sidebarWidthExpanded ? (
+          {sidebarWidthExpanded || isExpandedClosing ? (
             detail ? (
               <ExpandedProjectDetailLayout
                 detail={detail}
@@ -462,7 +481,8 @@ export function ProjectDetailsPanel({
                 primaryMoverId={primaryMoverId}
                 votingRecordFooter={votingRecordFooter}
                 horizontalMilestones={horizontalMilestones}
-                onCollapse={() => setSidebarWidthExpanded(false)}
+                isClosing={isExpandedClosing}
+                onCollapse={handleCollapseExpanded}
                 onExploreMap={onExploreMap}
                 onOpenChat={openProjectChat}
               />
@@ -513,40 +533,24 @@ export function ProjectDetailsPanel({
                     <div className="project-sidebar-title-cluster">
                       <h2 className="project-sidebar-title">
                         <span className="project-sidebar-title-text">{title}</span>
-                        {externalUrl ? (
-                          <>
-                            {" "}
-                            <span className="project-sidebar-tool-btn-with-hint">
-                              <a
-                                className="project-title-external-link"
-                                href={externalUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label="Open primary project document in a new tab"
-                                onClick={() =>
-                                  posthog?.capture("project_external_link_clicked", {
-                                    project_id: detail?.project.id,
-                                    project_title: title,
-                                    url: externalUrl,
-                                  })
-                                }
-                              >
-                                <img
-                                  className="project-title-external-link__icon"
-                                  src={PROJECT_TITLE_LINK_ICON_SRC}
-                                  alt=""
-                                  width={16}
-                                  height={16}
-                                  decoding="async"
-                                />
-                              </a>
-                              <span className="project-sidebar-tool-btn-hint" aria-hidden="true">
-                                View Source
-                              </span>
-                            </span>
-                          </>
-                        ) : null}
                       </h2>
+                      {externalUrl ? (
+                        <a
+                          className="project-view-source-link"
+                          href={externalUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() =>
+                            posthog?.capture("project_external_link_clicked", {
+                              project_id: detail?.project.id,
+                              project_title: title,
+                              url: externalUrl,
+                            })
+                          }
+                        >
+                          View Source
+                        </a>
+                      ) : null}
                       {councilFileId ? (
                         <p className="project-sidebar-council-file">Council File {councilFileId}</p>
                       ) : null}
@@ -731,10 +735,10 @@ export function ProjectDetailsPanel({
                       </h3>
                       {detail &&
                       (detail.project.district_id != null ||
-                        detail.project.meeting_date ||
-                        (typeof detail.project.vote_action === "string" && detail.project.vote_action.trim()) ||
+                        detail.project.start_date ||
+                        detail.project.end_date ||
                         sidebarHasVoteTallyDisplay(detail) ||
-                        moversOverviewLine != null) ? (
+                        moverRows.length > 0) ? (
                         <dl className="project-sidebar-meta">
                           {detail.project.district_id != null ? (
                             <div className="project-sidebar-meta-row">
@@ -742,16 +746,16 @@ export function ProjectDetailsPanel({
                               <dd>{detail.project.district_id}</dd>
                             </div>
                           ) : null}
-                          {detail.project.meeting_date ? (
+                          {detail.project.start_date ? (
                             <div className="project-sidebar-meta-row">
-                              <dt>Meeting Date:</dt>
-                              <dd>{formatProjectDateLong(detail.project.meeting_date)}</dd>
+                              <dt>Start Date:</dt>
+                              <dd>{formatProjectDateLong(detail.project.start_date)}</dd>
                             </div>
                           ) : null}
-                          {typeof detail.project.vote_action === "string" && detail.project.vote_action.trim() ? (
+                          {detail.project.end_date ? (
                             <div className="project-sidebar-meta-row">
-                              <dt>Vote Action:</dt>
-                              <dd>{detail.project.vote_action.trim()}</dd>
+                              <dt>End Date:</dt>
+                              <dd>{formatProjectDateLong(detail.project.end_date)}</dd>
                             </div>
                           ) : null}
                           {sidebarHasVoteTallyDisplay(detail) ? (
@@ -762,15 +766,29 @@ export function ProjectDetailsPanel({
                               </dd>
                             </div>
                           ) : null}
-                          {moversOverviewLine != null ? (
-                            <div className="project-sidebar-meta-row">
+                          {moverRows.length > 0 ? (
+                            <div className="project-sidebar-meta-row project-sidebar-meta-row--movers">
                               <dt>Movers:</dt>
-                              <dd>{moversOverviewLine}</dd>
+                              <dd>
+                                <MoversTable rows={moverRows} />
+                              </dd>
                             </div>
                           ) : null}
                         </dl>
                       ) : null}
                     </section>
+
+                    {detail && hasAnyAffiliations(detail.affiliations) ? (
+                      <section
+                        className="project-sidebar-overview"
+                        aria-labelledby="sidebar-affiliations-heading"
+                      >
+                        <h3 id="sidebar-affiliations-heading" className="project-sidebar-section-title">
+                          Related Bodies
+                        </h3>
+                        <ProjectAffiliationChips affiliations={detail.affiliations} />
+                      </section>
+                    ) : null}
 
                     {detail && horizontalMilestones.length > 0 ? (
                       <MiniHorizontalTimeline

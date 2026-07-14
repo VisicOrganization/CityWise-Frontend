@@ -2,26 +2,42 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { usePostHog } from "@posthog/react";
 
+// import { CouncilmemberMatrix } from "../districts/CouncilmemberMatrix";
 import { DistrictOverviewSheet } from "../districts/DistrictOverviewSheet";
+// import { useAffiliationsMatrix } from "../districts/useAffiliationsMatrix";
+import { getProjectDetail } from "../../shared/api/client";
 import type { MapMarker } from "../../shared/map/mapTypes";
 import { MAP_QUERY_DISTRICT_PIN_FILTER } from "../../shared/map/mapNavigateFromAddressSearch";
 import { AppShell } from "../../shared/ui/AppShell";
 import { CityMap } from "./CityMap";
 import { ProjectDetailsPanel } from "./ProjectDetailsPanel";
 import { useMapData } from "./useMapData";
+import { useMobileProjectSidebarLayout } from "./useMobileProjectSidebarLayout";
 import { useProjectDetail } from "./useProjectDetail";
 
 const DISTRICT_SHEET_ANIMATION_MS = 620;
+/** Desktop-only slide animation; mobile already animates its own close before calling onExploreMap. */
+const PROJECT_SIDEBAR_CLOSE_ANIMATION_MS = 320;
+/** Matches the councilmember-metadata sheet slide-out (reuses .district-sheet-dock timing). */
+// const METADATA_SHEET_ANIMATION_MS = 620;
 
 
 export function MapPage() {
   const posthog = usePostHog();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeMarker, setActiveMarker] = useState<MapMarker | null>(null);
+  const [focusMarker, setFocusMarker] = useState<MapMarker | null>(null);
   const [activeDistrictId, setActiveDistrictId] = useState<number | null>(null);
   const [isProjectSidebarOpen, setIsProjectSidebarOpen] = useState(true);
   const [isProjectSidebarExpanded, setIsProjectSidebarExpanded] = useState(false);
+  const [isProjectSidebarClosing, setIsProjectSidebarClosing] = useState(false);
+  const isMobileProjectSidebarLayout = useMobileProjectSidebarLayout();
+  const projectSidebarCloseTimeoutRef = useRef<number | null>(null);
   const [districtRefocusSignal, setDistrictRefocusSignal] = useState(0);
+  // const [isMetadataOpen, setIsMetadataOpen] = useState(false);
+  // const [isMetadataClosing, setIsMetadataClosing] = useState(false);
+  // const metadataCloseTimeoutRef = useRef<number | null>(null);
+  // const { matrix, error: matrixError, isLoading: isMatrixLoading } = useAffiliationsMatrix(isMetadataOpen);
   const [isDistrictOverviewClosing, setIsDistrictOverviewClosing] = useState(false);
   const districtOverviewCloseTimeoutRef = useRef<number | null>(null);
   const lastSyncedDistrictFocusFromUrlRef = useRef<number | null | undefined>(undefined);
@@ -68,6 +84,14 @@ export function MapPage() {
     return null;
   }, [addressFocusPoint, districtFocusId, districtPinFilterIntent]);
   const { boundaries, projectCards, projectMarkers } = useMapData();
+  // Markers rendered on the map: the preloaded set, plus any one-off "View on Map" target that
+  // wasn't in the preloaded set (projects load capped per district).
+  const markersForMap = useMemo(() => {
+    if (!focusMarker || projectMarkers.some((m) => m.id === focusMarker.id)) {
+      return projectMarkers;
+    }
+    return [...projectMarkers, focusMarker];
+  }, [projectMarkers, focusMarker]);
 
   useEffect(() => {
     if (activeMarker) {
@@ -107,8 +131,55 @@ export function MapPage() {
       if (districtOverviewCloseTimeoutRef.current !== null) {
         window.clearTimeout(districtOverviewCloseTimeoutRef.current);
       }
+      if (projectSidebarCloseTimeoutRef.current !== null) {
+        window.clearTimeout(projectSidebarCloseTimeoutRef.current);
+      }
+      // if (metadataCloseTimeoutRef.current !== null) {
+      //   window.clearTimeout(metadataCloseTimeoutRef.current);
+      // }
     };
   }, []);
+
+  // function openMetadata() {
+  //   posthog?.capture("councilmember_metadata_opened");
+  //   if (metadataCloseTimeoutRef.current !== null) {
+  //     window.clearTimeout(metadataCloseTimeoutRef.current);
+  //     metadataCloseTimeoutRef.current = null;
+  //   }
+  //   setIsMetadataClosing(false);
+  //   setIsMetadataOpen(true);
+  // }
+
+  // function closeMetadata() {
+  //   if (!isMetadataOpen || isMetadataClosing) {
+  //     return;
+  //   }
+  //   setIsMetadataClosing(true);
+  //   metadataCloseTimeoutRef.current = window.setTimeout(() => {
+  //     setIsMetadataOpen(false);
+  //     setIsMetadataClosing(false);
+  //     metadataCloseTimeoutRef.current = null;
+  //   }, METADATA_SHEET_ANIMATION_MS);
+  // }
+
+  /** Slide-out the project sidebar before committing the state change that unmounts it. */
+  function closeProjectSidebarWithAnimation(commit: () => void) {
+    if (isMobileProjectSidebarLayout) {
+      // Mobile already animates its own close before invoking this callback.
+      commit();
+      return;
+    }
+
+    if (projectSidebarCloseTimeoutRef.current !== null) {
+      window.clearTimeout(projectSidebarCloseTimeoutRef.current);
+    }
+    setIsProjectSidebarClosing(true);
+    projectSidebarCloseTimeoutRef.current = window.setTimeout(() => {
+      commit();
+      setIsProjectSidebarClosing(false);
+      projectSidebarCloseTimeoutRef.current = null;
+    }, PROJECT_SIDEBAR_CLOSE_ANIMATION_MS);
+  }
 
   async function handleMarkerSelect(marker: MapMarker) {
     posthog?.capture("project_marker_clicked", {
@@ -118,6 +189,11 @@ export function MapPage() {
       category: marker.category,
       label: marker.label,
     });
+    if (projectSidebarCloseTimeoutRef.current !== null) {
+      window.clearTimeout(projectSidebarCloseTimeoutRef.current);
+      projectSidebarCloseTimeoutRef.current = null;
+    }
+    setIsProjectSidebarClosing(false);
     setActiveMarker(marker);
     setActiveDistrictId(marker.districtId);
     setIsProjectSidebarOpen(true);
@@ -125,8 +201,10 @@ export function MapPage() {
   }
 
   function handleMapBackgroundClick() {
-    setActiveMarker(null);
-    resetProjectDetail();
+    closeProjectSidebarWithAnimation(() => {
+      setActiveMarker(null);
+      resetProjectDetail();
+    });
   }
 
   function setDistrictFocus(districtId: number | null, shouldOpenProfile = districtId !== null) {
@@ -163,10 +241,33 @@ export function MapPage() {
     }, DISTRICT_SHEET_ANIMATION_MS);
   }
 
-  function handleSelectProjectFromDistrictOverview(projectId: string) {
-    const marker = projectMarkers.find((m) => m.kind === "project" && m.projectId === projectId) ?? null;
+  async function handleSelectProjectFromDistrictOverview(projectId: string) {
+    let marker = projectMarkers.find((m) => m.kind === "project" && m.projectId === projectId) ?? null;
     if (!marker) {
-      return;
+      // Not in the preloaded markers (e.g. beyond the per-district cap); build one from detail.
+      try {
+        const detail = await getProjectDetail(projectId);
+        const geocode = detail.address_info?.geocode;
+        if (!geocode) {
+          return;
+        }
+        marker = {
+          id: `project-${projectId}`,
+          projectId,
+          districtId: detail.project.district_id,
+          kind: "project",
+          category: "housing",
+          label: detail.project.title,
+          summary: detail.project.summary ?? "",
+          primaryAddress: detail.address_info?.primary_address ?? null,
+          affiliations: detail.affiliations ?? [],
+          longitude: geocode.longitude,
+          latitude: geocode.latitude,
+        };
+        setFocusMarker(marker);
+      } catch {
+        return;
+      }
     }
     if (districtFocusId !== null) {
       setDistrictFocus(districtFocusId, false);
@@ -179,7 +280,7 @@ export function MapPage() {
       <section className="map-demo-screen">
         <CityMap
           boundaries={boundaries}
-          markers={projectMarkers}
+          markers={markersForMap}
           activeMarkerId={activeMarker?.id ?? null}
           activeDistrictId={activeDistrictId}
           districtRefocusSignal={districtRefocusSignal}
@@ -215,7 +316,8 @@ export function MapPage() {
             detail={activeProject}
             isLoading={isDetailsLoading}
             errorMessage={detailsError}
-            onExploreMap={() => setIsProjectSidebarOpen(false)}
+            isClosing={isProjectSidebarClosing}
+            onExploreMap={() => closeProjectSidebarWithAnimation(() => setIsProjectSidebarOpen(false))}
             onExpandedChange={setIsProjectSidebarExpanded}
           />
         ) : null}
@@ -239,6 +341,56 @@ export function MapPage() {
             />
           </>
         ) : null}
+        {/* Councilmember metadata matrix — temporarily disabled.
+        {!isMetadataOpen ? (
+          <button
+            type="button"
+            className="cm-metadata-button font-schibsted"
+            onClick={openMetadata}
+          >
+            Councilmember Metadata
+          </button>
+        ) : null}
+        {isMetadataOpen ? (
+          <>
+            <button
+              type="button"
+              className="district-sheet-dismiss-layer"
+              aria-label="Close councilmember metadata"
+              onClick={closeMetadata}
+            />
+            <div className={`district-sheet-dock cm-matrix-dock${isMetadataClosing ? " is-closing" : ""}`}>
+              <section
+                className="district-bottom-sheet district-bottom-sheet--scroll font-schibsted"
+                aria-label={isMetadataClosing ? "Councilmember metadata closing" : "Councilmember metadata"}
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="district-sheet-scroll-area">
+                  <header className="cm-matrix-header">
+                    <h1 className="font-public-sans cm-matrix-title">Councilmember Metadata</h1>
+                    <p className="cm-matrix-subtitle">
+                      Share of each councilmember&rsquo;s moved council files that reference each body.
+                      Percentages are normalized within each member.
+                    </p>
+                  </header>
+                  <CouncilmemberMatrix
+                    matrix={matrix}
+                    isLoading={isMatrixLoading}
+                    error={matrixError}
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="district-open-map-fixed font-schibsted"
+                  onClick={closeMetadata}
+                >
+                  Close
+                </button>
+              </section>
+            </div>
+          </>
+        ) : null}
+        */}
       </section>
     </AppShell>
   );

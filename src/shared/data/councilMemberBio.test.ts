@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  biosMapByNameFromDistrictProfiles,
   biosMapFromDistrictProfiles,
   councilMemberBioFromDistrictProfile,
+  councilMemberNameKey,
   normalizeCouncilWebsiteUrl,
   parseCouncilMemberBiosPayload,
 } from "./councilMemberBio";
@@ -136,5 +138,67 @@ describe("biosMapFromDistrictProfiles", () => {
     ]);
     expect(map.size).toBe(1);
     expect(map.get(11)?.name).toBe("First");
+  });
+});
+
+describe("councilMemberNameKey", () => {
+  it("collapses the mover and roster spellings of the same member", () => {
+    // Names as they actually arrive: roster (/council-members) vs mover (/projects/:id).
+    expect(councilMemberNameKey("Curren D. Price Jr.")).toBe("curren price");
+    expect(councilMemberNameKey("Curren D. Price, Jr.")).toBe("curren price");
+    expect(councilMemberNameKey("CURREN D. PRICE, JR.")).toBe("curren price");
+
+    expect(councilMemberNameKey("John Lee")).toBe("john lee");
+    expect(councilMemberNameKey("JOHN S. LEE")).toBe("john lee");
+  });
+
+  it("keeps hyphenated surnames intact", () => {
+    expect(councilMemberNameKey("Marqueece Harris-Dawson")).toBe("marqueece harris-dawson");
+  });
+
+  it("returns empty for names without a first/last pair", () => {
+    expect(councilMemberNameKey("")).toBe("");
+    expect(councilMemberNameKey("Price")).toBe("");
+    expect(councilMemberNameKey("J. R.")).toBe("");
+  });
+});
+
+describe("biosMapByNameFromDistrictProfiles", () => {
+  const profile = (district_id: number, name: string, profile_pic: string | null) => ({
+    id: district_id,
+    district_id,
+    name,
+    first_name: null,
+    last_name: null,
+    email: null,
+    phone_number: null,
+    website: null,
+    about: null,
+    impact_summary: null,
+    profile_pic,
+    is_active: "Y",
+  });
+
+  it("finds the roster member from a mover-side name spelling", () => {
+    const map = biosMapByNameFromDistrictProfiles([
+      profile(9, "Curren D. Price Jr.", "https://img.example/price.jpg"),
+      profile(12, "John Lee", "https://img.example/lee.jpg"),
+    ]);
+
+    expect(map.get(councilMemberNameKey("CURREN D. PRICE, JR."))?.profilePic).toBe(
+      "https://img.example/price.jpg",
+    );
+    expect(map.get(councilMemberNameKey("JOHN S. LEE"))?.profilePic).toBe(
+      "https://img.example/lee.jpg",
+    );
+  });
+
+  it("drops names shared by more than one member rather than guessing", () => {
+    const map = biosMapByNameFromDistrictProfiles([
+      profile(4, "David Ryu", "https://img.example/a.jpg"),
+      profile(13, "David E. Ryu", "https://img.example/b.jpg"),
+    ]);
+
+    expect(map.has("david ryu")).toBe(false);
   });
 });

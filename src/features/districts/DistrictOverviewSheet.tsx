@@ -6,10 +6,12 @@ import { formatPersonNameForDisplay } from "../../shared/formatPersonName";
 import { formatProjectTitleForDisplay } from "../../shared/formatProjectTitleForDisplay";
 import { toMarkerCategory } from "../../shared/map/mapTypes";
 import { normalizeProjectStatus, statusLabelForDisplay } from "../map/projectDetails/StatusBadge";
+import { MemberAffiliationsTable } from "./MemberAffiliationsTable";
 import { RecentProjects } from "./RecentProjects";
 import { useCouncilMemberBios } from "./useCouncilMemberBios";
 import { useDistrictProfile } from "./useDistrictProfile";
 import { useDistrictProjects } from "./useDistrictProjects";
+import { useMemberAffiliations } from "./useMemberAffiliations";
 // import { HousingIcon, InfrastructureIcon, TransitIcon } from "../../shared/ui/visicIcons";
 
 function formatDate(value: string | null): string {
@@ -135,6 +137,7 @@ export function DistrictOverviewSheet({
   const posthog = usePostHog();
   const [isChatOpen, setIsChatOpen] = useState(false);
   const { profile, error: profileError } = useDistrictProfile(districtId);
+  const { affiliations: memberAffiliations } = useMemberAffiliations(profile?.id ?? null);
   const { biosByDistrict } = useCouncilMemberBios();
   const { response, error, isLoading } = useDistrictProjects(districtId, 1, 100, { fetchAllPages: true });
 
@@ -249,36 +252,47 @@ export function DistrictOverviewSheet({
             </div>
           </section>
 
-          <section className="district-recent-panel">
-            <RecentProjects
-              layoutVariant="districtOverview"
-              projects={
-                response?.items.map((project) => ({
-                  id: project.id,
-                  title: formatProjectTitleForDisplay(project.title),
-                  titleHref: project.url ?? null,
-                  statusLabel: statusLabelForDisplay(project.status),
-                  statusVariant: normalizeProjectStatus(project.status),
-                  category: toMarkerCategory(project.category),
-                  subtitle: formatProjectCategory(project.address_info?.topics, project.status),
-                  description: project.summary,
-                  startDate: formatDate(project.start_date),
-                  completedStatus: formatCompletion(project.status, project.last_changed_date),
-                  externalUrl: project.url ?? null,
-                  onOpenOnMap: () => {
-                    posthog?.capture("project_opened_from_district", {
-                      project_id: project.id,
-                      project_title: project.title,
-                      district_id: districtId,
-                    });
-                    onSelectProjectOnMap(project.id);
-                  },
-                })) ?? []
-              }
-              isLoading={isLoading}
-              error={error}
-            />
-          </section>
+          <div className="district-overview-columns">
+            {memberAffiliations && memberAffiliations.items.length > 0 ? (
+              <section className="district-affiliations-panel">
+                <h2 className="district-affiliations-heading">All Council Files</h2>
+                <p className="district-affiliations-sub">
+                  Bodies referenced across the {memberAffiliations.total_files} council files this member has moved.
+                </p>
+                <MemberAffiliationsTable affiliations={memberAffiliations} onViewOnMap={onSelectProjectOnMap} />
+              </section>
+            ) : null}
+
+            <section className="district-recent-panel">
+              <RecentProjects
+                layoutVariant="districtOverview"
+                projects={
+                  response?.items.map((project) => ({
+                    id: project.id,
+                    title: formatProjectTitleForDisplay(project.title),
+                    titleHref: project.url ?? null,
+                    statusLabel: statusLabelForDisplay(project.status),
+                    statusVariant: normalizeProjectStatus(project.status),
+                    subtitle: formatProjectCategory(project.address_info?.topics, project.status),
+                    description: project.summary,
+                    startDate: formatDate(project.start_date),
+                    completedStatus: formatCompletion(project.status, project.last_changed_date),
+                    externalUrl: project.url ?? null,
+                    onOpenOnMap: () => {
+                      posthog?.capture("project_opened_from_district", {
+                        project_id: project.id,
+                        project_title: project.title,
+                        district_id: districtId,
+                      });
+                      onSelectProjectOnMap(project.id);
+                    },
+                  })) ?? []
+                }
+                isLoading={isLoading}
+                error={error}
+              />
+            </section>
+          </div>
         </div>
 
         <div className="district-sheet-footer-actions">

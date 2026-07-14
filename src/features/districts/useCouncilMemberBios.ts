@@ -1,33 +1,47 @@
 import { useEffect, useState } from "react";
 
 import { fetchCouncilMembers } from "../../shared/api/client";
-import { biosMapFromDistrictProfiles, type CouncilMemberBio } from "../../shared/data/councilMemberBio";
+import {
+  biosMapByNameFromDistrictProfiles,
+  biosMapFromDistrictProfiles,
+  type CouncilMemberBio,
+} from "../../shared/data/councilMemberBio";
 
-let biosMapPromise: Promise<Map<number, CouncilMemberBio>> | null = null;
+interface CouncilMemberBioIndex {
+  byDistrict: Map<number, CouncilMemberBio>;
+  byName: Map<string, CouncilMemberBio>;
+}
+
+let biosIndexPromise: Promise<CouncilMemberBioIndex> | null = null;
 
 export function resetCouncilMemberBiosCacheForTests(): void {
-  biosMapPromise = null;
+  biosIndexPromise = null;
 }
 
-function fetchCouncilMemberBiosMap(): Promise<Map<number, CouncilMemberBio>> {
-  return fetchCouncilMembers().then(({ items }) => biosMapFromDistrictProfiles(items));
+function fetchCouncilMemberBiosIndex(): Promise<CouncilMemberBioIndex> {
+  return fetchCouncilMembers().then(({ items }) => ({
+    byDistrict: biosMapFromDistrictProfiles(items),
+    byName: biosMapByNameFromDistrictProfiles(items),
+  }));
 }
 
-export function loadCouncilMemberBiosMapOnce(): Promise<Map<number, CouncilMemberBio>> {
-  if (!biosMapPromise) {
-    biosMapPromise = fetchCouncilMemberBiosMap();
+export function loadCouncilMemberBiosIndexOnce(): Promise<CouncilMemberBioIndex> {
+  if (!biosIndexPromise) {
+    biosIndexPromise = fetchCouncilMemberBiosIndex();
   }
-  return biosMapPromise;
+  return biosIndexPromise;
 }
 
 interface UseCouncilMemberBiosResult {
   biosByDistrict: Map<number, CouncilMemberBio> | null;
+  /** Keyed by `councilMemberNameKey`; used when a mover carries no usable district. */
+  biosByName: Map<string, CouncilMemberBio> | null;
   error: string | null;
   isLoading: boolean;
 }
 
 export function useCouncilMemberBios(): UseCouncilMemberBiosResult {
-  const [biosByDistrict, setBiosByDistrict] = useState<Map<number, CouncilMemberBio> | null>(null);
+  const [index, setIndex] = useState<CouncilMemberBioIndex | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -36,15 +50,15 @@ export function useCouncilMemberBios(): UseCouncilMemberBiosResult {
     setIsLoading(true);
     setError(null);
 
-    void loadCouncilMemberBiosMapOnce()
-      .then((map) => {
+    void loadCouncilMemberBiosIndexOnce()
+      .then((loaded) => {
         if (!ignore) {
-          setBiosByDistrict(map);
+          setIndex(loaded);
         }
       })
       .catch(() => {
         if (!ignore) {
-          setBiosByDistrict(null);
+          setIndex(null);
           setError("Could not load council members.");
         }
       })
@@ -59,5 +73,10 @@ export function useCouncilMemberBios(): UseCouncilMemberBiosResult {
     };
   }, []);
 
-  return { biosByDistrict, error, isLoading };
+  return {
+    biosByDistrict: index?.byDistrict ?? null,
+    biosByName: index?.byName ?? null,
+    error,
+    isLoading,
+  };
 }

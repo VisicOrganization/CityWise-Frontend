@@ -49,5 +49,9 @@ export interface MapMarker {
   latitude: number;
   districtId: number | null;
   projectId: string | null;
+  /** Primary street address for the hover card (from the project card). */
+  primaryAddress: string | null;
+  /** Committees / departments / etc. grouped by category, for the hover card chips. */
+  affiliations: Array<{ category: string; items: string[] }>;
   kind: "project";
 }

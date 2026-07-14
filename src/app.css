@@ -1094,6 +1094,16 @@ a {
   transform: translateX(-50%);
 }
 
+/* While the project panel is expanded (full-screen sheet), lift the pill above it so it still reads
+   as "on top" instead of being buried under the sheet's z-index: 28. */
+.map-district-pill-shell--elevated {
+  z-index: 29;
+}
+
+.map-district-pill-shell--elevated .map-district-pill {
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.32);
+}
+
 .district-route-pill {
   display: inline-flex;
   align-items: center;
@@ -1671,6 +1681,72 @@ a {
 
 .map-figma-flyout--district-filter {
   min-width: 18.5rem;
+  max-height: min(72vh, 36rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.map-district-filter-categories {
+  margin-top: 1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(227, 227, 227, 0.9);
+}
+
+.map-district-filter-categories .map-district-filter-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.map-category-filter-list {
+  margin-top: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.map-category-filter-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.map-category-filter-head-label {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.map-category-filter-head-label span {
+  font-weight: 700;
+}
+
+.map-category-filter-toggle {
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #1d865e;
+  font-family: "Schibsted Grotesk", "Public Sans", "Segoe UI", sans-serif;
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.map-category-filter-toggle:hover {
+  text-decoration: underline;
+}
+
+.map-category-filter-toggle:focus-visible {
+  outline: 2px solid rgba(29, 134, 94, 0.65);
+  outline-offset: 2px;
+}
+
+.map-category-filter-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0.4rem 0 0 1.35rem;
 }
 
 .map-district-filter-actions {
@@ -1890,6 +1966,19 @@ a {
   height: 48px;
 }
 
+.map-marker-pin-visual {
+  position: relative;
+  display: block;
+  width: 39px;
+  height: 48px;
+  transform-origin: bottom center;
+  transition: transform 160ms ease;
+}
+
+.map-marker-pin-visual.is-hovered {
+  transform: scale(1.05);
+}
+
 .map-marker-pin-img {
   display: block;
   width: 39px;
@@ -1952,11 +2041,13 @@ a {
   position: absolute;
   bottom: calc(100% + 10px);
   left: 50%;
-  transform: translateX(-50%);
+  /* scale(1.1) bumps the whole card ~10% larger, including text and chip fonts */
+  transform: translateX(-50%) scale(1.1);
+  transform-origin: bottom center;
   box-sizing: border-box;
   width: max-content;
-  max-width: 297px;
-  padding: 10px 14px 12px;
+  max-width: 360px;
+  padding: 12px 16px 14px;
   border-radius: 6px;
   background: #ffffff;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
@@ -1985,16 +2076,6 @@ a {
   color: #000000;
 }
 
-.map-marker-hover-category {
-  display: block;
-  margin-top: 4px;
-  font-family: "Schibsted Grotesk", "Public Sans", "Segoe UI", sans-serif;
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.3;
-  color: rgba(0, 0, 0, 0.72);
-}
-
 .map-marker-hover-description {
   margin: 6px 0 0;
   font-family: "Schibsted Grotesk", "Public Sans", "Segoe UI", sans-serif;
@@ -2005,6 +2086,33 @@ a {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 5;
+  overflow: hidden;
+}
+
+.map-marker-hover-address {
+  display: block;
+  margin-top: 4px;
+  font-family: "Schibsted Grotesk", "Public Sans", "Segoe UI", sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.35;
+  color: rgba(0, 0, 0, 0.58);
+}
+
+.map-marker-hover-member {
+  display: block;
+  margin-top: 4px;
+  font-family: "Schibsted Grotesk", "Public Sans", "Segoe UI", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: rgba(0, 0, 0, 0.72);
+}
+
+.map-marker-hover-chips {
+  display: block;
+  margin-top: 10px;
+  max-height: 280px;
   overflow: hidden;
 }
 
@@ -2164,6 +2272,41 @@ a {
   max-width: none;
   /* Match district overview: expanded state becomes a bottom-sheet over the map. */
   z-index: 28;
+}
+
+/* Desktop slide in/out for the collapsed (docked) sidebar; mobile uses the from-bottom sheet animation above. */
+@keyframes project-sidebar-enter-from-left {
+  from {
+    opacity: 0;
+    transform: translateX(-2rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes project-sidebar-exit-to-left {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(-2rem);
+  }
+}
+
+.project-sidebar-host--desktop-enter {
+  animation: project-sidebar-enter-from-left 320ms cubic-bezier(0.2, 0.9, 0.2, 1) both;
+  will-change: transform, opacity;
+}
+
+.project-sidebar-host--desktop-closing {
+  animation: project-sidebar-exit-to-left 320ms cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+  pointer-events: none;
 }
 
 .project-details-panel.project-sidebar-panel {
@@ -2437,6 +2580,13 @@ a {
   box-sizing: border-box;
   overflow: visible;
   pointer-events: none;
+  animation: district-sheet-enter-from-bottom 620ms cubic-bezier(0.2, 0.9, 0.2, 1) both;
+  will-change: transform, opacity;
+}
+
+.project-expanded-dock.is-closing {
+  animation: district-sheet-exit-to-bottom 620ms cubic-bezier(0.2, 0.9, 0.2, 1) forwards;
+  pointer-events: none;
 }
 
 .project-expanded-pill-shell {
@@ -2562,6 +2712,12 @@ a {
 
 /* Extra breathing room at the bottom of the expanded timeline card (away from the card's grey border) */
 .project-expanded-sheet-scroll .project-saas-card--timeline {
+  padding-bottom: 44px;
+}
+
+/* Same fix as above, applied to the affiliations ("Related Bodies") card: its last chip group was
+   crowding/overflowing past the card's rounded bottom border. */
+.project-expanded-sheet-scroll .project-expanded-affiliations-card {
   padding-bottom: 44px;
 }
 
@@ -3070,12 +3226,16 @@ a {
 }
 
 .project-card-htimeline-desc-link {
-  text-decoration: none;
-  color: #0f766e;
+  text-decoration: underline;
+  text-decoration-color: currentcolor;
+  text-underline-offset: 2px;
 }
 
-.project-card-htimeline-desc-link:hover {
-  text-decoration: underline;
+.project-card-htimeline-scroll-hint {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: var(--ps-gray-500, #6b7280);
+  text-align: center;
 }
 
 .project-card-htimeline-track {
@@ -3186,13 +3346,11 @@ a {
   max-width: 100%;
 }
 
-/* Collapsed sidebar title — 28px bold; link icon flows inline after text (wraps with last line when it fits) */
+/* Collapsed sidebar title — 28px bold */
 .project-sidebar-title {
   box-sizing: border-box;
   margin: 0;
   max-width: 100%;
-  /* Reserve end space so the external-link icon is not orphaned on its own line (narrow columns) */
-  padding-inline-end: calc(12px + 16px + 0.35em);
   font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
   font-size: 28px;
   font-weight: 700;
@@ -3208,9 +3366,21 @@ a {
   display: inline;
 }
 
-.project-sidebar-title .project-title-external-link {
-  margin-inline-start: 0.2em;
-  white-space: nowrap;
+/* Small "View Source" text link below the project title */
+.project-view-source-link {
+  display: inline-block;
+  margin: 0;
+  font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ps-forest, #1d865e);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.project-view-source-link:hover,
+.project-view-source-link:focus-visible {
+  color: #145a3e;
 }
 
 .project-title-link {
@@ -4022,6 +4192,95 @@ a {
 .project-sidebar-tally-fallback {
   color: rgba(0, 0, 0, 0.85);
   font-weight: 400;
+}
+
+.project-sidebar-meta-row--movers {
+  align-items: start;
+}
+
+/* Inset table of movers shown in the "Movers" meta row */
+.project-movers-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: #f7f7f8;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.5rem 0.625rem;
+}
+
+/* Related Bodies: each category (Committee, Department, ...) gets its own visually distinct
+   section, with clear spacing between sections coming from `gap` (not just margin-bottom, which
+   can visually collapse). */
+.project-affiliation-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+.project-affiliation-group {
+  background: #f7f7f8;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.75rem 0.875rem;
+}
+
+.project-movers-table-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.project-movers-table-cell--name {
+  font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.85);
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.project-movers-table-cell--role {
+  font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.55);
+  white-space: nowrap;
+  text-align: right;
+}
+
+.project-mover-avatar {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e8e8e8;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.project-mover-avatar-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+}
+
+/* Movers with no member on the current roster (former councilmembers) — line-art icon,
+   so it is inset and scaled to fit rather than cropped to fill like a photo. */
+.project-mover-avatar-placeholder {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 21%;
+  box-sizing: border-box;
+  object-fit: contain;
+  opacity: 0.42;
 }
 
 .project-sidebar-meta--expanded {
@@ -4982,11 +5241,11 @@ a {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  width: min(1120px, 100%);
+  width: min(1440px, 100%);
   margin-left: auto;
   margin-right: auto;
   /* Extra top padding (scalable) below overlapping divot so content is not tight to the sheet top */
-  padding: calc(clamp(1.25rem, 2.5vw + 0.75rem, 2.25rem) + 20px) 1rem 1.5rem;
+  padding: calc(clamp(1.25rem, 2.5vw + 0.75rem, 2.25rem) + 20px) 5% 1.5rem;
   padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
 }
 
@@ -5100,6 +5359,478 @@ a {
   border-radius: 0;
   background: transparent;
   box-shadow: none;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.district-overview-columns {
+  display: flex;
+  gap: 1.75rem;
+  align-items: flex-start;
+  margin-top: 0.5rem;
+}
+
+.district-overview-columns > .district-affiliations-panel,
+.district-overview-columns > .district-recent-panel {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* No affiliations/committee bodies for this member: the projects column is the only
+   one left, so narrow it and center it instead of letting it span the full sheet. */
+.district-overview-columns > .district-recent-panel:only-child {
+  flex: 0 1 auto;
+  width: 80%;
+  margin-inline: auto;
+}
+
+/* Matches the "Mapped Council Files" (.district-overview-recent-heading) style. */
+.district-affiliations-heading {
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.55);
+  line-height: normal;
+  margin: 0;
+}
+
+.district-affiliations-sub {
+  margin: 0.25rem 0 0.75rem;
+  font-size: 0.85rem;
+  color: rgba(23, 50, 77, 0.7);
+}
+
+.member-affiliations-scroll {
+  max-height: min(70vh, 46rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid rgba(227, 227, 227, 0.9);
+  border-radius: 10px;
+}
+
+.member-affiliations-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "Schibsted Grotesk", "Public Sans", "Segoe UI", sans-serif;
+  font-size: 0.85rem;
+}
+
+.member-affiliations-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #f5f7fa;
+  text-align: left;
+  font-weight: 600;
+  color: rgba(23, 50, 77, 0.7);
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid rgba(227, 227, 227, 0.9);
+  white-space: nowrap;
+}
+
+.member-affiliations-num .member-affiliations-sort {
+  margin-left: auto;
+}
+
+.member-affiliations-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.member-affiliations-sort:hover {
+  color: #17324d;
+}
+
+.member-affiliations-sort:focus-visible {
+  outline: 2px solid rgba(29, 134, 94, 0.65);
+  outline-offset: 2px;
+}
+
+.member-affiliations-sort-arrow {
+  font-size: 0.7em;
+  color: rgba(23, 50, 77, 0.45);
+}
+
+.member-affiliations-cat-filter {
+  max-width: 100%;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid rgba(23, 50, 77, 0.2);
+  border-radius: 6px;
+  background: #ffffff;
+  color: rgba(23, 50, 77, 0.85);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.member-affiliations-cat-filter:focus-visible {
+  outline: 2px solid rgba(29, 134, 94, 0.65);
+  outline-offset: 2px;
+}
+
+.member-affiliations-table td {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid rgba(237, 239, 242, 0.9);
+  color: #17324d;
+  vertical-align: top;
+}
+
+.member-affiliations-body-row {
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.member-affiliations-body-row:hover,
+.member-affiliations-body-row.is-open {
+  background: rgba(29, 134, 94, 0.08);
+}
+
+.member-affiliations-table tbody tr.is-open > td {
+  border-bottom: none;
+}
+
+.member-affiliations-num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.member-affiliations-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.member-affiliations-toggle {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #1d865e;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.member-affiliations-toggle:hover {
+  text-decoration: underline;
+}
+
+.member-affiliations-toggle:focus-visible {
+  outline: 2px solid rgba(29, 134, 94, 0.65);
+  outline-offset: 2px;
+}
+
+.member-affiliations-files-row > td {
+  padding-top: 0;
+  background: #fafbfc;
+}
+
+.member-affiliations-files {
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem 0 0.4rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.member-affiliations-files li {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.member-affiliations-files a {
+  color: #1d4ed8;
+  text-decoration: none;
+}
+
+.member-affiliations-files a:hover {
+  text-decoration: underline;
+}
+
+.member-affiliations-role {
+  flex: 0 0 auto;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(23, 50, 77, 0.65);
+}
+
+.member-affiliations-view-map {
+  flex: 0 0 auto;
+  padding: 1px 8px;
+  border: 1px solid rgba(29, 134, 94, 0.5);
+  border-radius: 9999px;
+  background: rgba(29, 134, 94, 0.08);
+  color: #1d865e;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.member-affiliations-view-map:hover {
+  background: rgba(29, 134, 94, 0.16);
+}
+
+.member-affiliations-view-map:focus-visible {
+  outline: 2px solid rgba(29, 134, 94, 0.65);
+  outline-offset: 2px;
+}
+
+/* ── Councilmember Metadata matrix ─────────────────────────────────────────── */
+
+/* Right-edge vertical tab that opens the metadata overlay. */
+.cm-metadata-button {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  z-index: 20;
+  transform: translateY(-50%);
+  writing-mode: vertical-rl;
+  padding: 1rem 0.55rem;
+  border: 1px solid rgba(29, 134, 94, 0.55);
+  border-right: 0;
+  border-radius: 14px 0 0 14px;
+  background: #1d865e;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(23, 50, 77, 0.18);
+  transition: background-color 120ms ease, box-shadow 120ms ease;
+}
+
+.cm-metadata-button:hover {
+  background: #17694a;
+  box-shadow: 0 8px 22px rgba(23, 50, 77, 0.24);
+}
+
+.cm-metadata-button:focus-visible {
+  outline: 2px solid rgba(29, 134, 94, 0.65);
+  outline-offset: 3px;
+}
+
+.cm-matrix-header {
+  margin-bottom: 1rem;
+}
+
+.cm-matrix-title {
+  margin: 0;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #17324d;
+  line-height: 1.2;
+}
+
+.cm-matrix-subtitle {
+  margin: 0.4rem 0 0;
+  max-width: 52rem;
+  font-size: 0.9rem;
+  color: rgba(23, 50, 77, 0.7);
+  line-height: 1.4;
+}
+
+.cm-matrix-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+  margin-bottom: 0.9rem;
+}
+
+.cm-matrix-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.cm-matrix-control-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(23, 50, 77, 0.7);
+}
+
+.cm-matrix-transpose {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.75rem;
+  border: 1px solid rgba(29, 134, 94, 0.5);
+  border-radius: 9999px;
+  background: rgba(29, 134, 94, 0.08);
+  color: #1d865e;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.cm-matrix-transpose:hover {
+  background: rgba(29, 134, 94, 0.16);
+}
+
+.cm-matrix-transpose:focus-visible {
+  outline: 2px solid rgba(29, 134, 94, 0.65);
+  outline-offset: 2px;
+}
+
+.cm-matrix-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: auto;
+}
+
+.cm-matrix-legend-label {
+  font-size: 0.75rem;
+  color: rgba(23, 50, 77, 0.6);
+}
+
+.cm-matrix-legend-swatch {
+  width: 1.1rem;
+  height: 0.8rem;
+  border-radius: 3px;
+  border: 1px solid rgba(23, 50, 77, 0.12);
+}
+
+.cm-matrix-status {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+  color: rgba(23, 50, 77, 0.7);
+}
+
+.cm-matrix-scroll {
+  max-height: min(70vh, 46rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid rgba(227, 227, 227, 0.9);
+  border-radius: 10px;
+}
+
+.cm-matrix-scroll:focus-visible {
+  outline: 2px solid rgba(29, 134, 94, 0.65);
+  outline-offset: 2px;
+}
+
+.cm-matrix-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-family: "Schibsted Grotesk", "Public Sans", "Segoe UI", sans-serif;
+  font-size: 0.8rem;
+  color: #17324d;
+}
+
+.cm-matrix-table th,
+.cm-matrix-table td {
+  border-right: 1px solid rgba(227, 227, 227, 0.9);
+  border-bottom: 1px solid rgba(227, 227, 227, 0.9);
+}
+
+/* Sticky column headers (top) and row headers (left); corner sticks to both. */
+.cm-matrix-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f5f7fa;
+  font-weight: 600;
+  color: rgba(23, 50, 77, 0.75);
+  vertical-align: bottom;
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+}
+
+.cm-matrix-corner {
+  left: 0;
+  z-index: 3 !important;
+  min-width: 9.5rem;
+  max-width: 9.5rem;
+  color: rgba(23, 50, 77, 0.55) !important;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cm-matrix-colhead {
+  min-width: 5.5rem;
+  max-width: 5.5rem;
+}
+
+.cm-matrix-colhead .cm-matrix-head-text {
+  display: block;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.25;
+  font-size: 0.75rem;
+}
+
+.cm-matrix-rowhead {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  min-width: 9.5rem;
+  max-width: 9.5rem;
+  background: #f5f7fa;
+  font-weight: 600;
+  color: rgba(23, 50, 77, 0.85);
+  text-align: left;
+  padding: 0.45rem 0.6rem;
+  vertical-align: middle;
+}
+
+.cm-matrix-rowhead .cm-matrix-head-text {
+  display: block;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.25;
+}
+
+.cm-matrix-body-head {
+  position: relative;
+}
+
+.cm-matrix-cat-dot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.35rem;
+  border-radius: 9999px;
+  vertical-align: baseline;
+}
+
+.cm-matrix-cell {
+  padding: 0.4rem 0.35rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .district-bottom-sheet .district-portrait {
@@ -5338,6 +6069,13 @@ a {
   box-sizing: border-box;
 }
 
+/* Council member profile sits flush-left (full width) above the two columns. */
+.district-bottom-sheet .district-profile-panel {
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+}
+
 .district-bottom-sheet .recent-projects-container {
   width: 100%;
   max-width: none;
@@ -5368,6 +6106,35 @@ a {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  /* Projects scroll within their own column; the heading and the rest of the
+     district overview stay in place. */
+  max-height: min(70vh, 46rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* overflow-y also clips horizontally, so the padding is what keeps the cards'
+     hover scale + shadow from being cut off against the scroll edges. */
+  padding: 0.5rem 0.75rem 0.75rem;
+}
+
+.district-overview-projects-scroll {
+  position: relative;
+}
+
+.district-overview-scroll-hint {
+  position: absolute;
+  left: 0;
+  right: 0.25rem;
+  bottom: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 2.25rem 0 0.5rem;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1d865e;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.96) 65%);
+  pointer-events: none;
 }
 
 /* Figma node 1726:1917 — district recent project cards (16px TB / 24px LR, responsive) */
@@ -5872,6 +6639,15 @@ a {
   .district-profile-panel {
     grid-template-columns: 1fr;
     justify-items: start;
+  }
+
+  .district-overview-columns {
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .district-overview-columns > .district-recent-panel:only-child {
+    width: 100%;
   }
 
   .district-bottom-sheet .district-portrait {
@@ -6481,7 +7257,8 @@ a {
   }
 
   .map-district-pill,
-  .district-sheet-dock {
+  .district-sheet-dock,
+  .project-expanded-dock {
     animation: none !important;
   }
 
