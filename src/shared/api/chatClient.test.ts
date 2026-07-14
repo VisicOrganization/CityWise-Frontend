@@ -186,7 +186,7 @@ describe("chat client", () => {
       {
         getItem: () => "client-1",
         setItem: vi.fn(),
-      } as Storage,
+      } as unknown as Storage,
     );
 
     fetchMock.mockImplementation((input: string | URL | Request) => {

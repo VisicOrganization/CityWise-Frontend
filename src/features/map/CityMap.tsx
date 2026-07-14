@@ -23,7 +23,8 @@ import {
   districtLabelsLayer,
   districtOutlineLayer,
 } from "../../shared/map/districtLayers";
-import { type MapMarker, type MarkerCategory } from "../../shared/map/mapTypes";
+import { categoryDescription } from "../../shared/data/categoryDescriptions";
+import { CATEGORY_COLOR, MARKER_CATEGORIES, type MapMarker, type MarkerCategory } from "../../shared/map/mapTypes";
 import { ProjectAffiliationChips, AFFILIATION_CATEGORY_ORDER } from "./projectDetails/ProjectAffiliations";
 import { InfoIcon } from "../../shared/ui/visicIcons";
 

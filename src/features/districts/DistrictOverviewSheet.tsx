@@ -273,6 +273,7 @@ export function DistrictOverviewSheet({
                     titleHref: project.url ?? null,
                     statusLabel: statusLabelForDisplay(project.status),
                     statusVariant: normalizeProjectStatus(project.status),
+                    category: toMarkerCategory(project.category),
                     subtitle: formatProjectCategory(project.address_info?.topics, project.status),
                     description: project.summary,
                     startDate: formatDate(project.start_date),
