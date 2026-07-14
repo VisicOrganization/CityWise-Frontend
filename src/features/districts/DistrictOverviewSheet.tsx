@@ -4,6 +4,7 @@ import { ScopedChatPanel } from "../chat/ScopedChatPanel";
 import { normalizeCouncilWebsiteUrl } from "../../shared/data/councilMemberBio";
 import { formatPersonNameForDisplay } from "../../shared/formatPersonName";
 import { formatProjectTitleForDisplay } from "../../shared/formatProjectTitleForDisplay";
+import { toMarkerCategory } from "../../shared/map/mapTypes";
 import { normalizeProjectStatus, statusLabelForDisplay } from "../map/projectDetails/StatusBadge";
 import { RecentProjects } from "./RecentProjects";
 import { useCouncilMemberBios } from "./useCouncilMemberBios";
@@ -258,6 +259,7 @@ export function DistrictOverviewSheet({
                   titleHref: project.url ?? null,
                   statusLabel: statusLabelForDisplay(project.status),
                   statusVariant: normalizeProjectStatus(project.status),
+                  category: toMarkerCategory(project.category),
                   subtitle: formatProjectCategory(project.address_info?.topics, project.status),
                   description: project.summary,
                   startDate: formatDate(project.start_date),

@@ -23,7 +23,8 @@ import {
   districtLabelsLayer,
   districtOutlineLayer,
 } from "../../shared/map/districtLayers";
-import { markerCategoryLabel, type MapMarker, type MarkerCategory } from "../../shared/map/mapTypes";
+import { categoryDescription } from "../../shared/data/categoryDescriptions";
+import { CATEGORY_COLOR, MARKER_CATEGORIES, type MapMarker, type MarkerCategory } from "../../shared/map/mapTypes";
 import { InfoIcon } from "../../shared/ui/visicIcons";
 
 const LIGHT_BASE_MAP_STYLE: StyleSpecification = {
@@ -58,16 +59,17 @@ const LIGHT_BASE_MAP_STYLE: StyleSpecification = {
 };
 
 const PIN_SRC: Record<MarkerCategory, string> = {
-  housing: "/images/pins/brown-pin.svg",
-  transit: "/images/pins/brown-pin.svg",
-  parks: "/images/pins/brown-pin.svg",
+  "Housing": "/images/pins/housing.svg",
+  "Education": "/images/pins/education.svg",
+  "Infrastructure": "/images/pins/infrastructure.svg",
+  "Public Resources": "/images/pins/public-resources.svg",
+  "Equity & Community Works": "/images/pins/equity-and-community-works.svg",
+  "Environmental": "/images/pins/environmental.svg",
+  "Public Safety": "/images/pins/public-safety.svg",
+  "Economic": "/images/pins/economic.svg",
+  "Miscellaneous": "/images/pins/miscellaneous.svg",
 };
 
-const PIN_TITLE_COLOR: Record<MarkerCategory, string> = {
-  housing: "#8d6e63",
-  transit: "#3779f4",
-  parks: "#00ae6d",
-};
 
 const DEFAULT_VIEW_STATE: ViewState = {
   longitude: -118.4118,
@@ -80,12 +82,10 @@ const DEFAULT_VIEW_STATE: ViewState = {
 
 const DEFAULT_DISTRICT_IDS = Array.from({ length: 15 }, (_, index) => index + 1);
 
-const MAP_GUIDANCE_ICON_ITEMS = [
-  { label: "Public Works", src: "/images/pins/green-pin.svg" },
-  { label: "Infrastructure", src: "/images/pins/orange-pin.svg" },
-  { label: "Housing", src: "/images/pins/brown-pin.svg" },
-  { label: "Transportation", src: "/images/pins/blue-pin.svg" },
-] as const;
+const MAP_GUIDANCE_ICON_ITEMS = MARKER_CATEGORIES.map((category) => ({
+  label: category,
+  src: PIN_SRC[category],
+}));
 
 function buildHighlightLayer(activeDistrictId: number) {
   return {
@@ -177,6 +177,7 @@ export function CityMap({
   const pillSwapTimeoutRef = useRef<number | null>(null);
   const [lastVisibleDistrictId, setLastVisibleDistrictId] = useState<number | null>(null);
   const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null);
+  const [explainedCategory, setExplainedCategory] = useState<MarkerCategory | null>(null);
   const [searchDismissSignal, setSearchDismissSignal] = useState(0);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
@@ -510,7 +511,7 @@ export function CityMap({
         {visibleMarkers.map((marker) => {
           const showHoverCard = hoveredMarkerId === marker.id;
           const markerZIndex = activeMarkerId === marker.id ? 4 : showHoverCard ? 6 : 1;
-          const titleColor = PIN_TITLE_COLOR[marker.category];
+          const titleColor = CATEGORY_COLOR[marker.category];
           const pinSrc = PIN_SRC[marker.category];
 
           return (
@@ -539,7 +540,7 @@ export function CityMap({
                   {showHoverCard ? (
                     <span className="map-marker-hover-card" role="tooltip">
                       <span className="map-marker-hover-title">{formatProjectTitleForDisplay(marker.label)}</span>
-                      <span className="map-marker-hover-category">{markerCategoryLabel(marker.category)}</span>
+                      <span className="map-marker-hover-category">{marker.category}</span>
                       {marker.summary.trim() ? (
                         <p className="map-marker-hover-description">{marker.summary}</p>
                       ) : null}
@@ -729,19 +730,37 @@ export function CityMap({
                     <section className="map-guidance-section" aria-label="Map guidance: icons">
                       <h4 className="map-guidance-section-title">Icons</h4>
                       <div className="map-guidance-icons" role="list" aria-label="Map icon legend">
-                        {MAP_GUIDANCE_ICON_ITEMS.map((item) => (
-                          <div key={item.label} className="map-guidance-icon-item" role="listitem">
-                            <img
-                              className="map-guidance-icon-img"
-                              src={item.src}
-                              alt=""
-                              width={26}
-                              height={32}
-                              draggable={false}
-                            />
-                            <span className="map-guidance-icon-label">{item.label}</span>
-                          </div>
-                        ))}
+                        {MAP_GUIDANCE_ICON_ITEMS.map((item) => {
+                          const isExplained = explainedCategory === item.label;
+                          return (
+                            <div key={item.label} className="map-guidance-icon-item" role="listitem">
+                              <div className="map-guidance-icon-head">
+                                <img
+                                  className="map-guidance-icon-img"
+                                  src={item.src}
+                                  alt=""
+                                  width={26}
+                                  height={32}
+                                  draggable={false}
+                                />
+                                <span className="map-guidance-icon-label">{item.label}</span>
+                              </div>
+                              <button
+                                type="button"
+                                className="map-guidance-icon-explain"
+                                aria-expanded={isExplained}
+                                onClick={() =>
+                                  setExplainedCategory((current) => (current === item.label ? null : item.label))
+                                }
+                              >
+                                What does this mean
+                              </button>
+                              {isExplained ? (
+                                <p className="map-guidance-icon-description">{categoryDescription(item.label)}</p>
+                              ) : null}
+                            </div>
+                          );
+                        })}
                       </div>
                     </section>
 

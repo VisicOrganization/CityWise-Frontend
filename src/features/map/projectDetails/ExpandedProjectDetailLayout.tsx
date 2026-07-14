@@ -1,4 +1,6 @@
 import type { ProjectDetail } from "../../../shared/api/contracts";
+import type { MarkerCategory } from "../../../shared/map/mapTypes";
+import { CategoryPill } from "../../../shared/ui/CategoryPill";
 import { formatName } from "../../../shared/formatPersonName";
 import { CardHorizontalTimeline, milestonesToCardTimelineNodes } from "./CardHorizontalTimeline";
 import { formatMoversListLine } from "./formatMoversListLine";
@@ -25,7 +27,7 @@ type VoteSectionKey = keyof VoteGroups;
 interface ExpandedProjectDetailLayoutProps {
   detail: ProjectDetail;
   title: string;
-  category: string;
+  category: MarkerCategory;
   summary: string;
   externalUrl: string | null;
   status: string;
@@ -77,7 +79,7 @@ function ProjectHeader({
 }: {
   detail: ProjectDetail;
   title: string;
-  category: string;
+  category: MarkerCategory;
   summary: string;
   externalUrl: string | null;
   status: string;
@@ -113,7 +115,7 @@ function ProjectHeader({
           {detail.project.id ? (
             <p className="project-sidebar-council-file">Council File {detail.project.id}</p>
           ) : null}
-          {category.trim() ? <p className="project-sidebar-category">{category}</p> : null}
+          <CategoryPill category={category} />
           {summary.trim() ? <p className="project-expanded-description">{summary}</p> : null}
         </div>
 
@@ -189,6 +191,20 @@ function VotingCard({
 
         {votingRecordFooter ? <footer className="project-expanded-vote-footer">{votingRecordFooter}</footer> : null}
       </div>
+    </section>
+  );
+}
+
+function AboutCard({ about }: { about: string }) {
+  return (
+    <section
+      className={`project-saas-card ${cardHoverClassName()}`}
+      aria-labelledby="expanded-about-heading"
+    >
+      <h2 id="expanded-about-heading" className="project-saas-card-title">
+        About
+      </h2>
+      <p className="project-sidebar-overview-body">{about}</p>
     </section>
   );
 }
@@ -339,6 +355,8 @@ export function ExpandedProjectDetailLayout({
   onExploreMap,
   onOpenChat,
 }: ExpandedProjectDetailLayoutProps) {
+  const about = detail.project.about?.trim() ?? "";
+
   return (
     <div className="project-expanded-dock font-schibsted">
       <section
@@ -369,6 +387,8 @@ export function ExpandedProjectDetailLayout({
             externalUrl={externalUrl}
             status={status}
           />
+
+          {about ? <AboutCard about={about} /> : null}
 
           <section className="project-expanded-grid" aria-label="Project overview cards">
             <ProjectOverviewCard detail={detail} voteTally={voteTally} />
