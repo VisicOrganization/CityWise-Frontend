@@ -2,11 +2,13 @@ import { createPortal } from "react-dom";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { usePostHog } from "@posthog/react";
 
+import { ScopedChatPanel } from "../chat/ScopedChatPanel";
 import type { ProjectDetail } from "../../shared/api/contracts";
 import { formatName } from "../../shared/formatPersonName";
 import { formatProjectTitleForDisplay } from "../../shared/formatProjectTitleForDisplay";
-import type { MapMarker } from "../../shared/map/mapTypes";
-import { CloseIcon } from "../../shared/ui/visicIcons";
+import { CATEGORY_COLOR, toMarkerCategory, type MapMarker, type MarkerCategory } from "../../shared/map/mapTypes";
+import { CategoryPill } from "../../shared/ui/CategoryPill";
+import { ChatBubbleIcon, CloseIcon } from "../../shared/ui/visicIcons";
 import { formatProjectDateLong, formatUsNumericDate } from "./projectDetails/formatProjectDate";
 import { MiniHorizontalTimeline } from "./projectDetails/MiniHorizontalTimeline";
 import {
@@ -74,38 +76,9 @@ function parseVoteGivenTally(voteGiven: unknown): { yes: number; no: number; abs
   return null;
 }
 
-/** Figma map pins: brown housing #8d6e63, blue transit #3779f4, orange infrastructure #e67e22 */
-function categoryAccentBarColor(marker: MapMarker | null): string {
-  const cat = marker?.category;
-  if (cat === "transit") {
-    return "#3779f4";
-  }
-  if (cat === "housing") {
-    return "#8d6e63";
-  }
-  return "#e67e22";
-}
-
-function categoryLine(marker: MapMarker | null, detail: ProjectDetail | null): string {
-  const topicParts = detail?.address_info?.topics
-    ?.map((topic) => topic.trim())
-    .filter((topic) => topic.length > 0);
-  if (topicParts && topicParts.length > 0) {
-    const unique = Array.from(new Set(topicParts));
-    return unique.slice(0, 2).join(" & ");
-  }
-
-  const base =
-    marker?.category === "housing"
-      ? "Housing"
-      : marker?.category === "transit"
-        ? "Transportation"
-        : "Infrastructure";
-  const topics = detail?.address_info?.topics?.filter((t) => t.trim().length > 0) ?? [];
-  if (topics.length > 0) {
-    return `${base} & ${topics[0]}`;
-  }
-  return `${base} & Infrastructure`;
+/** Backend category is authoritative; the marker carries the same value for the selected project. */
+function projectCategory(marker: MapMarker | null, detail: ProjectDetail | null): MarkerCategory {
+  return toMarkerCategory(detail?.project.category ?? marker?.category);
 }
 
 interface ProjectDetailsPanelProps {
@@ -220,11 +193,13 @@ export function ProjectDetailsPanel({
   const [sidebarWidthExpanded, setSidebarWidthExpanded] = useState(false);
   const [mobileSidebarClosing, setMobileSidebarClosing] = useState(false);
   const [isExpandedClosing, setIsExpandedClosing] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const isMobileLayout = useMobileProjectSidebarLayout();
 
   useEffect(() => {
     setTimelineViewOpen(false);
     setSidebarWidthExpanded(false);
+    setIsChatOpen(false);
   }, [detail?.project.id]);
 
   useEffect(() => {
@@ -276,6 +251,19 @@ export function ProjectDetailsPanel({
   const rawTitle = detail?.project.title ?? marker?.label ?? "Project details";
   const title = useMemo(() => formatProjectTitleForDisplay(rawTitle), [rawTitle]);
   const councilFileId = detail?.project.id ?? marker?.projectId ?? null;
+  const chatScopeId =
+    detail?.project.source_council_file_id ?? detail?.project.id ?? marker?.projectId ?? null;
+  const chatCouncilFileLabel = councilFileId ? `Council File ${councilFileId}` : title;
+
+  const openProjectChat = useCallback(() => {
+    setIsVotingPopoverOpen(false);
+    setTimelineViewOpen(false);
+    setIsChatOpen(true);
+    posthog?.capture("project_chat_opened", {
+      project_id: detail?.project.id,
+      council_file_id: chatScopeId,
+    });
+  }, [chatScopeId, detail?.project.id, posthog]);
   const summary = detail?.project.summary ?? marker?.summary ?? "";
   const status = detail?.project.status ?? "loading";
 
@@ -425,8 +413,8 @@ export function ProjectDetailsPanel({
   }, [detail]);
 
   const externalUrl = detail?.project.url ?? null;
-  const category = categoryLine(marker, detail);
-  const categoryAccent = useMemo(() => categoryAccentBarColor(marker), [marker]);
+  const category = projectCategory(marker, detail);
+  const categoryAccent = CATEGORY_COLOR[category];
 
   const votingRecordPortal =
     !isMobileLayout && isVotingPopoverOpen && detail && votePopoverPlacement
@@ -496,6 +484,7 @@ export function ProjectDetailsPanel({
                 isClosing={isExpandedClosing}
                 onCollapse={handleCollapseExpanded}
                 onExploreMap={onExploreMap}
+                onOpenChat={openProjectChat}
               />
             ) : (
               <div className="project-expanded-root project-expanded-root--loading">
@@ -565,13 +554,49 @@ export function ProjectDetailsPanel({
                       {councilFileId ? (
                         <p className="project-sidebar-council-file">Council File {councilFileId}</p>
                       ) : null}
-                      <p className="project-sidebar-category">{category}</p>
+                      <CategoryPill category={category} />
                     </div>
                     <div className="project-sidebar-status-column">
                       <StatusBadge status={status} project={detail?.project ?? null} />
                       <div className="project-sidebar-tool-row">
                         {isMobileLayout ? (
                           <>
+                            <span className="project-sidebar-tool-btn-with-hint">
+                              <button
+                                ref={voteButtonRef}
+                                type="button"
+                                className={`project-sidebar-tool-btn project-sidebar-tool-btn--32 ${
+                                  isVotingPopoverOpen ? "is-active" : ""
+                                }`}
+                                aria-label="Toggle voting record"
+                                aria-expanded={isVotingPopoverOpen}
+                                disabled={!detail}
+                                onClick={() => {
+                                  setTimelineViewOpen(false);
+                                  setIsVotingPopoverOpen((current) => {
+                                    if (!current) {
+                                      posthog?.capture("voting_record_opened", {
+                                        project_id: detail?.project.id,
+                                        project_title: title,
+                                      });
+                                    }
+                                    return !current;
+                                  });
+                                }}
+                              >
+                                <img
+                                  className="project-sidebar-header-icon-img"
+                                  src={SIDEBAR_VOTING_ICON_SRC}
+                                  alt=""
+                                  width={18}
+                                  height={18}
+                                  decoding="async"
+                                />
+                              </button>
+                              <span className="project-sidebar-tool-btn-hint" aria-hidden="true">
+                                View Voting Record
+                              </span>
+                            </span>
                             {detail && horizontalMilestones.length > 0 ? (
                               <span className="project-sidebar-tool-btn-with-hint">
                                 <button
@@ -609,45 +634,20 @@ export function ProjectDetailsPanel({
                                 </span>
                               </span>
                             ) : null}
-                            <span className="project-sidebar-tool-btn-with-hint">
-                              <button
-                                ref={voteButtonRef}
-                                type="button"
-                                className={`project-sidebar-tool-btn project-sidebar-tool-btn--32 ${
-                                  isVotingPopoverOpen ? "is-active" : ""
-                                }`}
-                                aria-label="Toggle voting record"
-                                aria-expanded={isVotingPopoverOpen}
-                                disabled={!detail}
-                                onClick={() => {
-                                  setTimelineViewOpen(false);
-                                  setIsVotingPopoverOpen((current) => {
-                                    if (!current) {
-                                      posthog?.capture("voting_record_opened", {
-                                        project_id: detail?.project.id,
-                                        project_title: title,
-                                      });
-                                    }
-                                    return !current;
-                                  });
-                                }}
-                              >
-                                <img
-                                  className="project-sidebar-header-icon-img"
-                                  src={SIDEBAR_VOTING_ICON_SRC}
-                                  alt=""
-                                  width={18}
-                                  height={18}
-                                  decoding="async"
-                                />
-                              </button>
-                              <span className="project-sidebar-tool-btn-hint" aria-hidden="true">
-                                View Voting Record
-                              </span>
-                            </span>
+                            <button
+                              type="button"
+                              className={`project-sidebar-chat-btn ${isChatOpen ? "is-active" : ""}`}
+                              aria-label="Chat about this council file"
+                              disabled={!detail || !chatScopeId}
+                              onClick={openProjectChat}
+                            >
+                              <ChatBubbleIcon width={16} height={16} />
+                              <span>Chat</span>
+                            </button>
                           </>
                         ) : (
-                          <span className="project-sidebar-tool-btn-with-hint">
+                          <>
+                            <span className="project-sidebar-tool-btn-with-hint">
                             <button
                               ref={voteButtonRef}
                               type="button"
@@ -681,6 +681,17 @@ export function ProjectDetailsPanel({
                               View Voting Record
                             </span>
                           </span>
+                            <button
+                              type="button"
+                              className={`project-sidebar-chat-btn ${isChatOpen ? "is-active" : ""}`}
+                              aria-label="Chat about this council file"
+                              disabled={!detail || !chatScopeId}
+                              onClick={openProjectChat}
+                            >
+                              <ChatBubbleIcon width={16} height={16} />
+                              <span>Chat</span>
+                            </button>
+                          </>
                         )}
                       </div>
                     </div>
@@ -707,6 +718,15 @@ export function ProjectDetailsPanel({
                     {isLoading ? <p className="project-sidebar-status">Loading backend project data…</p> : null}
                     {errorMessage ? (
                       <p className="project-sidebar-status project-sidebar-status--error">{errorMessage}</p>
+                    ) : null}
+
+                    {detail?.project.about?.trim() ? (
+                      <section className="project-sidebar-about" aria-labelledby="project-about-heading">
+                        <h3 id="project-about-heading" className="project-sidebar-section-title">
+                          About
+                        </h3>
+                        <p className="project-sidebar-overview-body">{detail.project.about.trim()}</p>
+                      </section>
                     ) : null}
 
                     <section className="project-sidebar-overview" aria-labelledby="project-overview-heading">
@@ -808,6 +828,11 @@ export function ProjectDetailsPanel({
                 </div>
 
                 <div className="project-sidebar-footer-cta">
+                  {detail && chatScopeId ? (
+                    <button type="button" className="project-sidebar-ask-chat" onClick={openProjectChat}>
+                      Ask about this file
+                    </button>
+                  ) : null}
                   <button type="button" className="project-sidebar-explore-map" onClick={handleCloseProjectSidebar}>
                     Explore Map
                   </button>
@@ -893,6 +918,16 @@ export function ProjectDetailsPanel({
         ) : null}
       </div>
       {votingRecordPortal}
+      {chatScopeId ? (
+        <ScopedChatPanel
+          scopeType="project"
+          scopeId={chatScopeId}
+          scopeLabel={chatCouncilFileLabel}
+          headerTitle="Ask about this council file"
+          isOpen={isChatOpen}
+          onClose={() => setIsChatOpen(false)}
+        />
+      ) : null}
     </>
   );
 }

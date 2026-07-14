@@ -31,6 +31,7 @@ export interface DistrictProjectCard {
   primary_address: string | null;
   affiliations?: Array<{ category: string; items: string[] }>;
   address_info?: ProjectAddressInfo | null;
+  category: string | null;
 }
 
 export interface DistrictProjectsResponse {
@@ -158,6 +159,7 @@ export interface ProjectDetail {
     status: string;
     district_id: number | null;
     about: string | null;
+    category: string | null;
     start_date: string | null;
     last_changed_date: string | null;
     end_date: string | null;

@@ -1,16 +1,5 @@
 import type { DistrictProjectCard } from "../../shared/api/contracts";
-import type { MapMarker, MarkerCategory } from "../../shared/map/mapTypes";
-
-function categoryFromProject(card: DistrictProjectCard): MarkerCategory {
-  const topics = (card.address_info?.topics ?? []).join(" ").toLowerCase();
-  if (topics.includes("transit") || topics.includes("transport")) {
-    return "transit";
-  }
-  if (topics.includes("park") || topics.includes("infra") || topics.includes("infrastructure")) {
-    return "parks";
-  }
-  return "housing";
-}
+import { toMarkerCategory, type MapMarker } from "../../shared/map/mapTypes";
 
 export function buildProjectMarkers(cards: DistrictProjectCard[]): MapMarker[] {
   return cards.flatMap((card) => {
@@ -24,7 +13,7 @@ export function buildProjectMarkers(cards: DistrictProjectCard[]): MapMarker[] {
     projectId: card.id,
     districtId: card.district_id,
     kind: "project" as const,
-    category: categoryFromProject(card),
+    category: toMarkerCategory(card.category),
     label: card.title,
     summary: card.summary ?? "",
     primaryAddress: card.primary_address ?? card.address_info?.primary_address ?? null,

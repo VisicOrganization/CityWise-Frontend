@@ -1,8 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { usePostHog } from "@posthog/react";
+import { ScopedChatPanel } from "../chat/ScopedChatPanel";
 import { normalizeCouncilWebsiteUrl } from "../../shared/data/councilMemberBio";
 import { formatPersonNameForDisplay } from "../../shared/formatPersonName";
 import { formatProjectTitleForDisplay } from "../../shared/formatProjectTitleForDisplay";
+import { toMarkerCategory } from "../../shared/map/mapTypes";
 import { normalizeProjectStatus, statusLabelForDisplay } from "../map/projectDetails/StatusBadge";
 import { MemberAffiliationsTable } from "./MemberAffiliationsTable";
 import { RecentProjects } from "./RecentProjects";
@@ -133,6 +135,7 @@ export function DistrictOverviewSheet({
   onSelectProjectOnMap,
 }: DistrictOverviewSheetProps) {
   const posthog = usePostHog();
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const { profile, error: profileError } = useDistrictProfile(districtId);
   const { affiliations: memberAffiliations } = useMemberAffiliations(profile?.id ?? null);
   const { biosByDistrict } = useCouncilMemberBios();
@@ -159,6 +162,12 @@ export function DistrictOverviewSheet({
     .join("");
 
   const topPillText = (focusLabel?.trim() || `District ${districtId}`).trim();
+  const memberChatScopeId = profile?.id != null ? String(profile.id) : null;
+  const districtChatLabel = `${representative} • District ${districtId}`;
+
+  useEffect(() => {
+    setIsChatOpen(false);
+  }, [districtId]);
 
   return (
     <div className={`district-sheet-dock${isClosing ? " is-closing" : ""}`}>
@@ -286,16 +295,43 @@ export function DistrictOverviewSheet({
           </div>
         </div>
 
-        <button
-          type="button"
-          className="district-open-map-fixed font-schibsted"
-          onClick={onOpenMap}
-          disabled={isLoading}
-          aria-disabled={isLoading}
-        >
-          Open Map
-        </button>
+        <div className="district-sheet-footer-actions">
+          {memberChatScopeId ? (
+            <button
+              type="button"
+              className="district-ask-chat-fixed font-schibsted"
+              onClick={() => {
+                setIsChatOpen(true);
+                posthog?.capture("district_chat_opened", {
+                  district_id: districtId,
+                  member_id: memberChatScopeId,
+                });
+              }}
+            >
+              Ask about this district
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className="district-open-map-fixed font-schibsted"
+            onClick={onOpenMap}
+            disabled={isLoading}
+            aria-disabled={isLoading}
+          >
+            Open Map
+          </button>
+        </div>
       </section>
+      {memberChatScopeId ? (
+        <ScopedChatPanel
+          scopeType="member"
+          scopeId={memberChatScopeId}
+          scopeLabel={districtChatLabel}
+          headerTitle="Ask about this district"
+          isOpen={isChatOpen}
+          onClose={() => setIsChatOpen(false)}
+        />
+      ) : null}
     </div>
   );
 }
