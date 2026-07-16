@@ -94,6 +94,9 @@ export function ScopedChatPanel({
   const [panelWidth, setPanelWidth] = useState<number | null>(null);
   const [shouldRender, setShouldRender] = useState(isOpen);
   const [isClosing, setIsClosing] = useState(false);
+  // In modal (mobile) mode, size the panel to the visual viewport so the on-screen
+  // keyboard doesn't cover the input + Send. null = use the CSS default (full height).
+  const [mobileViewportHeight, setMobileViewportHeight] = useState<number | null>(null);
 
   // Desktop docks the panel (pushes page content left, non-modal); mobile keeps the
   // full-width modal overlay. Breakpoint matches the shared map/sidebar media query.
@@ -131,6 +134,27 @@ export function ScopedChatPanel({
       setDraft("");
     }
   }, [isOpen, scopeId, scopeType]);
+
+  // Track the visual viewport (which shrinks when the mobile keyboard opens) so the modal
+  // panel stays fully on-screen. Docked (desktop) mode is unaffected.
+  useEffect(() => {
+    if (!isOpen || isDocked) {
+      setMobileViewportHeight(null);
+      return;
+    }
+    const vv = window.visualViewport;
+    if (!vv) {
+      return;
+    }
+    const update = () => setMobileViewportHeight(vv.height);
+    update();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
+  }, [isOpen, isDocked]);
 
   useEffect(() => {
     if (typeof messagesEndRef.current?.scrollIntoView === "function") {
@@ -277,6 +301,11 @@ export function ScopedChatPanel({
     <div
       className={`project-chat-root${isDocked ? " project-chat-root--docked" : ""}${isClosing ? " project-chat-root--closing" : ""}`}
       role="presentation"
+      style={
+        !isDocked && mobileViewportHeight != null
+          ? { height: `${mobileViewportHeight}px`, bottom: "auto" }
+          : undefined
+      }
     >
       {isDocked ? null : (
         <button type="button" className="project-chat-backdrop" aria-label="Close chat" onClick={onClose} />

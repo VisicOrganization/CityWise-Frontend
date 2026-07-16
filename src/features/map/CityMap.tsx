@@ -207,6 +207,8 @@ export function CityMap({
   const [explainedCategory, setExplainedCategory] = useState<MarkerCategory | null>(null);
   const [searchDismissSignal, setSearchDismissSignal] = useState(0);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  // Touch has no hover, so the address pin's label card is tap-toggled open on touch.
+  const [isAddressCardOpen, setIsAddressCardOpen] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isDistrictFilterOpen, setIsDistrictFilterOpen] = useState(false);
   const [pillPortraitFailed, setPillPortraitFailed] = useState(false);
@@ -333,14 +335,21 @@ export function CityMap({
     .filter(Boolean)
     .join("");
 
-  const mapGuidanceHowToUse = useMemo(
-    () => [
-      "Hover pins to preview project names.",
-      "Click pins to open project details.",
-      "Click a district to view its projects.",
-    ],
-    [],
-  );
+  const mapGuidanceHowToUse = useMemo(() => {
+    // Touch devices (no hover) never see the hover preview cards, so tell them to tap.
+    const isTouch = typeof window !== "undefined" && Boolean(window.matchMedia?.("(hover: none)").matches);
+    return isTouch
+      ? [
+          "Tap a pin to open project details.",
+          "Tap a district to view its projects.",
+          "Tap the address pin to see its label.",
+        ]
+      : [
+          "Hover pins to preview project names.",
+          "Click pins to open project details.",
+          "Click a district to view its projects.",
+        ];
+  }, []);
 
   const setMapInstance = useCallback((instance: MapRef | null) => {
     mapRef.current = instance;
@@ -563,6 +572,7 @@ export function CityMap({
 
   function handleMapClick(event: MapLayerMouseEvent) {
     setSearchDismissSignal((n) => n + 1);
+    setIsAddressCardOpen(false);
     onMapBackgroundClick();
 
     const clickedFeature = event.features?.find((feature) => {
@@ -623,13 +633,18 @@ export function CityMap({
                 click selects the underlying district and clears the address focus params,
                 which would unmount this pin. */}
             <div
-              className="map-address-marker"
+              className={`map-address-marker${isAddressCardOpen ? " map-address-marker--open" : ""}`}
               role="img"
               tabIndex={0}
               aria-label={
                 addressFocusLabel ? `Your searched address: ${addressFocusLabel}` : "Your searched address"
               }
-              onClick={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                // Swallow the click so it can't fall through to the map canvas (which would
+                // clear the address focus and remove the pin), and tap-toggle the label card.
+                event.stopPropagation();
+                setIsAddressCardOpen((open) => !open);
+              }}
             >
               {addressFocusLabel ? (
                 <span className="map-address-pin-card" role="tooltip">

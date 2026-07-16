@@ -27,6 +27,15 @@ body {
   min-width: 320px;
 }
 
+/* Contain any over-wide descendant so it can never scroll the whole page sideways on
+   mobile. `clip` (unlike `hidden`) doesn't establish a scroll container or force the
+   other axis to `auto`, and position:fixed overlays (chat modal, portaled dropdowns)
+   escape it, so they're unaffected. */
+html,
+body {
+  overflow-x: clip;
+}
+
 button,
 input,
 select,
@@ -2112,7 +2121,8 @@ a {
 }
 
 .map-address-marker:hover .map-address-pin,
-.map-address-marker:focus-visible .map-address-pin {
+.map-address-marker:focus-visible .map-address-pin,
+.map-address-marker--open .map-address-pin {
   animation: map-address-pin-bounce 520ms cubic-bezier(0.2, 0.9, 0.2, 1);
   transform: translateY(-3px) scale(1.08);
 }
@@ -2129,7 +2139,8 @@ a {
   }
 }
 
-/* Address hover card — hidden until the pin is hovered or keyboard-focused. */
+/* Address card — hidden until the pin is hovered, keyboard-focused, or (on touch, where
+   there is no hover) tapped open via the `--open` class. */
 .map-address-pin-card {
   position: absolute;
   bottom: calc(100% + 8px);
@@ -2154,7 +2165,8 @@ a {
 }
 
 .map-address-marker:hover .map-address-pin-card,
-.map-address-marker:focus-visible .map-address-pin-card {
+.map-address-marker:focus-visible .map-address-pin-card,
+.map-address-marker--open .map-address-pin-card {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
@@ -2258,7 +2270,7 @@ a {
   transform-origin: bottom center;
   box-sizing: border-box;
   width: max-content;
-  max-width: 360px;
+  max-width: min(360px, calc(100vw - 2rem));
   padding: 12px 16px 14px;
   border-radius: 6px;
   background: #ffffff;
@@ -5628,6 +5640,7 @@ a {
 
 .member-affiliations-scroll {
   max-height: min(70vh, 46rem);
+  overflow-x: auto;
   overflow-y: auto;
   overscroll-behavior: contain;
   border: 1px solid rgba(227, 227, 227, 0.9);
@@ -7051,6 +7064,9 @@ a {
 
   .map-district-pill-shell,
   .district-route-pill {
+    /* Drop below the top-center address-search row so the pill doesn't cover the
+       collapsed search button (which sits at top: 1rem, ~48px tall). */
+    top: calc(max(env(safe-area-inset-top, 0px), 0px) + 4.75rem);
     left: 50%;
     right: auto;
     transform: translateX(-50%);
@@ -7923,6 +7939,9 @@ a {
   line-height: 1.45;
   color: var(--ps-gray-900);
   white-space: pre-wrap;
+  /* A long URL or unbroken token in an answer must wrap, not scroll the bubble. */
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .project-chat-source-list {
@@ -8065,7 +8084,9 @@ a {
   cursor: not-allowed;
 }
 
-@media (max-width: 639px) {
+/* 640px matches the `useMobileProjectSidebarLayout` hook so the CSS modal and the JS
+   modal switch at the same width (previously 639 here, leaving a 1px dead zone). */
+@media (max-width: 640px) {
   .project-chat-root {
     justify-content: center;
     align-items: stretch;
@@ -8077,5 +8098,27 @@ a {
 
   .project-chat-resize-handle {
     display: none;
+  }
+
+  /* 16px avoids iOS Safari auto-zooming the panel when the textarea is focused. */
+  .project-chat-input {
+    font-size: 16px;
+  }
+}
+
+/* Prevent iOS Safari from auto-zooming when any text field is focused: on phones, force
+   the effective font-size to 16px. Kept out of the desktop styles so the compact look is
+   preserved on larger screens. */
+@media (max-width: 640px) {
+  .landing-search input,
+  .map-address-search-bar input,
+  .member-affiliations-cat-filter {
+    font-size: 16px;
+  }
+
+  /* The hover card is already ~10% up-scaled on desktop; on phones the scale pushes it
+     past the viewport edge, so render it at 1:1. */
+  .map-marker-hover-card {
+    transform: translateX(-50%);
   }
 }
