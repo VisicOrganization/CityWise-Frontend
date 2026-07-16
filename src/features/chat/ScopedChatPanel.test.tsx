@@ -41,9 +41,57 @@ function scopeMeta(overrides: Record<string, unknown> = {}) {
   };
 }
 
+const baseProps = {
+  scopeType: "project" as const,
+  scopeId: "25-0859",
+  scopeLabel: "Council File 25-0859",
+  headerTitle: "Ask about this council file",
+  onClose: () => undefined,
+};
+
+function mockReadyFetch() {
+  fetchMock.mockImplementation((input: string | URL | Request) => {
+    const url = String(input);
+    if (url.includes("/chat/sessions")) {
+      return Promise.resolve(new Response(JSON.stringify([])));
+    }
+    if (url.includes("/meta")) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify(
+            scopeMeta({
+              indexed: true,
+              index: indexStatus({ status: "ready", is_ready: true, progress_percent: 100 }),
+            }),
+          ),
+        ),
+      );
+    }
+    return Promise.resolve(new Response(JSON.stringify({})));
+  });
+}
+
+function mockMatchMedia(matches: boolean) {
+  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+    matches,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })) as unknown as typeof window.matchMedia;
+}
+
+const originalMatchMedia = window.matchMedia;
+
 afterEach(() => {
   cleanup();
   document.body.innerHTML = "";
+  document.documentElement.style.removeProperty("--chat-dock-width");
+  document.documentElement.removeAttribute("data-chat-resizing");
+  window.matchMedia = originalMatchMedia;
   fetchMock.mockReset();
   vi.useRealTimers();
 });
@@ -118,6 +166,76 @@ describe("ScopedChatPanel", () => {
 
     await waitFor(() => {
       expect(screen.getByLabelText("Your question")).not.toBeDisabled();
+    });
+  });
+
+  it("shows suggested questions as soon as indexing finishes, without reopening", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+
+    // The post-index meta refresh (the one carrying the starters) resolves through a
+    // gate we release manually. This reproduces production timing where the network
+    // fetch outlasts React's re-render: the ready index status is applied and the poll
+    // effect tears down *before* this meta resolves. The fix must survive that ordering.
+    let releaseMeta: (() => void) | null = null;
+    const postIndexMeta = scopeMeta({
+      indexed: true,
+      starters: ["What is this council file about?"],
+      index: indexStatus({ status: "ready", is_ready: true, progress_percent: 100 }),
+    });
+
+    let metaCalls = 0;
+    fetchMock.mockImplementation((input: string | URL | Request) => {
+      const url = String(input);
+      if (url.includes("/chat/sessions")) {
+        return Promise.resolve(new Response(JSON.stringify([])));
+      }
+      if (url.includes("/chat/scopes/project/25-0859/meta")) {
+        metaCalls += 1;
+        // First meta (pre-index) has no starters yet; the gated refresh does.
+        if (metaCalls > 1) {
+          return new Promise<Response>((resolve) => {
+            releaseMeta = () => resolve(new Response(JSON.stringify(postIndexMeta)));
+          });
+        }
+        return Promise.resolve(new Response(JSON.stringify(scopeMeta())));
+      }
+      if (url.includes("/chat/index/project/25-0859/status")) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify(indexStatus({ status: "ready", is_ready: true, progress_percent: 100 })),
+          ),
+        );
+      }
+      return Promise.reject(new Error(`Unexpected fetch: ${url}`));
+    });
+
+    render(
+      <ScopedChatPanel
+        scopeType="project"
+        scopeId="25-0859"
+        scopeLabel="Council File 25-0859"
+        headerTitle="Ask about this council file"
+        isOpen
+        onClose={() => undefined}
+      />,
+    );
+
+    // Starts in the preparing state with no starters.
+    expect(await screen.findByText("Preparing documents for chat…")).toBeInTheDocument();
+    expect(screen.queryByText("What is this council file about?")).not.toBeInTheDocument();
+
+    // Poll fires → status ready. React flushes the ready index and the poll effect
+    // tears down while the meta refresh is still gated.
+    await vi.advanceTimersByTimeAsync(2600);
+    await waitFor(() => expect(releaseMeta).not.toBeNull());
+
+    // Now let the meta refresh resolve. The starters must still be applied.
+    releaseMeta!();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: "What is this council file about?" }),
+      ).toBeInTheDocument();
     });
   });
 
@@ -262,5 +380,56 @@ describe("ScopedChatPanel", () => {
     expect(await screen.findByText("Preparing documents for chat…")).toBeInTheDocument();
     expect(screen.getByLabelText("Your question")).toBeDisabled();
     expect(screen.queryByText("Couldn't get an answer, try again.")).not.toBeInTheDocument();
+  });
+
+  it("docks as a non-modal panel and publishes the content-push width on desktop", async () => {
+    mockMatchMedia(false); // not mobile → docked
+    mockReadyFetch();
+
+    const view = render(<ScopedChatPanel {...baseProps} isOpen />);
+
+    await screen.findByRole("complementary");
+    // Docked: no backdrop, non-modal complementary region.
+    expect(document.querySelector(".project-chat-root--docked")).not.toBeNull();
+    expect(document.querySelector(".project-chat-backdrop")).toBeNull();
+    expect(screen.getByRole("complementary")).not.toHaveAttribute("aria-modal");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    // Publishes the width the page content is inset by.
+    expect(document.documentElement.style.getPropertyValue("--chat-dock-width")).toBe("28rem");
+
+    view.unmount();
+    // Space is reclaimed on unmount.
+    expect(document.documentElement.style.getPropertyValue("--chat-dock-width")).toBe("");
+  });
+
+  it("reserves no space while mounted but closed, and pushes only once opened", async () => {
+    mockMatchMedia(false); // not mobile → docked
+    mockReadyFetch();
+
+    // ProjectDetailsPanel keeps ScopedChatPanel mounted with isOpen=false until the
+    // user hits the chat button — it must not reserve the docked rail before then.
+    const view = render(<ScopedChatPanel {...baseProps} isOpen={false} />);
+
+    expect(document.querySelector(".project-chat-panel")).toBeNull();
+    expect(document.documentElement.style.getPropertyValue("--chat-dock-width")).toBe("");
+
+    view.rerender(<ScopedChatPanel {...baseProps} isOpen />);
+
+    await screen.findByRole("complementary");
+    expect(document.documentElement.style.getPropertyValue("--chat-dock-width")).toBe("28rem");
+  });
+
+  it("stays a modal overlay and does not push content on mobile", async () => {
+    mockMatchMedia(true); // mobile → modal
+    mockReadyFetch();
+
+    render(<ScopedChatPanel {...baseProps} isOpen />);
+
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).toHaveAttribute("aria-modal", "true");
+    expect(document.querySelector(".project-chat-backdrop")).not.toBeNull();
+    expect(document.querySelector(".project-chat-root--docked")).toBeNull();
+    // No content push in modal mode.
+    expect(document.documentElement.style.getPropertyValue("--chat-dock-width")).toBe("");
   });
 });

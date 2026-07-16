@@ -92,6 +92,30 @@ export function HorizontalTimelineTrack({ nodes, onExpandTimeline }: HorizontalT
 
   return (
     <div className={containerClass}>
+      {onExpandTimeline ? (
+        <div className="project-h-timeline-expand-row">
+          <button
+            type="button"
+            className="project-h-timeline-expand-link"
+            onClick={onExpandTimeline}
+            aria-label="Open expanded timeline overview"
+          >
+            View Full Timeline
+            <span className="project-h-timeline-expand-chevron" aria-hidden="true">
+              <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M4 12H20M20 12L14 6M20 12L14 18"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+          </button>
+        </div>
+      ) : null}
+
       <div className="project-h-timeline-labels-top">
         {nodes.map((n) => (
           <div key={n.id} className="project-h-timeline-label-top">
@@ -114,25 +138,7 @@ export function HorizontalTimelineTrack({ nodes, onExpandTimeline }: HorizontalT
       </div>
 
       <div className="project-h-timeline-bar project-h-timeline-bar--segmented">
-        <div
-          className={
-            onExpandTimeline
-              ? "project-h-timeline-bar-mid project-h-timeline-bar-mid--with-expand"
-              : "project-h-timeline-bar-mid"
-          }
-        >
-          {onExpandTimeline ? (
-            <div className="project-h-timeline-expand-row">
-              <button
-                type="button"
-                className="project-h-timeline-expand-link"
-                onClick={onExpandTimeline}
-                aria-label="Open expanded timeline overview"
-              >
-                View Timeline
-              </button>
-            </div>
-          ) : null}
+        <div className="project-h-timeline-bar-mid">
           <div className="project-h-timeline-line-between-nodes" aria-hidden="true">
             {n > 1 ? (
               <div className="project-h-timeline-line-segments">

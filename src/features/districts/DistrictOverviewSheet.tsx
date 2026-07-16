@@ -297,6 +297,7 @@ export function DistrictOverviewSheet({
         </div>
 
         <div className="district-sheet-footer-actions">
+          {/* "Ask about this district" chat button — temporarily disabled.
           {memberChatScopeId ? (
             <button
               type="button"
@@ -312,6 +313,7 @@ export function DistrictOverviewSheet({
               Ask about this district
             </button>
           ) : null}
+          */}
           <button
             type="button"
             className="district-open-map-fixed font-schibsted"

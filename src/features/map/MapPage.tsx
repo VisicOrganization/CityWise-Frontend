@@ -288,6 +288,7 @@ export function MapPage() {
           activeDistrictId={activeDistrictId}
           districtRefocusSignal={districtRefocusSignal}
           addressFocusPoint={addressFocusPoint}
+          addressFocusLabel={districtSheetFocusLabel}
           addressDrivenDistrictPinsId={addressDrivenDistrictPinsId}
           districtOverviewOpen={Boolean(districtFocusId && shouldShowDistrictProfile)}
           hideMapChrome={isProjectSidebarExpanded}

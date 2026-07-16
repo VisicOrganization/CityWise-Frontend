@@ -470,6 +470,31 @@ describe("mock app routes", () => {
     await screen.findByTestId("mock-boundary-source");
   });
 
+  it("drops the address location pin (labelled with the address) when the URL carries a geocoded focus point", async () => {
+    render(
+      <MemoryRouter initialEntries={["/map?focusLat=34.05&focusLng=-118.24&focusLabel=City+Hall"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(
+      await screen.findByRole("img", { name: "Your searched address: City Hall" }),
+    ).toBeInTheDocument();
+    // The hover card carries the address text (revealed on hover via CSS).
+    expect(screen.getByText("City Hall")).toBeInTheDocument();
+  });
+
+  it("shows no address pin on the plain map (no focus point)", async () => {
+    render(
+      <MemoryRouter initialEntries={["/map"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    await screen.findByTestId("mock-boundary-source");
+    expect(screen.queryByRole("img", { name: "Your searched address" })).not.toBeInTheDocument();
+  });
+
   it("renders district boundaries before the district project preload finishes", async () => {
     fetchMock.mockImplementation((input: string | URL | Request) => {
       const url = String(input);
