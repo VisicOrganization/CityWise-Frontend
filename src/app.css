@@ -54,16 +54,19 @@ a {
 
 .page-shell {
   min-height: 100vh;
+  min-height: 100dvh;
   padding: 2rem;
 }
 
 .app-shell {
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .shell-content {
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .top-nav {
@@ -138,6 +141,9 @@ a {
 }
 
 .top-nav-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   color: #000000;
   text-decoration: none;
   font-weight: 600;
@@ -716,7 +722,7 @@ a {
 .landing-district-pick-trigger {
   display: inline-block;
   margin: 0;
-  min-height: 2.5rem;
+  min-height: 44px;
   padding: 0.35em 0.4em 0.3em;
   border: 0;
   background: none;
@@ -1243,6 +1249,9 @@ a {
 
 .map-district-pill-copy {
   min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   font: inherit;
   color: inherit;
 }
@@ -1779,7 +1788,8 @@ a {
 }
 
 .map-figma-flyout--district-filter {
-  min-width: 18.5rem;
+  /* Guard the min-width so it can't beat the mobile max-width cap and overflow at 320px. */
+  min-width: min(18.5rem, calc(100vw - 4.5rem));
   max-height: min(72vh, 36rem);
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -6766,6 +6776,7 @@ a {
 
 .about-page {
   min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   place-items: center;
   padding: 7rem 1rem 2rem;
@@ -7442,7 +7453,9 @@ a {
   }
 }
 
-@media (max-width: 360px) {
+@media (max-width: 520px) {
+  /* Below ~520px the nowrap testimonial text clips its bubble and drifts toward the
+     headline; let it wrap instead. */
   .landing-shell .landing-comment-bubble-text {
     white-space: normal;
     text-align: center;
@@ -8120,5 +8133,58 @@ a {
      past the viewport edge, so render it at 1:1. */
   .map-marker-hover-card {
     transform: translateX(-50%);
+  }
+
+  /* Touch-target minimums (~44px) for the small icon/link controls. */
+  .map-figma-ctrl-btn {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .map-guidance-close-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 22px;
+  }
+
+  .project-sidebar-tool-btn--32 {
+    width: 44px;
+    height: 44px;
+  }
+
+  .project-sidebar-mobile-close {
+    width: 44px;
+    height: 44px;
+  }
+
+  .project-chat-chip {
+    min-height: 44px;
+  }
+
+  .district-overview-project-card__external-link {
+    padding: 0.6rem;
+  }
+
+  .member-affiliations-toggle,
+  .member-affiliations-view-map,
+  .cm-matrix-transpose {
+    min-height: 44px;
+  }
+
+  /* Reveal more data cells on phones by shrinking the sticky label column. */
+  .cm-matrix-corner,
+  .cm-matrix-rowhead {
+    min-width: 7rem;
+    max-width: 7rem;
+  }
+}
+
+/* Landscape phones / very short viewports: the native map zoom control's `bottom: 15rem`
+   offset (set in the mobile block) can push it above the top nav / off-screen. Pull it back
+   toward the bottom-right cluster. */
+@media (max-height: 480px) {
+  .maplibregl-ctrl-top-right,
+  .mapboxgl-ctrl-top-right {
+    bottom: 8rem;
   }
 }
