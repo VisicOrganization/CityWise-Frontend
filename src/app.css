@@ -7075,9 +7075,9 @@ a {
 
   .map-district-pill-shell,
   .district-route-pill {
-    /* Drop below the top-center address-search row so the pill doesn't cover the
-       collapsed search button (which sits at top: 1rem, ~48px tall). */
-    top: calc(max(env(safe-area-inset-top, 0px), 0px) + 4.75rem);
+    /* Keep the same top margin as desktop (base rule: safe-area + 1rem). The centered pill
+       and the left-aligned collapsed search button don't overlap; when the search expands
+       full-width the pill is hidden (isSearchExpanded), so no push-down is needed. */
     left: 50%;
     right: auto;
     transform: translateX(-50%);
@@ -7098,6 +7098,15 @@ a {
     top: auto;
     right: 1rem;
     bottom: calc(max(0.75rem, env(safe-area-inset-bottom, 0px)) + 3.35rem);
+    /* Above the district pill (z-index 8) so the tall accessibility/filter flyouts render
+       over the councilmember pill instead of being covered by it. */
+    z-index: 10;
+  }
+
+  /* No hover on touch — hide the expandable Accessibility/Filter labels on small screens.
+     The buttons keep their aria-labels, so screen readers are unaffected. */
+  .map-figma-ctrl-btn-label {
+    display: none;
   }
 
   .map-feedback-button {
