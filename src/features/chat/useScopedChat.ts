@@ -218,13 +218,18 @@ export function useScopedChat({ scopeType, scopeId, isOpen }: UseScopedChatOptio
       }, delayMs);
     };
 
-    const handleReady = async () => {
+    const handleReady = async (readyStatus: ChatIndexStatus) => {
       if (readyHandled || cancelled) {
         return;
       }
       readyHandled = true;
       setIsPolling(false);
       clearPollTimer();
+      // Fetch the post-index meta (which carries the suggested-question starters)
+      // BEFORE committing the ready index. Committing `is_ready: true` first would
+      // flip this effect's `index?.is_ready` dependency and tear it down, flipping
+      // `cancelled` to true — which would then discard the starters we just fetched.
+      // Fetching first keeps the effect alive until we commit everything atomically.
       try {
         const meta = await getChatScopeMeta(scopeType, scopeId);
         if (!cancelled) {
@@ -233,7 +238,10 @@ export function useScopedChat({ scopeType, scopeId, isOpen }: UseScopedChatOptio
           setIndex(meta.index);
         }
       } catch {
-        /* Keep chat enabled even if meta refresh fails. */
+        // Keep chat enabled even if the meta refresh fails.
+        if (!cancelled) {
+          setIndex(readyStatus);
+        }
       }
     };
 
@@ -249,14 +257,16 @@ export function useScopedChat({ scopeType, scopeId, isOpen }: UseScopedChatOptio
           return;
         }
 
-        setIndex(status);
         pollBackoffMsRef.current = POLL_INTERVAL_MS;
 
         if (status.is_ready) {
-          await handleReady();
+          // Let handleReady commit the index alongside the refreshed starters so
+          // `is_ready` and `starters` land in the same render (see comment there).
+          await handleReady(status);
           return;
         }
 
+        setIndex(status);
         schedulePoll(POLL_INTERVAL_MS);
       } catch {
         if (cancelled) {

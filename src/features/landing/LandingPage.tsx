@@ -271,7 +271,12 @@ export function LandingPage() {
                       setShowOutOfCityTooltip(false);
                       setShowOutOfCityModal(false);
                     }}
-                    autoFocus
+                    /* Only auto-focus where a physical keyboard is likely (desktop). On touch
+                       this would pop the keyboard and zoom the page on first load. */
+                    autoFocus={
+                      typeof window !== "undefined" &&
+                      Boolean(window.matchMedia?.("(hover: hover) and (pointer: fine)").matches)
+                    }
                     aria-label="Search address"
                     aria-expanded={results.length > 0}
                     aria-controls={results.length > 0 ? LANDING_SUGGESTIONS_LISTBOX_ID : undefined}

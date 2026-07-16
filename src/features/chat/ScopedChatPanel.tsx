@@ -3,6 +3,7 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEve
 
 import type { ChatIndexStatus, ChatScopeType } from "../../shared/api/chatContracts";
 import { CloseIcon } from "../../shared/ui/visicIcons";
+import { useMobileProjectSidebarLayout } from "../map/useMobileProjectSidebarLayout";
 import { useScopedChat } from "./useScopedChat";
 
 export type ScopedChatPanelProps = {
@@ -93,6 +94,14 @@ export function ScopedChatPanel({
   const [panelWidth, setPanelWidth] = useState<number | null>(null);
   const [shouldRender, setShouldRender] = useState(isOpen);
   const [isClosing, setIsClosing] = useState(false);
+  // In modal (mobile) mode, size the panel to the visual viewport so the on-screen
+  // keyboard doesn't cover the input + Send. null = use the CSS default (full height).
+  const [mobileViewportHeight, setMobileViewportHeight] = useState<number | null>(null);
+
+  // Desktop docks the panel (pushes page content left, non-modal); mobile keeps the
+  // full-width modal overlay. Breakpoint matches the shared map/sidebar media query.
+  const isMobile = useMobileProjectSidebarLayout();
+  const isDocked = !isMobile;
 
   const {
     subtitle,
@@ -126,6 +135,27 @@ export function ScopedChatPanel({
     }
   }, [isOpen, scopeId, scopeType]);
 
+  // Track the visual viewport (which shrinks when the mobile keyboard opens) so the modal
+  // panel stays fully on-screen. Docked (desktop) mode is unaffected.
+  useEffect(() => {
+    if (!isOpen || isDocked) {
+      setMobileViewportHeight(null);
+      return;
+    }
+    const vv = window.visualViewport;
+    if (!vv) {
+      return;
+    }
+    const update = () => setMobileViewportHeight(vv.height);
+    update();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
+  }, [isOpen, isDocked]);
+
   useEffect(() => {
     if (typeof messagesEndRef.current?.scrollIntoView === "function") {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -133,7 +163,10 @@ export function ScopedChatPanel({
   }, [messages, isSending, isMetaLoading, index?.message]);
 
   useEffect(() => {
-    if (!isOpen) {
+    // Only the modal (mobile) variant moves focus into the panel and restores it on
+    // close. Docked mode is non-modal — the user keeps working the page, so grabbing
+    // and yanking focus would be disruptive.
+    if (!isOpen || isDocked) {
       return;
     }
     previouslyFocusedRef.current = document.activeElement as HTMLElement | null;
@@ -145,7 +178,7 @@ export function ScopedChatPanel({
       previouslyFocusedRef.current?.focus?.();
       previouslyFocusedRef.current = null;
     };
-  }, [isOpen]);
+  }, [isOpen, isDocked]);
 
   useEffect(() => {
     if (isOpen) {
@@ -163,6 +196,32 @@ export function ScopedChatPanel({
     }, CLOSE_ANIMATION_MS);
     return () => window.clearTimeout(closeTimer);
   }, [isOpen, shouldRender]);
+
+  // Publish the docked panel width to the document root so `.map-demo-screen` can inset
+  // its content by the same amount (see app.css `--chat-dock-width`). Only applies while
+  // the panel is actually visible (`shouldRender`) — the component stays mounted with
+  // isOpen=false before the user opens chat, and must not reserve any space then. Cleared
+  // when the panel closes/unmounts so the page reclaims the space. Only one chat is ever
+  // docked at a time, so a single shared variable is safe.
+  useEffect(() => {
+    if (!isDocked || !shouldRender) {
+      return;
+    }
+    const root = document.documentElement;
+    return () => {
+      root.style.removeProperty("--chat-dock-width");
+    };
+  }, [isDocked, shouldRender]);
+
+  useEffect(() => {
+    if (!isDocked || !shouldRender) {
+      return;
+    }
+    // While closing, collapse the inset to 0 so page content slides back as the panel
+    // slides out. `panelWidth` null means the CSS default width (28rem) is in effect.
+    const width = isClosing ? "0px" : panelWidth != null ? `${panelWidth}px` : "28rem";
+    document.documentElement.style.setProperty("--chat-dock-width", width);
+  }, [isDocked, shouldRender, isClosing, panelWidth]);
 
   if (!shouldRender) {
     return null;
@@ -191,7 +250,9 @@ export function ScopedChatPanel({
       onClose();
       return;
     }
-    if (event.key !== "Tab" || !panelRef.current) {
+    // Docked mode is non-modal — let Tab move focus out into the page. Only the modal
+    // (mobile) variant traps focus within the panel.
+    if (event.key !== "Tab" || !panelRef.current || isDocked) {
       return;
     }
     const focusable = Array.from(panelRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
@@ -214,6 +275,8 @@ export function ScopedChatPanel({
     const currentWidth = panelRef.current?.getBoundingClientRect().width ?? panelWidth ?? 448;
     resizeStateRef.current = { startX: event.clientX, startWidth: currentWidth };
     event.currentTarget.setPointerCapture(event.pointerId);
+    // Suppress the content push transition during drag so the page tracks the handle 1:1.
+    document.documentElement.setAttribute("data-chat-resizing", "");
   };
 
   const handleResizePointerMove = (event: PointerEvent<HTMLDivElement>) => {
@@ -228,6 +291,7 @@ export function ScopedChatPanel({
 
   const handleResizePointerUp = (event: PointerEvent<HTMLDivElement>) => {
     resizeStateRef.current = null;
+    document.documentElement.removeAttribute("data-chat-resizing");
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
@@ -235,15 +299,22 @@ export function ScopedChatPanel({
 
   const panel = (
     <div
-      className={`project-chat-root${isClosing ? " project-chat-root--closing" : ""}`}
+      className={`project-chat-root${isDocked ? " project-chat-root--docked" : ""}${isClosing ? " project-chat-root--closing" : ""}`}
       role="presentation"
+      style={
+        !isDocked && mobileViewportHeight != null
+          ? { height: `${mobileViewportHeight}px`, bottom: "auto" }
+          : undefined
+      }
     >
-      <button type="button" className="project-chat-backdrop" aria-label="Close chat" onClick={onClose} />
+      {isDocked ? null : (
+        <button type="button" className="project-chat-backdrop" aria-label="Close chat" onClick={onClose} />
+      )}
       <section
         ref={panelRef}
         className="project-chat-panel"
-        role="dialog"
-        aria-modal="true"
+        role={isDocked ? "complementary" : "dialog"}
+        aria-modal={isDocked ? undefined : true}
         aria-labelledby={titleId}
         tabIndex={-1}
         style={panelWidth != null ? { width: `${panelWidth}px` } : undefined}

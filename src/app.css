@@ -27,6 +27,15 @@ body {
   min-width: 320px;
 }
 
+/* Contain any over-wide descendant so it can never scroll the whole page sideways on
+   mobile. `clip` (unlike `hidden`) doesn't establish a scroll container or force the
+   other axis to `auto`, and position:fixed overlays (chat modal, portaled dropdowns)
+   escape it, so they're unaffected. */
+html,
+body {
+  overflow-x: clip;
+}
+
 button,
 input,
 select,
@@ -45,16 +54,19 @@ a {
 
 .page-shell {
   min-height: 100vh;
+  min-height: 100dvh;
   padding: 2rem;
 }
 
 .app-shell {
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .shell-content {
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .top-nav {
@@ -129,6 +141,9 @@ a {
 }
 
 .top-nav-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   color: #000000;
   text-decoration: none;
   font-weight: 600;
@@ -707,7 +722,7 @@ a {
 .landing-district-pick-trigger {
   display: inline-block;
   margin: 0;
-  min-height: 2.5rem;
+  min-height: 44px;
   padding: 0.35em 0.4em 0.3em;
   border: 0;
   background: none;
@@ -1066,7 +1081,25 @@ a {
   min-height: 0;
   width: 100%;
   padding-top: 5.25rem;
+  /* Docked chat pushes page content left by insetting the content box; the fixed
+     chat panel fills this padding gap (see .project-chat-root--docked). The var is
+     published live by ScopedChatPanel so the shift tracks the resizable width. */
+  padding-right: var(--chat-dock-width, 0px);
   box-sizing: border-box;
+  transition: padding-right 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* During a resize-handle drag, track the pointer 1:1 (no easing lag). */
+:root[data-chat-resizing] .map-demo-screen,
+:root[data-chat-resizing] .district-overview-route {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-demo-screen,
+  .district-overview-route {
+    transition: none;
+  }
 }
 
 .city-demo-map,
@@ -1151,11 +1184,35 @@ a {
   cursor: pointer;
   text-align: left;
   animation: none;
+  transform-origin: center;
+  transition: transform 180ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    box-shadow 180ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.map-district-pill:hover,
+.map-district-pill:focus-visible {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
+}
+
+.map-district-pill:active {
+  transform: scale(1.02);
 }
 
 .map-district-pill:focus-visible {
   outline: 2px solid #1d4ed8;
   outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-district-pill {
+    transition: none;
+  }
+  .map-district-pill:hover,
+  .map-district-pill:focus-visible,
+  .map-district-pill:active {
+    transform: none;
+  }
 }
 
 .map-district-avatar {
@@ -1192,6 +1249,9 @@ a {
 
 .map-district-pill-copy {
   min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   font: inherit;
   color: inherit;
 }
@@ -1427,13 +1487,61 @@ a {
   color: #1d865e;
 }
 
-.map-figma-filter-label {
-  display: inline-block;
+/* Tools pill (accessibility + filter): width hugs the icons; a hovered/focused button
+   expands leftward to reveal its text label while the icons stay pinned to the right. */
+.map-control-pill--tools {
+  align-items: stretch;
+  width: auto;
+  min-width: 3rem;
+  padding-inline: 0.9rem;
+}
+
+.map-figma-ctrl-btn--expandable {
+  justify-content: flex-end;
+  gap: 0;
+  width: 100%;
+  transform-origin: right center;
+  transition:
+    color 140ms ease,
+    transform 160ms ease;
+}
+
+.map-figma-ctrl-icon {
+  flex: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  display: block;
+}
+
+.map-figma-ctrl-btn-label {
+  max-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  white-space: nowrap;
   font-family: "Schibsted Grotesk", "Public Sans", "Segoe UI", sans-serif;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   line-height: 1;
+  transition:
+    max-width 200ms ease,
+    opacity 160ms ease,
+    margin-right 200ms ease;
+}
+
+/* Reveal BOTH labels when the pill is hovered, or when either tool button is keyboard-focused. */
+.map-control-pill--tools:hover .map-figma-ctrl-btn-label,
+.map-control-pill--tools:has(.map-figma-ctrl-btn--expandable:focus-visible) .map-figma-ctrl-btn-label {
+  max-width: 8rem;
+  opacity: 1;
+  margin-right: 0.4rem;
+}
+
+/* The button actually under the cursor (or keyboard focus) stands out: green + a slight grow. */
+.map-figma-ctrl-btn--expandable:hover,
+.map-figma-ctrl-btn--expandable:focus-visible {
+  color: #1d865e;
+  transform: scale(1.08);
 }
 
 /* Stacked control buttons: hover/focus tooltip to the left of the icon */
@@ -1680,7 +1788,8 @@ a {
 }
 
 .map-figma-flyout--district-filter {
-  min-width: 18.5rem;
+  /* Guard the min-width so it can't beat the mobile max-width cap and overflow at 320px. */
+  min-width: min(18.5rem, calc(100vw - 4.5rem));
   max-height: min(72vh, 36rem);
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -1803,6 +1912,20 @@ a {
   margin: 0;
   accent-color: #1d865e;
   cursor: pointer;
+}
+
+/* Project-category filter: the category's map-pin icon, next to the label. */
+.map-category-swatch-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.map-category-swatch {
+  flex: none;
+  width: auto;
+  height: 1.4rem;
 }
 
 /* Map address search — Figma 1099:2109 (400px bar + dropdown) */
@@ -1986,6 +2109,117 @@ a {
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
 }
 
+/* Searched-address pin. The wrapper captures pointer/keyboard focus so the click never
+   falls through to the map canvas (which would clear the address focus and remove the pin). */
+.map-address-marker {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  cursor: default;
+  outline: none;
+}
+
+/* A white halo keeps the forest-green outline legible over the light basemap and district
+   fills; the lift/scale on hover+focus reads as a gentle "pop" alongside the address card. */
+.map-address-pin {
+  display: block;
+  transform-origin: bottom center;
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.95))
+    drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+  transition: transform 200ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.map-address-marker:hover .map-address-pin,
+.map-address-marker:focus-visible .map-address-pin,
+.map-address-marker--open .map-address-pin {
+  animation: map-address-pin-bounce 520ms cubic-bezier(0.2, 0.9, 0.2, 1);
+  transform: translateY(-3px) scale(1.08);
+}
+
+@keyframes map-address-pin-bounce {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  45% {
+    transform: translateY(-7px) scale(1.12);
+  }
+  100% {
+    transform: translateY(-3px) scale(1.08);
+  }
+}
+
+/* Address card — hidden until the pin is hovered, keyboard-focused, or (on touch, where
+   there is no hover) tapped open via the `--open` class. */
+.map-address-pin-card {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-width: min(70vw, 360px);
+  width: max-content;
+  padding: 7px 12px;
+  border-radius: 9px;
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba(15, 43, 32, 0.18), 0 0 0 1px rgba(29, 134, 94, 0.14);
+  font-family: "Public Sans", "Schibsted Grotesk", "Segoe UI", sans-serif;
+  text-align: center;
+  white-space: normal;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(4px);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.map-address-marker:hover .map-address-pin-card,
+.map-address-marker:focus-visible .map-address-pin-card,
+.map-address-marker--open .map-address-pin-card {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Little caret pointing down at the pin. */
+.map-address-pin-card::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  background: #ffffff;
+  transform: translate(-50%, -50%) rotate(45deg);
+  box-shadow: 2px 2px 4px rgba(15, 43, 32, 0.1);
+}
+
+.map-address-pin-card-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1d865e;
+}
+
+.map-address-pin-card-value {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: #23303a;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-address-pin,
+  .map-address-pin-card {
+    transition: none;
+  }
+  .map-address-marker:hover .map-address-pin,
+  .map-address-marker:focus-visible .map-address-pin {
+    animation: none;
+  }
+}
+
 .map-marker-district-badge {
   position: absolute;
   left: 50%;
@@ -2046,7 +2280,7 @@ a {
   transform-origin: bottom center;
   box-sizing: border-box;
   width: max-content;
-  max-width: 360px;
+  max-width: min(360px, calc(100vw - 2rem));
   padding: 12px 16px 14px;
   border-radius: 6px;
   background: #ffffff;
@@ -4326,6 +4560,7 @@ a {
   --h-timeline-seg-bleed: 4px;
   width: 100%;
   min-width: 0;
+  margin-bottom: 2rem;
   box-sizing: border-box;
 }
 
@@ -4424,33 +4659,56 @@ a {
   min-height: 20px;
 }
 
-.project-h-timeline--mini .project-h-timeline-bar-mid--with-expand {
-  overflow: visible;
-}
-
 .project-h-timeline-expand-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
   width: 100%;
-  margin-bottom: 0;
-  text-align: center;
+  margin: 0 0 8px;
+  padding: 0;
 }
 
 .project-h-timeline-expand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
   margin: 0;
-  padding: 0;
-  border: 0;
-  background: none;
+  padding: 4px 10px;
+  border: 1px solid var(--ps-forest, #1d865e);
+  border-radius: 999px;
+  background: transparent;
   cursor: pointer;
   font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
-  font-size: 10px;
-  font-weight: 500;
-  line-height: normal;
-  color: var(--ps-forest, #1d865e);
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  color: #166a4b;
+  text-decoration: none;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
 }
 
 .project-h-timeline-expand-link:hover {
-  color: #166a4b;
+  background: rgba(29, 134, 94, 0.08);
+}
+
+.project-h-timeline-expand-link:active {
+  background: rgba(29, 134, 94, 0.16);
+}
+
+.project-h-timeline-expand-link:focus-visible {
+  outline: 2px solid var(--ps-forest, #1d865e);
+  outline-offset: 2px;
+}
+
+.project-h-timeline-expand-chevron {
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+  line-height: 1;
 }
 
 .project-h-timeline-line-between-nodes {
@@ -4750,31 +5008,6 @@ a {
 
 .project-h-timeline--mini .project-h-timeline-labels-bottom {
   margin-top: 2px;
-}
-
-/* Pin “Timeline” to the top edge of the track (above the line) so copy sits closer to the bar */
-.project-h-timeline--mini .project-h-timeline-bar-mid--with-expand .project-h-timeline-expand-row {
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  text-align: center;
-  transform: translateY(-100%);
-  pointer-events: none;
-}
-
-.project-h-timeline--mini .project-h-timeline-bar-mid--with-expand .project-h-timeline-expand-link {
-  padding: 0;
-  line-height: 1.15;
-  pointer-events: auto;
-  font-size: 12px;
 }
 
 .project-h-timeline--mini .project-h-timeline-node {
@@ -5417,6 +5650,7 @@ a {
 
 .member-affiliations-scroll {
   max-height: min(70vh, 46rem);
+  overflow-x: auto;
   overflow-y: auto;
   overscroll-behavior: contain;
   border: 1px solid rgba(227, 227, 227, 0.9);
@@ -6542,6 +6776,7 @@ a {
 
 .about-page {
   min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   place-items: center;
   padding: 7rem 1rem 2rem;
@@ -6840,6 +7075,9 @@ a {
 
   .map-district-pill-shell,
   .district-route-pill {
+    /* Drop below the top-center address-search row so the pill doesn't cover the
+       collapsed search button (which sits at top: 1rem, ~48px tall). */
+    top: calc(max(env(safe-area-inset-top, 0px), 0px) + 4.75rem);
     left: 50%;
     right: auto;
     transform: translateX(-50%);
@@ -7215,7 +7453,9 @@ a {
   }
 }
 
-@media (max-width: 360px) {
+@media (max-width: 520px) {
+  /* Below ~520px the nowrap testimonial text clips its bubble and drifts toward the
+     headline; let it wrap instead. */
   .landing-shell .landing-comment-bubble-text {
     white-space: normal;
     text-align: center;
@@ -7343,6 +7583,22 @@ a {
   justify-content: flex-end;
 }
 
+/* Docked (desktop, non-modal) mode: sit below the top nav as a right-edge rail so the
+   nav and the rest of the page stay visible and interactive. No backdrop is rendered
+   in this mode (see ScopedChatPanel). The root spans the viewport (so the panel's
+   `min(100%, …)` still resolves) but is pointer-transparent, so clicks pass through to
+   the map/content; only the panel itself captures pointer events. */
+.project-chat-root--docked {
+  top: 5.25rem;
+  /* Below .top-nav (z-index 30) — it docks beside content, not over the nav. */
+  z-index: 20;
+  pointer-events: none;
+}
+
+.project-chat-root--docked .project-chat-panel {
+  pointer-events: auto;
+}
+
 .project-chat-backdrop {
   position: absolute;
   inset: 0;
@@ -7361,9 +7617,6 @@ a {
   max-width: 100%;
   height: 100%;
   background: #ffffff;
-  box-shadow:
-    -12px 0 30px rgba(15, 23, 42, 0.18),
-    -4px 0 12px rgba(15, 23, 42, 0.12);
   animation: project-chat-slide-in 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -7433,20 +7686,58 @@ a {
   touch-action: none;
 }
 
+/* Thicker, always-visible left border: doubles as the visual divider (the panel has no
+   shadow) and signals the edge is draggable to expand. Darkens/widens on hover/focus. */
 .project-chat-resize-handle::before {
   content: "";
   position: absolute;
   top: 0;
   bottom: 0;
-  left: 4px;
-  width: 2px;
-  background: transparent;
-  transition: background-color 120ms ease;
+  left: 2px;
+  width: 4px;
+  background: var(--ps-gray-300, #cbd5e1);
+  transition:
+    background-color 120ms ease,
+    width 120ms ease;
 }
 
 .project-chat-resize-handle:hover::before,
 .project-chat-resize-handle:focus-visible::before {
   background: var(--ps-forest, #1d865e);
+  width: 6px;
+}
+
+/* "Drag to expand" hover card, anchored to the left border (matches the app's tooltip
+   chip style). Appears over the content to the left of the panel on hover/focus. */
+.project-chat-resize-handle::after {
+  content: "Drag to expand";
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 6px);
+  z-index: 30;
+  transform: translateY(-50%);
+  padding: 4px 7px;
+  border-radius: 3px;
+  background: #5e5e5e;
+  color: #ffffff;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 120ms ease,
+    visibility 120ms ease;
+}
+
+.project-chat-resize-handle:hover::after,
+.project-chat-resize-handle:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
 }
 
 .project-chat-resize-handle:focus-visible {
@@ -7661,6 +7952,9 @@ a {
   line-height: 1.45;
   color: var(--ps-gray-900);
   white-space: pre-wrap;
+  /* A long URL or unbroken token in an answer must wrap, not scroll the bubble. */
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .project-chat-source-list {
@@ -7803,7 +8097,9 @@ a {
   cursor: not-allowed;
 }
 
-@media (max-width: 639px) {
+/* 640px matches the `useMobileProjectSidebarLayout` hook so the CSS modal and the JS
+   modal switch at the same width (previously 639 here, leaving a 1px dead zone). */
+@media (max-width: 640px) {
   .project-chat-root {
     justify-content: center;
     align-items: stretch;
@@ -7815,5 +8111,80 @@ a {
 
   .project-chat-resize-handle {
     display: none;
+  }
+
+  /* 16px avoids iOS Safari auto-zooming the panel when the textarea is focused. */
+  .project-chat-input {
+    font-size: 16px;
+  }
+}
+
+/* Prevent iOS Safari from auto-zooming when any text field is focused: on phones, force
+   the effective font-size to 16px. Kept out of the desktop styles so the compact look is
+   preserved on larger screens. */
+@media (max-width: 640px) {
+  .landing-search input,
+  .map-address-search-bar input,
+  .member-affiliations-cat-filter {
+    font-size: 16px;
+  }
+
+  /* The hover card is already ~10% up-scaled on desktop; on phones the scale pushes it
+     past the viewport edge, so render it at 1:1. */
+  .map-marker-hover-card {
+    transform: translateX(-50%);
+  }
+
+  /* Touch-target minimums (~44px) for the small icon/link controls. */
+  .map-figma-ctrl-btn {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .map-guidance-close-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 22px;
+  }
+
+  .project-sidebar-tool-btn--32 {
+    width: 44px;
+    height: 44px;
+  }
+
+  .project-sidebar-mobile-close {
+    width: 44px;
+    height: 44px;
+  }
+
+  .project-chat-chip {
+    min-height: 44px;
+  }
+
+  .district-overview-project-card__external-link {
+    padding: 0.6rem;
+  }
+
+  .member-affiliations-toggle,
+  .member-affiliations-view-map,
+  .cm-matrix-transpose {
+    min-height: 44px;
+  }
+
+  /* Reveal more data cells on phones by shrinking the sticky label column. */
+  .cm-matrix-corner,
+  .cm-matrix-rowhead {
+    min-width: 7rem;
+    max-width: 7rem;
+  }
+}
+
+/* Landscape phones / very short viewports: the native map zoom control's `bottom: 15rem`
+   offset (set in the mobile block) can push it above the top nav / off-screen. Pull it back
+   toward the bottom-right cluster. */
+@media (max-height: 480px) {
+  .maplibregl-ctrl-top-right,
+  .mapboxgl-ctrl-top-right {
+    bottom: 8rem;
   }
 }

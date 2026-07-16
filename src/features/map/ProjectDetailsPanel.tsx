@@ -830,7 +830,7 @@ export function ProjectDetailsPanel({
                 <div className="project-sidebar-footer-cta">
                   {detail && chatScopeId ? (
                     <button type="button" className="project-sidebar-ask-chat" onClick={openProjectChat}>
-                      Ask about this file
+                      Chat with this file
                     </button>
                   ) : null}
                   <button type="button" className="project-sidebar-explore-map" onClick={handleCloseProjectSidebar}>
@@ -867,6 +867,7 @@ export function ProjectDetailsPanel({
         </aside>
         {!sidebarWidthExpanded ? (
           <div className="project-sidebar-edge-controls">
+            {/* Expanded project overview button — temporarily disabled.
             <span className="project-sidebar-tool-btn-with-hint">
               <button
                 type="button"
@@ -894,6 +895,7 @@ export function ProjectDetailsPanel({
                 Expand
               </span>
             </span>
+            */}
             <span className="project-sidebar-tool-btn-with-hint">
               <button
                 type="button"
