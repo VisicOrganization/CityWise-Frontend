@@ -27,12 +27,18 @@ function positionsForCount(count: number): number[] {
   return [0, 25, 75, 100];
 }
 
-export function labelFromEntry(entry: ProjectTimelineEntry): string {
+/** Untruncated entry text; callers that need to fit a fixed slot use labelFromEntry. */
+export function fullLabelFromEntry(entry: ProjectTimelineEntry): string {
   const text = entry.text?.trim();
   if (text) {
-    return text.length > 48 ? `${text.slice(0, 45)}…` : text;
+    return text;
   }
   return (entry.type ?? "Milestone").replace(/_/g, " ");
+}
+
+export function labelFromEntry(entry: ProjectTimelineEntry): string {
+  const label = fullLabelFromEntry(entry);
+  return label.length > 48 ? `${label.slice(0, 45)}…` : label;
 }
 
 export function firstHttpDocumentUrl(entry: ProjectTimelineEntry): string | null {
@@ -107,12 +113,22 @@ export function milestoneToNodeStatus(state: TimelineMilestoneModel["state"]): "
   return state === "upcoming" ? "upcoming" : "completed";
 }
 
+/** One source file attached to a timeline entry, as the vertical view needs it. */
+export interface VerticalTimelineDocument {
+  /** null when the entry has no usable http(s) link, so no "View Source" is offered. */
+  url: string | null;
+  title: string | null;
+  /** From the API's `activity_file_summary`; null when the backend has none. */
+  activityFileSummary: string | null;
+}
+
 export interface VerticalTimelineItem {
   id: string;
   /** Formatted for display */
   date: string;
   description: string;
-  documentUrl: string | null;
+  /** Empty for entries with no attached files (~12.5% of live entries). */
+  documents: VerticalTimelineDocument[];
 }
 
 /** Full timeline for the vertical view: API entries when present, else milestone fallback. */
@@ -128,8 +144,14 @@ export function buildVerticalTimelineItems(detail: ProjectDetail): VerticalTimel
     return dated.map((entry, index) => ({
       id: `vt-${index}-${entry.date}`,
       date: formatProjectDateLong(entry.date),
-      description: labelFromEntry(entry),
-      documentUrl: firstHttpDocumentUrl(entry),
+      description: fullLabelFromEntry(entry),
+      // Same http(s) guard the old single-link path applied via firstHttpDocumentUrl:
+      // relative/ftp/malformed values become null rather than a broken link.
+      documents: (entry.documents ?? []).map((doc) => ({
+        url: doc.url?.startsWith("http") ? doc.url : null,
+        title: doc.title ?? null,
+        activityFileSummary: doc.activity_file_summary?.trim() || null,
+      })),
     }));
   }
 
@@ -140,10 +162,11 @@ export function buildVerticalTimelineItems(detail: ProjectDetail): VerticalTimel
     status: detail.project.status,
   });
 
+  // Fallback milestones are synthesised from project metadata, so they have no files.
   return fallback.map((m) => ({
     id: m.id,
     date: formatProjectDateLong(m.date),
     description: m.label,
-    documentUrl: m.documentUrl,
+    documents: [],
   }));
 }

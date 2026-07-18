@@ -27,8 +27,6 @@ import { useMobileProjectSidebarLayout } from "./useMobileProjectSidebarLayout";
 
 /** Public-folder SVGs (Vite: use URL string, not import from `/images`). */
 const SIDEBAR_VOTING_EXPAND_SRC = "/voting_expand.svg";
-const SIDEBAR_TIMELINE_ICON_SRC = "/images/timeline-icon.svg";
-const SIDEBAR_VOTING_ICON_SRC = "/images/voting-icon.svg";
 const SIDEBAR_EXPAND_ICON_SRC = "/expand-icon.svg";
 const SIDEBAR_COLLAPSE_ICON_SRC = "/collapse-icon.svg";
 
@@ -558,141 +556,53 @@ export function ProjectDetailsPanel({
                     </div>
                     <div className="project-sidebar-status-column">
                       <StatusBadge status={status} project={detail?.project ?? null} />
+                      {/* Same controls in both layouts: Voting + Chat. The timeline is
+                          reached from the "View Full Timeline" link on the mini timeline. */}
                       <div className="project-sidebar-tool-row">
-                        {isMobileLayout ? (
-                          <>
-                            <span className="project-sidebar-tool-btn-with-hint">
-                              <button
-                                ref={voteButtonRef}
-                                type="button"
-                                className={`project-sidebar-tool-btn project-sidebar-tool-btn--32 ${
-                                  isVotingPopoverOpen ? "is-active" : ""
-                                }`}
-                                aria-label="Toggle voting record"
-                                aria-expanded={isVotingPopoverOpen}
-                                disabled={!detail}
-                                onClick={() => {
-                                  setTimelineViewOpen(false);
-                                  setIsVotingPopoverOpen((current) => {
-                                    if (!current) {
-                                      posthog?.capture("voting_record_opened", {
-                                        project_id: detail?.project.id,
-                                        project_title: title,
-                                      });
-                                    }
-                                    return !current;
+                        <span className="project-sidebar-tool-btn-with-hint">
+                          <button
+                            ref={voteButtonRef}
+                            type="button"
+                            className={`project-sidebar-voting-expand ${isVotingPopoverOpen ? "is-active" : ""}`}
+                            aria-label="Toggle voting record"
+                            aria-expanded={isVotingPopoverOpen}
+                            disabled={!detail}
+                            onClick={() => {
+                              setTimelineViewOpen(false);
+                              setIsVotingPopoverOpen((current) => {
+                                if (!current) {
+                                  posthog?.capture("voting_record_opened", {
+                                    project_id: detail?.project.id,
+                                    project_title: title,
                                   });
-                                }}
-                              >
-                                <img
-                                  className="project-sidebar-header-icon-img"
-                                  src={SIDEBAR_VOTING_ICON_SRC}
-                                  alt=""
-                                  width={18}
-                                  height={18}
-                                  decoding="async"
-                                />
-                              </button>
-                              <span className="project-sidebar-tool-btn-hint" aria-hidden="true">
-                                View Voting Record
-                              </span>
-                            </span>
-                            {detail && horizontalMilestones.length > 0 ? (
-                              <span className="project-sidebar-tool-btn-with-hint">
-                                <button
-                                  type="button"
-                                  className={`project-sidebar-tool-btn project-sidebar-tool-btn--32 ${
-                                    timelineViewOpen ? "is-active" : ""
-                                  }`}
-                                  aria-label="Timeline view"
-                                  aria-expanded={timelineViewOpen}
-                                  aria-controls="project-vertical-timeline-panel"
-                                  onClick={() => {
-                                    setIsVotingPopoverOpen(false);
-                                    setTimelineViewOpen((v) => {
-                                      if (!v) {
-                                        posthog?.capture("timeline_view_opened", {
-                                          project_id: detail.project.id,
-                                          project_title: title,
-                                        });
-                                      }
-                                      return !v;
-                                    });
-                                  }}
-                                >
-                                  <img
-                                    className="project-sidebar-header-icon-img"
-                                    src={SIDEBAR_TIMELINE_ICON_SRC}
-                                    alt=""
-                                    width={18}
-                                    height={18}
-                                    decoding="async"
-                                  />
-                                </button>
-                                <span className="project-sidebar-tool-btn-hint" aria-hidden="true">
-                                  Timeline View
-                                </span>
-                              </span>
-                            ) : null}
-                            <button
-                              type="button"
-                              className={`project-sidebar-chat-btn ${isChatOpen ? "is-active" : ""}`}
-                              aria-label="Chat about this council file"
-                              disabled={!detail || !chatScopeId}
-                              onClick={openProjectChat}
-                            >
-                              <ChatBubbleIcon width={16} height={16} />
-                              <span>Chat</span>
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <span className="project-sidebar-tool-btn-with-hint">
-                            <button
-                              ref={voteButtonRef}
-                              type="button"
-                              className={`project-sidebar-voting-expand ${isVotingPopoverOpen ? "is-active" : ""}`}
-                              aria-label="Toggle voting record"
-                              aria-expanded={isVotingPopoverOpen}
-                              disabled={!detail}
-                              onClick={() => {
-                                setTimelineViewOpen(false);
-                                setIsVotingPopoverOpen((current) => {
-                                  if (!current) {
-                                    posthog?.capture("voting_record_opened", {
-                                      project_id: detail?.project.id,
-                                      project_title: title,
-                                    });
-                                  }
-                                  return !current;
-                                });
-                              }}
-                            >
-                              <img
-                                className="project-sidebar-voting-expand__img"
-                                src={SIDEBAR_VOTING_EXPAND_SRC}
-                                alt=""
-                                width={75}
-                                height={27}
-                                decoding="async"
-                              />
-                            </button>
-                            <span className="project-sidebar-tool-btn-hint" aria-hidden="true">
-                              View Voting Record
-                            </span>
+                                }
+                                return !current;
+                              });
+                            }}
+                          >
+                            <img
+                              className="project-sidebar-voting-expand__img"
+                              src={SIDEBAR_VOTING_EXPAND_SRC}
+                              alt=""
+                              width={75}
+                              height={27}
+                              decoding="async"
+                            />
+                          </button>
+                          <span className="project-sidebar-tool-btn-hint" aria-hidden="true">
+                            View Voting Record
                           </span>
-                            <button
-                              type="button"
-                              className={`project-sidebar-chat-btn ${isChatOpen ? "is-active" : ""}`}
-                              aria-label="Chat about this council file"
-                              disabled={!detail || !chatScopeId}
-                              onClick={openProjectChat}
-                            >
-                              <ChatBubbleIcon width={16} height={16} />
-                              <span>Chat</span>
-                            </button>
-                          </>
-                        )}
+                        </span>
+                        <button
+                          type="button"
+                          className={`project-sidebar-chat-btn ${isChatOpen ? "is-active" : ""}`}
+                          aria-label="Chat about this council file"
+                          disabled={!detail || !chatScopeId}
+                          onClick={openProjectChat}
+                        >
+                          <ChatBubbleIcon width={16} height={16} />
+                          <span>Chat</span>
+                        </button>
                       </div>
                     </div>
                   </div>
