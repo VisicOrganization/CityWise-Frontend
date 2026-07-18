@@ -2495,14 +2495,22 @@ a {
 
 /* —— Project sidebar (map detail panel) —— */
 /* Host positions on map; aside is the white panel; edge controls are siblings (Figma 1099:2514) */
+:root {
+  /* Geometry of the docked project sidebar column. Shared so overlays that need to
+     sit over the panel (e.g. the activity summary modal) track it instead of
+     hardcoding a second copy of these numbers. */
+  --ps-sidebar-top: 5.25rem;
+  /* Reserve ~3rem so edge expand/close stack (outside panel) stays in viewport on narrow screens */
+  --ps-sidebar-width: min(28.5rem, calc(100% - 3rem), 456px);
+}
+
 .project-sidebar-host {
   position: absolute;
-  top: 5.25rem;
+  top: var(--ps-sidebar-top);
   left: 0;
   bottom: 0;
   z-index: 20;
-  /* Reserve ~3rem so edge expand/close stack (outside panel) stays in viewport on narrow screens */
-  width: min(28.5rem, calc(100% - 3rem), 456px);
+  width: var(--ps-sidebar-width);
   pointer-events: none;
 }
 
@@ -2564,6 +2572,7 @@ a {
   --ps-gray-400: #9ca3af;
   --ps-gray-300: #d1d5db;
   --ps-gray-200: #e5e7eb;
+  --ps-gray-50: #f9fafb;
 
   position: absolute;
   inset: 0;
@@ -4668,7 +4677,10 @@ a {
   padding: 0;
 }
 
-.project-h-timeline-expand-link {
+/* "View Full Timeline" and the timeline view's "Back to Overview" are the same
+   pill control; they share these rules so the pair cannot drift apart. */
+.project-h-timeline-expand-link,
+.project-v-timeline-overview-heading {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -4691,20 +4703,24 @@ a {
     color 120ms ease;
 }
 
-.project-h-timeline-expand-link:hover {
+.project-h-timeline-expand-link:hover,
+.project-v-timeline-overview-heading:hover {
   background: rgba(29, 134, 94, 0.08);
 }
 
-.project-h-timeline-expand-link:active {
+.project-h-timeline-expand-link:active,
+.project-v-timeline-overview-heading:active {
   background: rgba(29, 134, 94, 0.16);
 }
 
-.project-h-timeline-expand-link:focus-visible {
+.project-h-timeline-expand-link:focus-visible,
+.project-v-timeline-overview-heading:focus-visible {
   outline: 2px solid var(--ps-forest, #1d865e);
   outline-offset: 2px;
 }
 
-.project-h-timeline-expand-chevron {
+.project-h-timeline-expand-chevron,
+.project-v-timeline-overview-chevron {
   display: inline-flex;
   width: 14px;
   height: 14px;
@@ -5059,7 +5075,7 @@ a {
 @keyframes project-v-timeline-row-in {
   from {
     opacity: 0;
-    transform: translateY(40px);
+    transform: translateY(16px);
   }
 
   to {
@@ -5071,167 +5087,332 @@ a {
 .project-v-timeline {
   display: flex;
   flex-direction: column;
-  align-items: center;
   position: relative;
   width: 100%;
-  padding: 24px 12px 44px;
+  padding: 24px 16px 44px 28px;
   margin-top: 0.5rem;
   box-sizing: border-box;
   overflow-wrap: break-word;
 }
 
-.project-v-timeline-overview-heading {
-  display: block;
-  margin: 0 0 24px;
+/* Layout only; appearance is shared with .project-h-timeline-expand-link above. */
+.project-v-timeline-overview-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
   width: 100%;
-  border: 0;
-  padding-left: 0.5em;
-  background: none;
-  font: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
-  color: #2f855a;
-  text-align: left;
-  text-decoration: underline;
-  cursor: pointer;
-  transition: color 120ms ease;
-}
-
-.project-v-timeline-overview-heading:hover {
-  color: #276749;
-}
-
-.project-v-timeline-overview-heading:focus-visible {
-  outline: 2px solid var(--ps-forest, #1d865e);
-  outline-offset: 3px;
-  border-radius: 4px;
+  margin: 0 0 24px;
 }
 
 .project-v-timeline-inner {
   position: relative;
   width: 100%;
   max-width: 800px;
-  padding: 0 4px;
   box-sizing: border-box;
-}
-
-.project-v-timeline-line {
-  position: absolute;
-  left: 50%;
-  top: 9px;
-  bottom: 9px;
-  width: 4px;
-  transform: translateX(-50%);
-  background-color: #2f855a;
-  border-radius: 2px;
-  pointer-events: none;
 }
 
 .project-v-timeline-rows {
   position: relative;
-  z-index: 1;
   margin: 0;
   padding: 0;
   list-style: none;
   width: 100%;
 }
 
+/* Single left rail: status-icon column + content column. */
 .project-v-timeline-row {
-  margin-bottom: 88px;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  column-gap: 14px;
+  padding-bottom: 28px;
   opacity: 0;
   animation: project-v-timeline-row-in 0.35s ease-out forwards;
   animation-delay: calc(var(--v-stagger, 0) * 0.05s);
 }
 
 .project-v-timeline-row:last-child {
-  margin-bottom: 0;
+  padding-bottom: 0;
 }
 
-.project-v-timeline-row-grid {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  column-gap: 16px;
-  width: 100%;
+.project-v-timeline-rail {
   position: relative;
-}
-
-.project-v-timeline-cell {
-  min-width: 0;
-  padding: 0 6px;
-  box-sizing: border-box;
-}
-
-.project-v-timeline-cell--left {
-  text-align: right;
-}
-
-.project-v-timeline-cell--right {
-  text-align: left;
-}
-
-.project-v-timeline-date {
-  font-size: 16px;
-  font-weight: 500;
-  color: #1a202c;
-  display: inline-block;
-  width: 100%;
-  max-width: min(260px, 100%);
-  overflow-wrap: break-word;
-  word-break: break-word;
-}
-
-.project-v-timeline-desc {
-  font-size: 15px;
-  line-height: 1.5;
-  color: #4a5568;
-  max-width: min(260px, 100%);
-  display: inline-block;
-  text-align: inherit;
-  overflow-wrap: break-word;
-  word-break: break-word;
-}
-
-.project-v-timeline-desc-link {
-  font-size: 15px;
-  line-height: 1.5;
-  color: #4a5568;
-  max-width: min(260px, 100%);
-  display: inline-block;
-  text-align: inherit;
-  text-decoration: underline;
-  text-decoration-color: currentcolor;
-  text-underline-offset: 2px;
-  transition: color 0.12s ease;
-  overflow-wrap: break-word;
-  word-break: break-word;
-}
-
-.project-v-timeline-desc-link:hover {
-  color: #2d3748;
-}
-
-.project-v-timeline-cell--left .project-v-timeline-desc,
-.project-v-timeline-cell--left .project-v-timeline-desc-link {
-  margin-left: auto;
-}
-
-.project-v-timeline-node-wrap {
   display: flex;
-  align-items: center;
   justify-content: center;
-  width: 18px;
-  flex-shrink: 0;
+}
+
+/* Connector runs from below the icon into the next row; none after the last. */
+.project-v-timeline-row:not(:last-child) .project-v-timeline-rail::before {
+  content: "";
+  position: absolute;
+  top: 26px;
+  bottom: -28px;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background-color: var(--ps-gray-200, #e2e8f0);
 }
 
 .project-v-timeline-node {
-  width: 18px;
-  height: 18px;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
   box-sizing: border-box;
   border-radius: 50%;
-  border: 4px solid #2f855a;
+  background-color: var(--ps-forest, #1d865e);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.project-v-timeline-content {
+  min-width: 0;
+  padding-top: 1px;
+}
+
+.project-v-timeline-date {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ps-gray-600, #4a5568);
+}
+
+.project-v-timeline-desc {
+  margin: 2px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--ps-gray-900, #1a202c);
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Card grouping the source actions for one timeline entry. */
+.project-v-timeline-docs {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+  border: 1px solid var(--ps-gray-200, #e2e8f0);
+  border-radius: 10px;
+  /* No overflow:hidden — it would clip the actions' focus-visible ring. */
+  background-color: var(--ps-gray-50, #f9fafb);
+}
+
+/* One row per document: View Source + Summary. */
+.project-v-timeline-doc {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  padding: 10px 12px;
+}
+
+/* Entries can carry several documents (25% of live entries do); divide them
+   inside the one card rather than splitting into separate cards. */
+.project-v-timeline-doc + .project-v-timeline-doc {
+  border-top: 1px solid var(--ps-gray-200, #e2e8f0);
+}
+
+.project-v-timeline-action {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1d4ed8;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 120ms ease;
+  min-width: 0;
+}
+
+.project-v-timeline-action:hover {
+  color: #1e40af;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.project-v-timeline-action:focus-visible {
+  outline: 2px solid var(--ps-forest, #1d865e);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* File titles repeat heavily ("Motion" x28), so they read as a secondary label. */
+.project-v-timeline-doc-title {
+  color: var(--ps-gray-600, #4a5568);
+  font-weight: 400;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .project-v-timeline-row {
+    animation: none;
+    opacity: 1;
+  }
+
+  .project-v-timeline-action,
+  .project-v-timeline-overview-heading {
+    transition: none;
+  }
+}
+
+/* ---- Activity file summary modal ---- */
+
+.activity-summary-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background-color: rgb(15 23 42 / 45%);
+}
+
+.activity-summary-dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(560px, 100%);
+  /* dvh, not vh: mobile browser chrome is excluded from dvh, so the dialog
+     cannot extend under the URL bar and lose its bottom edge. */
+  max-height: min(80dvh, 640px);
+  box-sizing: border-box;
+  padding: 18px 20px 16px;
+  border-radius: 12px;
   background-color: #fff;
+  box-shadow: 0 18px 48px rgb(15 23 42 / 24%);
+}
+
+.activity-summary-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.activity-summary-heading-group {
+  min-width: 0;
+}
+
+.activity-summary-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ps-gray-900, #1a202c);
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.activity-summary-date {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--ps-gray-600, #4a5568);
+}
+
+.activity-summary-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--ps-gray-600, #4a5568);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.activity-summary-close:hover {
+  background-color: var(--ps-gray-200, #e2e8f0);
+  color: var(--ps-gray-900, #1a202c);
+}
+
+.activity-summary-close:focus-visible {
+  outline: 2px solid var(--ps-forest, #1d865e);
+  outline-offset: 2px;
+}
+
+/* Summaries run 477-1509 chars, so the body scrolls instead of the viewport. */
+.activity-summary-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  /* Stop scroll chaining into the timeline behind the modal on touch. */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  margin-top: 12px;
+  padding-right: 4px;
+}
+
+.activity-summary-text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ps-gray-800, #2d3748);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.activity-summary-caption {
+  flex-shrink: 0;
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--ps-gray-200, #e2e8f0);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ps-gray-600, #4a5568);
+}
+
+/* Wide viewports: the summary belongs over the project panel it was opened from,
+   not floating in the middle of the map. Tracks the sidebar column geometry.
+   The backdrop still spans the viewport so click-anywhere-to-close keeps working. */
+@media (min-width: 641px) {
+  .activity-summary-backdrop {
+    justify-content: flex-start;
+    padding: calc(var(--ps-sidebar-top) + 12px) 12px 12px;
+  }
+
+  .activity-summary-dialog {
+    width: calc(var(--ps-sidebar-width) - 24px);
+    max-height: min(640px, calc(100dvh - var(--ps-sidebar-top) - 24px));
+  }
+}
+
+@media (max-width: 640px) {
+  /* Centred, not a bottom sheet: the sheet variant sat under the mobile browser
+     chrome and lost its lower edge. Safe-area insets keep it clear of both. */
+  .activity-summary-backdrop {
+    align-items: center;
+    padding: max(16px, env(safe-area-inset-top)) 12px
+      max(16px, env(safe-area-inset-bottom));
+  }
+
+  .activity-summary-dialog {
+    width: 100%;
+    max-height: min(80dvh, 100% - 8px);
+    border-radius: 12px;
+    padding: 16px 16px 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .activity-summary-close {
+    transition: none;
+  }
 }
 
 .project-sidebar-timeline-fallback {

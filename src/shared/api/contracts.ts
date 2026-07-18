@@ -140,6 +140,8 @@ export interface ProjectTimelineDocument {
   url: string;
   title: string | null;
   date: string | null;
+  /** AI-generated summary of the source file. Absent on older payloads. */
+  activity_file_summary?: string | null;
 }
 
 export interface ProjectTimelineEntry {
@@ -182,6 +184,8 @@ export interface ProjectDetail {
     title: string | null;
     date: string | null;
     source: string;
+    /** AI-generated summary of the source file. Absent on older payloads. */
+    activity_file_summary?: string | null;
   }>;
   affiliations: Array<{
     category: string;
