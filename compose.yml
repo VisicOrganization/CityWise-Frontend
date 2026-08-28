@@ -10,6 +10,7 @@
 # - `.env` values override `.env.example`; stale local values can cause surprising behavior.
 # - This workflow intentionally requires `.env`; if it is missing, Compose should fail loudly.
 # - `VITE_API_BASE_URL` must point at a running backend API for project and district data.
+# - `VITE_CARTO_API_KEY` is required for unwatermarked CARTO basemap tiles.
 
 services:
   frontend:

@@ -15,6 +15,7 @@ import { useCouncilMemberBios } from "../districts/useCouncilMemberBios";
 import { useDistrictProfile } from "../districts/useDistrictProfile";
 import { formatPersonNameForDisplay } from "../../shared/formatPersonName";
 import { formatProjectTitleForDisplay } from "../../shared/formatProjectTitleForDisplay";
+import { cartoLightAllTilesUrl } from "../../shared/map/cartoBasemap";
 import { findDistrictFeature, getFeatureBounds, type DistrictBoundaryCollection } from "../../shared/map/districtBoundaries";
 import {
   districtFillLayer,
@@ -38,7 +39,7 @@ const LIGHT_BASE_MAP_STYLE: StyleSpecification = {
   sources: {
     raster: {
       type: "raster",
-      tiles: ["https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"],
+      tiles: [cartoLightAllTilesUrl()],
       tileSize: 256,
       attribution: "© OpenStreetMap contributors © CARTO",
     },

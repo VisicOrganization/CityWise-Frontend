@@ -12,6 +12,7 @@ export default defineConfig({
     /** Align with map/geocode test mocks; avoids machine-specific `.env` breaking CI. */
     env: {
       VITE_API_BASE_URL: "http://localhost:18100",
+      VITE_CARTO_API_KEY: "test-carto-key",
     },
   },
 });

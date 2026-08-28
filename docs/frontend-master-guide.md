@@ -406,8 +406,11 @@ Important ones:
 - `FRONTEND_HOST_PORT`
 - `VITE_PORT`
 - `VITE_API_BASE_URL`
+- `VITE_CARTO_API_KEY`
 
 Address search geocoding uses the same `VITE_API_BASE_URL` and calls backend `GET /nominatim/search`.
+
+`VITE_CARTO_API_KEY` is required for unwatermarked CARTO basemap tiles. Request a free key at https://carto.com/basemaps/apikey. Production deploys bake it in from GitHub Actions repository variables.
 
 Preferred local Docker flow:
 

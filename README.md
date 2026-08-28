@@ -65,6 +65,7 @@ Expected settings in `.env`:
 - `FRONTEND_HOST_PORT`
 - `VITE_PORT`
 - `VITE_API_BASE_URL`
+- `VITE_CARTO_API_KEY`
 
 Recommended non-clashing defaults:
 
@@ -78,6 +79,8 @@ The frontend container always serves the Vite dev server on `VITE_PORT` internal
 
 `VITE_API_BASE_URL` should point at the backend API. For the documented local MVP flow, that is the backend Docker host port `18100`.
 Address search geocoding uses this same backend base URL and calls `GET /nominatim/search`.
+
+`VITE_CARTO_API_KEY` is appended to CARTO raster tile URLs. Without it, the map shows an "API key required" watermark. Request a free key at [carto.com/basemaps/apikey](https://carto.com/basemaps/apikey). Production GitHub Pages builds read the same variable from repository Actions variables.
 
 ## Quick Start
 
