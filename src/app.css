@@ -8378,3 +8378,457 @@ a {
     bottom: 8rem;
   }
 }
+
+/* —— Subscriptions dashboard —— */
+.subscriptions-shell .shell-content {
+  overflow: auto;
+}
+
+.subscriptions-page {
+  box-sizing: border-box;
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  padding: 1.25rem 1rem 3rem;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  color: #1f2937;
+}
+
+.subscriptions-subnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.subscriptions-subnav a {
+  color: #4b5563;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.subscriptions-subnav a.active,
+.subscriptions-subnav a[aria-current="page"] {
+  color: #1d865e;
+}
+
+.subscriptions-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.subscriptions-header h1 {
+  margin: 0 0 0.35rem;
+  font-family: "Schibsted Grotesk", "Public Sans", sans-serif;
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+  font-weight: 700;
+}
+
+.subscriptions-lede {
+  margin: 0;
+  max-width: 42rem;
+  color: #6b7280;
+  line-height: 1.45;
+}
+
+.subscriptions-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.subscriptions-layout {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 900px) {
+  .subscriptions-layout {
+    grid-template-columns: 1fr 1.2fr;
+  }
+}
+
+.subscriptions-card {
+  box-sizing: border-box;
+  padding: 1.1rem 1.2rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.subscriptions-card--narrow {
+  max-width: 28rem;
+  margin: 2rem auto;
+}
+
+.subscriptions-card--compact {
+  margin-bottom: 1rem;
+}
+
+.subscriptions-card h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+}
+
+.subscriptions-plan-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.75rem 1rem;
+  margin: 0 0 0.75rem;
+}
+
+.subscriptions-plan-summary-wrap {
+  position: relative;
+}
+
+.subscriptions-trial-badge {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 0 0.65rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.subscriptions-card h2 .subscriptions-trial-badge {
+  margin: 0 0 0 0.4rem;
+  vertical-align: middle;
+}
+
+.subscriptions-plan-summary dt {
+  margin: 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+}
+
+.subscriptions-plan-summary dd {
+  margin: 0.15rem 0 0;
+  font-weight: 600;
+}
+
+.subscriptions-district-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.subscriptions-district-chip {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.subscriptions-district-chip.is-selected {
+  border-color: #1d865e;
+  background: rgba(29, 134, 94, 0.12);
+  color: #145c40;
+}
+
+.subscriptions-district-chip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.subscriptions-district-chip.is-locked {
+  background: #f3f4f6;
+  color: #9ca3af;
+}
+
+.subscriptions-dashboard-layout {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 900px) {
+  .subscriptions-dashboard-layout {
+    grid-template-columns: 14rem minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.subscriptions-district-panel {
+  box-sizing: border-box;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.subscriptions-district-panel h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+}
+
+.subscriptions-district-list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.subscriptions-district-list-btn {
+  width: 100%;
+  text-align: left;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.subscriptions-district-list-btn.is-active {
+  border-color: #059669;
+  background: #ecfdf5;
+  font-weight: 600;
+}
+
+.subscriptions-district-list-btn.is-disabled,
+.subscriptions-district-list-btn:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.subscriptions-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.75rem;
+  margin: 0.75rem 0 1rem;
+}
+
+.subscriptions-stat {
+  padding: 0.85rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f9fafb;
+}
+
+.subscriptions-stat--accent {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+}
+
+.subscriptions-stat-label {
+  display: block;
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-bottom: 0.35rem;
+}
+
+.subscriptions-stat-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.subscriptions-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.subscriptions-primary-btn,
+.subscriptions-secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1rem;
+  border-radius: 999px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: 0;
+}
+
+.subscriptions-primary-btn {
+  background: #1d865e;
+  color: #fff;
+}
+
+.subscriptions-primary-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.subscriptions-secondary-btn {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #1f2937;
+}
+
+.subscriptions-text-btn {
+  border: 0;
+  background: transparent;
+  color: #1d865e;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.subscriptions-muted {
+  color: #6b7280;
+  font-size: 0.92rem;
+}
+
+.subscriptions-pill {
+  display: inline-flex;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: #f3f4f6;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.subscriptions-status {
+  margin: 0.75rem 0;
+}
+
+.subscriptions-status--error {
+  color: #b91c1c;
+}
+
+.subscriptions-status--ok {
+  color: #145c40;
+}
+
+.subscriptions-quota-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #fcd34d;
+  border-radius: 12px;
+  background: #fffbeb;
+}
+
+.subscriptions-quota-banner p {
+  margin: 0.25rem 0 0;
+  color: #78716c;
+}
+
+.subscriptions-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+}
+
+.subscriptions-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: #4b5563;
+}
+
+.subscriptions-filters input[type="date"] {
+  padding: 0.45rem 0.55rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+.subscriptions-table-wrap {
+  overflow-x: auto;
+}
+
+.subscriptions-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.subscriptions-table th,
+.subscriptions-table td {
+  padding: 0.65rem 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+  vertical-align: top;
+}
+
+.subscriptions-table th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+}
+
+.subscriptions-row-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.subscriptions-row-actions a {
+  color: #1d865e;
+}
+
+.subscriptions-status-pill {
+  display: inline-flex;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: #f3f4f6;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.subscriptions-status-pill.status-ready {
+  background: rgba(29, 134, 94, 0.14);
+  color: #145c40;
+}
+
+.subscriptions-status-pill.status-failed,
+.subscriptions-status-pill.status-skipped_quota {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.subscriptions-status-pill.status-queued {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.subscriptions-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.subscriptions-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.subscriptions-plan-facts {
+  margin: 0 0 1rem;
+  padding-left: 1.1rem;
+  color: #4b5563;
+  line-height: 1.45;
+}
