@@ -912,9 +912,11 @@ export function CityMap({
                 onClick={(clickEvent) => {
                   clickEvent.stopPropagation();
                   // Both panels dock to the left edge; the project sidebar would slide in
-                  // on top of this one, so the neighbourhood selection yields to it.
+                  // on top of this one, so the neighbourhood selection yields to it -- highlight
+                  // and popup included, or the council file opens over a still-glowing CD2 pin.
                   setPanelSelection(null);
                   setAssetFocus(null);
+                  setSelectedAsset(null);
                   onMarkerSelect(marker);
                 }}
               >
@@ -994,6 +996,9 @@ export function CityMap({
           onClose={() => {
             setPanelSelection(null);
             setAssetFocus(null);
+            // The pin's highlight and popup belong to this panel; leaving them behind orphans
+            // an enlarged, glowing pin with nothing on screen explaining it.
+            setSelectedAsset(null);
           }}
         />
       ) : null}

@@ -1442,6 +1442,77 @@ describe("mock app routes", () => {
       );
     });
 
+    /**
+     * The selection layers carry no category filter of their own, so before this they kept
+     * drawing the 1.5x icon, its backing and its glow after the base icon was filtered away --
+     * a ghost pin that could not be clicked off, because those layers are not interactive.
+     */
+    it("hides the selected pin's highlight when its category is switched off", async () => {
+      const user = await enterNeighborhoodMode();
+      await user.click(screen.getByTestId("mock-asset-click"));
+
+      expect(screen.getByTestId("layer-cd2-asset-points-selected")).toHaveAttribute(
+        "data-filter",
+        expect.stringContaining("Fire Station 60"),
+      );
+
+      await user.click(screen.getByRole("button", { name: "Deselect all" }));
+
+      for (const id of [
+        "cd2-asset-points-selected",
+        "cd2-asset-points-selected-glow",
+        "cd2-asset-points-selected-backing",
+      ]) {
+        expect(screen.getByTestId(`layer-${id}`)).toHaveAttribute(
+          "data-filter",
+          expect.stringContaining("no-asset"),
+        );
+      }
+      // The contact popup is anchored to that pin, so it goes with it.
+      expect(screen.queryByText("Located in Council District 2")).not.toBeInTheDocument();
+    });
+
+    // Hiding is not deselecting: the legend filters what is drawn, not what you picked.
+    it("restores the highlight when the category is switched back on", async () => {
+      const user = await enterNeighborhoodMode();
+      await user.click(screen.getByTestId("mock-asset-click"));
+      await user.click(screen.getByRole("button", { name: "Deselect all" }));
+      await user.click(screen.getByRole("button", { name: "Select all" }));
+
+      expect(screen.getByTestId("layer-cd2-asset-points-selected")).toHaveAttribute(
+        "data-filter",
+        expect.stringContaining("Fire Station 60"),
+      );
+    });
+
+    it("clears the pin highlight when the resource panel is closed", async () => {
+      const user = await enterNeighborhoodMode();
+      await user.click(screen.getByTestId("mock-asset-click"));
+      await screen.findByLabelText("Valley Village resources");
+
+      await user.click(screen.getByLabelText("Close Valley Village panel"));
+
+      expect(screen.queryByLabelText("Valley Village resources")).not.toBeInTheDocument();
+      expect(screen.getByTestId("layer-cd2-asset-points-selected")).toHaveAttribute(
+        "data-filter",
+        expect.stringContaining("no-asset"),
+      );
+    });
+
+    it("clears the pin highlight when a council file marker is opened instead", async () => {
+      const user = await enterNeighborhoodMode();
+      await user.click(screen.getByLabelText("Also show council file pins"));
+      await user.click(screen.getByTestId("mock-asset-click"));
+      await screen.findByLabelText("Valley Village resources");
+
+      await user.click(screen.getByLabelText("Council File 25-0358"));
+
+      expect(screen.getByTestId("layer-cd2-asset-points-selected")).toHaveAttribute(
+        "data-filter",
+        expect.stringContaining("no-asset"),
+      );
+    });
+
     it("flashes the clicked pin's card and clears the flash a second later", async () => {
       const scrollIntoView = vi.fn();
       Element.prototype.scrollIntoView = scrollIntoView;

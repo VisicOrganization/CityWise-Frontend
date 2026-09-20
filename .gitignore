@@ -17,3 +17,6 @@ Thumbs.db
 .vscode/
 
 graphify-out/
+# Python bytecode from scripts/
+__pycache__/
+*.pyc

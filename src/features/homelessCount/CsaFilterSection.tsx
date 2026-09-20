@@ -59,7 +59,19 @@ export function CsaFilterSection({
   const groups = useMemo(() => groupCsaRows(filterCsaRows(rows, query)), [rows, query]);
   const matchCount = groups.reduce((total, group) => total + group.rows.length, 0);
 
-  const hiddenCount = hiddenLabels.size;
+  /**
+   * Counted by intersecting with `rows`, NOT as `hiddenLabels.size`.
+   *
+   * `hiddenLabels` comes straight from `readHiddenCsaLabels()`, which deliberately does not
+   * cross-check stored labels against the loaded index -- a stale label is inert for the map,
+   * because `buildHiddenCsaFilter`'s `in` test simply never matches it. It was NOT inert here:
+   * the raw Set size counted a label that hides nothing, so one stale entry made this read
+   * "303 of 304 neighborhoods" while all 304 were on screen.
+   */
+  const hiddenCount = useMemo(
+    () => rows.reduce((total, row) => (hiddenLabels.has(row.CSA_Label) ? total + 1 : total), 0),
+    [rows, hiddenLabels],
+  );
   const countHeading =
     hiddenCount === 0
       ? `All ${rows.length} neighborhoods`

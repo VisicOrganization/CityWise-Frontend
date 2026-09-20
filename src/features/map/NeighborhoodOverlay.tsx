@@ -100,6 +100,20 @@ export function NeighborhoodOverlay({
       ? hoveredNeighborhood.label
       : null;
 
+  /**
+   * The selection stack draws only while the selected pin's own category is switched on.
+   *
+   * Without this the three selection layers carry no category filter, while the two base layers
+   * do -- so unchecking the selected pin's category (or "Deselect all") removed its icon and
+   * left the 1.5x icon, its white backing and its glow floating with nothing underneath. Worse,
+   * those layers are not in `interactiveLayerIds`, so the ghost could not be clicked away.
+   *
+   * Hiding rather than deselecting is the deliberate half: the legend filters what is drawn, it
+   * does not change what you picked, so re-checking the category brings the selection back.
+   */
+  const visibleSelected =
+    selected && activeCategories.includes(selected.properties.category ?? "") ? selected : null;
+
   return (
     <>
       <Source id="cd2-neighborhoods" type="geojson" data={neighborhoods}>
@@ -132,9 +146,9 @@ export function NeighborhoodOverlay({
       <Source id="cd2-assets" type="geojson" data={assets}>
         <Layer {...assetPointBackingLayer} filter={buildCategoryFilter(activeCategories)} />
         <Layer {...assetPointLayer} filter={buildCategoryFilter(activeCategories)} />
-        <Layer {...buildSelectedAssetGlowLayer(selected?.properties ?? null)} />
-        <Layer {...buildSelectedAssetBackingLayer(selected?.properties ?? null)} />
-        <Layer {...buildSelectedAssetLayer(selected?.properties ?? null)} />
+        <Layer {...buildSelectedAssetGlowLayer(visibleSelected?.properties ?? null)} />
+        <Layer {...buildSelectedAssetBackingLayer(visibleSelected?.properties ?? null)} />
+        <Layer {...buildSelectedAssetLayer(visibleSelected?.properties ?? null)} />
         <Layer {...buildAssetHoverLayer(hoveredAsset?.label ?? null)} />
       </Source>
 
@@ -172,20 +186,22 @@ export function NeighborhoodOverlay({
         </Popup>
       ) : null}
 
-      {selected ? (
+      {/* Gated on `visibleSelected` too: a card for a pin the legend has hidden must not leave
+          its contact popup anchored over empty basemap. */}
+      {visibleSelected ? (
         // maxWidth must be >= .neighborhood-asset-popup's border-box width (17rem in app.css)
         // plus the 2px border MapLibre puts on .maplibregl-popup-content. Change one, change
         // the other.
         <Popup
-          longitude={selected.longitude}
-          latitude={selected.latitude}
+          longitude={visibleSelected.longitude}
+          latitude={visibleSelected.latitude}
           closeOnClick={false}
           onClose={onCloseSelected}
           maxWidth="calc(17rem + 2px)"
           className="neighborhood-asset-popup-shell"
         >
           <NeighborhoodAssetPopup
-            properties={selected.properties}
+            properties={visibleSelected.properties}
             districtId={NEIGHBORHOOD_DISTRICT_ID}
           />
         </Popup>

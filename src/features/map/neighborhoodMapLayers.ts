@@ -201,7 +201,20 @@ export const neighborhoodLabelLayer: Omit<SymbolLayerSpecification, "source"> = 
   },
 };
 
-/** Resolves a pin's category to the icon id `assetPinImages.ts` registered for it. */
+/**
+ * Resolves a pin's category to the icon id `assetPinImages.ts` registered for it.
+ *
+ * The fallback is the FIRST category's icon, which is weaker than `categoryColorExpression`'s:
+ * that one falls back to a distinct grey so an unmatched category is visibly flagged, whereas an
+ * unmatched category here is drawn as if it really were "Neighborhood orgs & resources". There is
+ * no "unknown" artwork to point at, and naming an unregistered id is worse -- MapLibre warns
+ * every frame and draws no pin at all, so the row would vanish silently.
+ *
+ * Unreachable from committed data: `build_cd2_assets.py` raises SystemExit on any category
+ * outside CATEGORY_KEYS, which mirrors CATEGORY_ORDER. Adding a fifth category means updating
+ * four places together -- CATEGORY_ORDER, CATEGORY_LABELS, CATEGORY_COLORS, ASSET_PIN_IMAGE_IDS
+ * -- plus CATEGORY_KEYS in the build script. Miss ASSET_PIN_IMAGE_IDS and this fallback hides it.
+ */
 export const categoryIconExpression = [
   "match",
   ["get", "category"],

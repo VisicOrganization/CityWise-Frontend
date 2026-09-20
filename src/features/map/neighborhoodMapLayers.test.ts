@@ -134,6 +134,28 @@ describe("layer specs", () => {
     expect(assetPointLayer.layout?.["icon-ignore-placement"]).toBe(true);
   });
 
+  /**
+   * Pins the weaker-than-colour fallback so it is a decision rather than an accident. Unlike
+   * categoryColorExpression's grey, an unmatched category is drawn as a REAL category here, so
+   * the thing actually protecting this is the build script's CATEGORY_KEYS guard plus the
+   * four-map coupling asserted below.
+   */
+  it("falls back to the first category's icon for an unknown category", () => {
+    const expression = categoryIconExpression as unknown as unknown[];
+    expect(expression[0]).toBe("match");
+    expect(expression).toHaveLength(2 + CATEGORY_ORDER.length * 2 + 1);
+    expect(expression.at(-1)).toBe(ASSET_PIN_IMAGE_IDS[CATEGORY_ORDER[0]]);
+  });
+
+  // Adding a category to one map and not the others is what makes the fallback above reachable.
+  it("keeps the label, colour and icon maps total over CATEGORY_ORDER", () => {
+    for (const category of CATEGORY_ORDER) {
+      expect(CATEGORY_LABELS[category]).toBeTruthy();
+      expect(CATEGORY_COLORS[category]).toBeTruthy();
+      expect(ASSET_PIN_IMAGE_IDS[category]).toBeTruthy();
+    }
+  });
+
   it("maps every category to a registered icon id", () => {
     for (const category of CATEGORY_ORDER) {
       expect(ASSET_PIN_IMAGE_IDS[category]).toBeTruthy();
