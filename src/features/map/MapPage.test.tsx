@@ -11,19 +11,35 @@ import { resetCouncilMemberBiosCacheForTests } from "../districts/useCouncilMemb
 import { resetMapDataCacheForTests } from "./useMapData";
 
 
+/**
+ * One stable map handle for the whole file, so a test can assert what the camera was asked to
+ * do. The previous mock built a fresh object per getMap() call, which made easeTo unassertable.
+ */
+const mockMapContainer = { clientWidth: 1280 };
+const mockMap = {
+  getZoom: () => 10,
+  easeTo: vi.fn(),
+  jumpTo: vi.fn(),
+  fitBounds: vi.fn(),
+  getContainer: () => mockMapContainer,
+};
+
+/**
+ * jsdom cannot rasterise an SVG (no canvas 2d context, and Image never fires load), so the real
+ * icon registration can never resolve here. Only the hook is replaced; the icon ids, file paths
+ * and layer specs stay real, and `assetPinImages.test.ts` covers the loader itself.
+ */
+vi.mock("./assetPinImages", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./assetPinImages")>()),
+  useAssetPinImages: () => true,
+}));
+
 vi.mock("react-map-gl/maplibre", () => ({
   default: React.forwardRef(function MockMap(
     { children, onClick }: { children?: ReactNode; onClick?: (event: unknown) => void },
-    ref: React.ForwardedRef<{ getMap: () => { getZoom: () => number; easeTo: () => void; jumpTo: () => void } } | null>,
+    ref: React.ForwardedRef<{ getMap: () => typeof mockMap } | null>,
   ) {
-    React.useImperativeHandle(ref, () => ({
-      getMap: () => ({
-        getZoom: () => 10,
-        easeTo: vi.fn(),
-        jumpTo: vi.fn(),
-        fitBounds: vi.fn(),
-      }),
-    }));
+    React.useImperativeHandle(ref, () => ({ getMap: () => mockMap }));
     return (
       <div data-testid="demo-map">
         <button
@@ -45,6 +61,64 @@ vi.mock("react-map-gl/maplibre", () => ({
         </button>
         <button
           type="button"
+          data-testid="mock-asset-click"
+          onClick={() =>
+            onClick?.({
+              features: [
+                {
+                  layer: { id: "cd2-asset-points" },
+                  geometry: { type: "Point", coordinates: [-118.39, 34.16] },
+                  properties: {
+                    label: "Fire Station 60",
+                    category: "PUBLIC SAFETY",
+                    neighborhood: "Valley Village",
+                  },
+                },
+              ],
+            })
+          }
+        >
+          mock asset click
+        </button>
+        <button
+          type="button"
+          data-testid="mock-district-asset-click"
+          onClick={() =>
+            onClick?.({
+              features: [
+                {
+                  layer: { id: "cd2-asset-points" },
+                  geometry: { type: "Point", coordinates: [-118.37, 34.15] },
+                  properties: {
+                    label: "Vineland Avenue Median",
+                    category: "DISTRICT PROJECTS & OFFICE",
+                    neighborhood: "Districtwide",
+                  },
+                },
+              ],
+            })
+          }
+        >
+          mock district asset click
+        </button>
+        <button
+          type="button"
+          data-testid="mock-neighborhood-click"
+          onClick={() =>
+            onClick?.({
+              features: [
+                {
+                  layer: { id: "cd2-neighborhood-fill" },
+                  properties: { CSA_Label: "Los Angeles - Valley Village" },
+                },
+              ],
+            })
+          }
+        >
+          mock neighborhood click
+        </button>
+        <button
+          type="button"
           data-testid="mock-empty-map-click"
           onClick={() =>
             onClick?.({
@@ -58,8 +132,17 @@ vi.mock("react-map-gl/maplibre", () => ({
       </div>
     );
   }),
-  Layer: () => null,
+  // The filter is surfaced because layers now mount unconditionally and turn themselves off
+  // with a match-nothing filter, so presence alone no longer says whether one is active.
+  Layer: ({ id, filter }: { id?: string; filter?: unknown }) => (
+    <div
+      data-testid={id ? `layer-${id}` : undefined}
+      data-filter={filter === undefined ? undefined : JSON.stringify(filter)}
+    />
+  ),
   Marker: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
+  // Only reached once a test clicks an asset pin: the overlay opens its click card there.
+  Popup: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
   Source: ({ children, id }: { children?: ReactNode; id?: string }) => (
     <div data-testid={id === "district-boundaries" ? "mock-boundary-source" : undefined}>{children}</div>
   ),
@@ -233,6 +316,58 @@ function buildEmptyDistrictResponse(districtId: number) {
   };
 }
 
+const cd2AssetsResponse = {
+  type: "FeatureCollection",
+  features: [
+    {
+      type: "Feature",
+      properties: {
+        label: "Fire Station 60",
+        category: "PUBLIC SAFETY",
+        neighborhood: "Valley Village",
+        council_district: 2,
+        precision: "rooftop",
+      },
+      geometry: { type: "Point", coordinates: [-118.39, 34.16] },
+    },
+    {
+      type: "Feature",
+      properties: {
+        label: "Vineland Avenue Median",
+        category: "DISTRICT PROJECTS & OFFICE",
+        neighborhood: "Districtwide",
+        council_district: 2,
+        precision: "rooftop",
+      },
+      geometry: { type: "Point", coordinates: [-118.37, 34.15] },
+    },
+  ],
+};
+
+const cd2NeighborhoodsResponse = {
+  type: "FeatureCollection",
+  district_source_url: "https://cd2.lacity.gov/district-2",
+  features: [
+    {
+      type: "Feature",
+      properties: {
+        CSA_Label: "Los Angeles - Valley Village",
+        source_url: "https://cd2.lacity.gov/district-2/valley-village",
+      },
+      geometry: {
+        type: "Polygon",
+        coordinates: [[
+          [-118.4, 34.15],
+          [-118.38, 34.15],
+          [-118.38, 34.17],
+          [-118.4, 34.17],
+          [-118.4, 34.15],
+        ]],
+      },
+    },
+  ],
+};
+
 function defaultFetchMock(input: string | URL | Request) {
   const url = String(input);
   const requestUrl = new URL(url, "http://localhost");
@@ -255,6 +390,14 @@ function defaultFetchMock(input: string | URL | Request) {
 
   if (url.includes("la-city-council-districts.geojson")) {
     return Promise.resolve(new Response(JSON.stringify(boundariesResponse)));
+  }
+
+  if (url.includes("cd2-civic-assets.geojson")) {
+    return Promise.resolve(new Response(JSON.stringify(cd2AssetsResponse)));
+  }
+
+  if (url.includes("cd2-neighborhoods.geojson")) {
+    return Promise.resolve(new Response(JSON.stringify(cd2NeighborhoodsResponse)));
   }
 
   if (pathname === "/districts") {
@@ -1066,5 +1209,252 @@ describe("mock app routes", () => {
     expect(await screen.findByText("Yes")).toBeInTheDocument();
 
     randomSpy.mockRestore();
+  });
+
+  describe("neighborhood mode", () => {
+    async function enterNeighborhoodMode() {
+      const user = userEvent.setup();
+      render(
+        <MemoryRouter initialEntries={["/map"]}>
+          <App />
+        </MemoryRouter>,
+      );
+      await screen.findByTestId("mock-boundary-source");
+      await user.click(
+        screen.getByLabelText("Show neighborhood boundaries and resources"),
+      );
+      await screen.findByTestId("layer-cd2-asset-points");
+      return user;
+    }
+
+    it("greys out the other districts and drops their colour fill and labels", async () => {
+      await enterNeighborhoodMode();
+
+      // The scrim is what puts everything outside the focused district out of focus.
+      expect(screen.getByTestId("layer-district-fill-scrim")).toBeInTheDocument();
+      // A saturated fill on another district would pull attention straight back out.
+      expect(screen.queryByTestId("layer-district-fill-selected")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("layer-district-highlight")).not.toBeInTheDocument();
+    });
+
+    it("restores the district fills when neighborhood mode is turned back off", async () => {
+      const user = await enterNeighborhoodMode();
+      await user.click(screen.getByLabelText("Show neighborhood boundaries and resources"));
+
+      await waitFor(() =>
+        expect(screen.queryByTestId("layer-district-fill-scrim")).not.toBeInTheDocument(),
+      );
+      expect(screen.getByTestId("layer-district-fill-selected")).toBeInTheDocument();
+      expect(screen.queryByTestId("layer-cd2-asset-points")).not.toBeInTheDocument();
+    });
+
+    it("draws the neighborhood boundary casing under the outline", async () => {
+      await enterNeighborhoodMode();
+      expect(screen.getByTestId("layer-cd2-neighborhood-outline-casing")).toBeInTheDocument();
+      expect(screen.getByTestId("layer-cd2-neighborhood-outline")).toBeInTheDocument();
+    });
+
+    // Explicit requirement: a district must not become selected while the overlay is on.
+    it("ignores a district click while neighborhood mode is on", async () => {
+      await enterNeighborhoodMode();
+      expect(screen.queryByLabelText(/Open District 11 overview/)).not.toBeInTheDocument();
+
+      await userEvent.setup().click(screen.getByTestId("mock-boundary-click"));
+
+      expect(screen.queryByLabelText(/Open District 11 overview/)).not.toBeInTheDocument();
+    });
+
+    it("hides council file pins by default and brings them back from the flyout", async () => {
+      const user = userEvent.setup();
+      render(
+        <MemoryRouter initialEntries={["/map"]}>
+          <App />
+        </MemoryRouter>,
+      );
+
+      // Present before the overlay is switched on...
+      await screen.findByLabelText("Council File 25-0358");
+
+      await user.click(screen.getByLabelText("Show neighborhood boundaries and resources"));
+      await screen.findByTestId("layer-cd2-asset-points");
+
+      // ...gone once it is, so the neighbourhood layer reads on its own.
+      expect(screen.queryByLabelText("Council File 25-0358")).not.toBeInTheDocument();
+
+      await user.click(screen.getByLabelText("Also show council file pins"));
+
+      expect(screen.getByLabelText("Council File 25-0358")).toBeInTheDocument();
+    });
+
+    it("closes the filter flyout from its X and reopens it from the Neighborhoods control", async () => {
+      const user = await enterNeighborhoodMode();
+      expect(screen.getByLabelText("Neighborhood resource categories")).toBeInTheDocument();
+
+      await user.click(screen.getByLabelText("Close neighborhood resource filters"));
+
+      expect(screen.queryByLabelText("Neighborhood resource categories")).not.toBeInTheDocument();
+      // The overlay itself stays up -- the X closes the flyout, not the layer.
+      expect(screen.getByTestId("layer-cd2-asset-points")).toBeInTheDocument();
+
+      await user.click(screen.getByLabelText("Show neighborhood boundaries and resources"));
+
+      expect(screen.getByLabelText("Neighborhood resource categories")).toBeInTheDocument();
+      expect(screen.getByTestId("layer-cd2-asset-points")).toBeInTheDocument();
+    });
+
+    it("opens the neighborhood detail dock on a neighborhood click and closes it again", async () => {
+      const user = await enterNeighborhoodMode();
+      expect(screen.queryByLabelText("Valley Village resources")).not.toBeInTheDocument();
+
+      await user.click(screen.getByTestId("mock-neighborhood-click"));
+
+      const panel = await screen.findByLabelText("Valley Village resources");
+      expect(panel).toBeInTheDocument();
+      // The card list is built from the loaded assets, not refetched.
+      expect(within(panel).getByText("Fire Station 60")).toBeInTheDocument();
+      expect(
+        within(panel)
+          .getByRole("link", { name: "cd2.lacity.gov/district-2/valley-village" })
+          .getAttribute("href"),
+      ).toBe("https://cd2.lacity.gov/district-2/valley-village");
+
+      await user.click(screen.getByLabelText("Close Valley Village panel"));
+
+      expect(screen.queryByLabelText("Valley Village resources")).not.toBeInTheDocument();
+    });
+
+    it("opens the District Overview panel from a District projects & office pin", async () => {
+      const user = await enterNeighborhoodMode();
+
+      await user.click(screen.getByTestId("mock-district-asset-click"));
+
+      const panel = await screen.findByLabelText("District Overview resources");
+      expect(within(panel).getByText("Council District 2")).toBeInTheDocument();
+      // Straight from the sheet's source_url column, via the generated neighborhoods file.
+      expect(
+        within(panel).getByRole("link", { name: "cd2.lacity.gov/district-2" }),
+      ).toBeInTheDocument();
+      // Scoped to the panel: the pin's own click popup carries the same label.
+      expect(within(panel).getByText("Vineland Avenue Median")).toBeInTheDocument();
+    });
+
+    // The whole point of the routing: the open panel is no obstacle to clicking a pin that
+    // belongs somewhere else.
+    it("switches panels when the clicked pin belongs to a different one", async () => {
+      const user = await enterNeighborhoodMode();
+
+      await user.click(screen.getByTestId("mock-district-asset-click"));
+      expect(await screen.findByLabelText("District Overview resources")).toBeInTheDocument();
+
+      await user.click(screen.getByTestId("mock-asset-click"));
+
+      expect(await screen.findByLabelText("Valley Village resources")).toBeInTheDocument();
+      expect(screen.queryByLabelText("District Overview resources")).not.toBeInTheDocument();
+    });
+
+    it("moves the map to a card's pin when the card is clicked", async () => {
+      mockMap.easeTo.mockClear();
+      const user = await enterNeighborhoodMode();
+
+      await user.click(screen.getByTestId("mock-neighborhood-click"));
+      const panel = await screen.findByLabelText("Valley Village resources");
+      await user.click(within(panel).getByText("Fire Station 60"));
+
+      expect(mockMap.easeTo).toHaveBeenCalledWith(
+        expect.objectContaining({
+          center: [-118.39, 34.16],
+          // Never below the viewer's current zoom, and shifted clear of the left-hand dock.
+          zoom: 15,
+          offset: [184, 0],
+        }),
+      );
+    });
+
+    // Below the dock's full-width breakpoint there is no visible half to aim at.
+    it("skips the panel offset on a narrow viewport", async () => {
+      mockMap.easeTo.mockClear();
+      mockMapContainer.clientWidth = 480;
+      try {
+        const user = await enterNeighborhoodMode();
+        await user.click(screen.getByTestId("mock-neighborhood-click"));
+        const panel = await screen.findByLabelText("Valley Village resources");
+        await user.click(within(panel).getByText("Fire Station 60"));
+
+        expect(mockMap.easeTo).toHaveBeenCalledWith(
+          expect.objectContaining({ offset: [0, 0] }),
+        );
+      } finally {
+        mockMapContainer.clientWidth = 1280;
+      }
+    });
+
+    it("enlarges and glows the pin a card click selected", async () => {
+      const user = await enterNeighborhoodMode();
+
+      await user.click(screen.getByTestId("mock-neighborhood-click"));
+      const panel = await screen.findByLabelText("Valley Village resources");
+      // Mounted from the start, but matching nothing until something is selected.
+      expect(screen.getByTestId("layer-cd2-asset-points-selected")).toHaveAttribute(
+        "data-filter",
+        expect.stringContaining("no-asset"),
+      );
+
+      await user.click(within(panel).getByText("Fire Station 60"));
+
+      for (const id of ["cd2-asset-points-selected", "cd2-asset-points-selected-glow"]) {
+        expect(screen.getByTestId(`layer-${id}`)).toHaveAttribute(
+          "data-filter",
+          expect.stringContaining("Fire Station 60"),
+        );
+      }
+    });
+
+    /**
+     * The regression this guards: react-map-gl appends a layer to the TOP of the style on mount,
+     * so a fill that only mounted when a neighbourhood was selected landed above the pins and
+     * tinted them with its 22%-opacity orange. Every layer must exist before any selection.
+     */
+    it("mounts the selection and hover fills before anything is selected", async () => {
+      await enterNeighborhoodMode();
+
+      for (const id of ["cd2-neighborhood-selected", "cd2-neighborhood-hover"]) {
+        expect(screen.getByTestId(`layer-${id}`)).toHaveAttribute(
+          "data-filter",
+          expect.stringContaining("no-neighborhood"),
+        );
+      }
+    });
+
+    it("keeps the pin layers above the neighborhood fills once one is selected", async () => {
+      const user = await enterNeighborhoodMode();
+      await user.click(screen.getByTestId("mock-neighborhood-click"));
+
+      const rendered = Array.from(
+        document.querySelectorAll<HTMLElement>("[data-testid^='layer-']"),
+      ).map((node) => node.dataset.testid);
+      // Mount order is style order, so the fill must still precede the pins in the DOM.
+      expect(rendered.indexOf("layer-cd2-neighborhood-selected")).toBeLessThan(
+        rendered.indexOf("layer-cd2-asset-points"),
+      );
+      expect(screen.getByTestId("layer-cd2-neighborhood-selected")).toHaveAttribute(
+        "data-filter",
+        expect.stringContaining("Valley Village"),
+      );
+    });
+
+    it("flashes the clicked pin's card and clears the flash a second later", async () => {
+      const scrollIntoView = vi.fn();
+      Element.prototype.scrollIntoView = scrollIntoView;
+      const user = await enterNeighborhoodMode();
+
+      await user.click(screen.getByTestId("mock-asset-click"));
+
+      const panel = await screen.findByLabelText("Valley Village resources");
+      const card = within(panel).getByText("Fire Station 60").closest("li");
+      expect(card?.className).toContain("is-flashing");
+      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "center" });
+
+      await waitFor(() => expect(card?.className).not.toContain("is-flashing"), { timeout: 2000 });
+    });
   });
 });

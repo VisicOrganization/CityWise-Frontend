@@ -8,14 +8,36 @@ import Map, {
   type MapRef,
   type ViewState,
 } from "react-map-gl/maplibre";
-import type { FilterSpecification, StyleSpecification } from "maplibre-gl";
+import type { FilterSpecification } from "maplibre-gl";
 
 import { MapAddressSearch } from "./MapAddressSearch";
 import { useCouncilMemberBios } from "../districts/useCouncilMemberBios";
 import { useDistrictProfile } from "../districts/useDistrictProfile";
 import { formatPersonNameForDisplay } from "../../shared/formatPersonName";
 import { formatProjectTitleForDisplay } from "../../shared/formatProjectTitleForDisplay";
-import { cartoLightAllTilesUrl } from "../../shared/map/cartoBasemap";
+import { LIGHT_BASE_MAP_STYLE } from "../../shared/map/lightBaseMapStyle";
+import {
+  assetKey,
+  getDistrictAssetSource,
+  getPanelSourceUrl,
+  hasNeighborhoodMap,
+  NEIGHBORHOOD_DISTRICT_ID,
+  resolvePanelSelection,
+  useDistrictAssets,
+  type AssetProperties,
+  type PanelAsset,
+  type PanelSelection,
+} from "./cd2Assets";
+import { ResourceDetailPanel, type AssetFocus } from "./ResourceDetailPanel";
+import { NeighborhoodOverlay } from "./NeighborhoodOverlay";
+import {
+  ASSET_POINTS_LAYER_ID,
+  CATEGORY_LABELS,
+  CATEGORY_ORDER,
+  NEIGHBORHOOD_FILL_LAYER_ID,
+} from "./neighborhoodMapLayers";
+import { ASSET_PIN_SOURCES, pinImageUrl, useAssetPinImages } from "./assetPinImages";
+import type { HoveredAsset, HoveredNeighborhood } from "./NeighborhoodOverlay";
 import { findDistrictFeature, getFeatureBounds, type DistrictBoundaryCollection } from "../../shared/map/districtBoundaries";
 import {
   districtFillLayer,
@@ -32,37 +54,6 @@ import { LocationPinIcon } from "../../shared/ui/visicIcons";
 
 /** Style-guide forest green (Figma Visic UI primary, `--ps-forest`) for the searched-address pin. */
 const ADDRESS_PIN_COLOR = "#1d865e";
-
-const LIGHT_BASE_MAP_STYLE: StyleSpecification = {
-  version: 8,
-  glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
-  sources: {
-    raster: {
-      type: "raster",
-      tiles: [cartoLightAllTilesUrl()],
-      tileSize: 256,
-      attribution: "© OpenStreetMap contributors © CARTO",
-    },
-  },
-  layers: [
-    {
-      id: "background",
-      type: "background",
-      paint: {
-        "background-color": "#eef2f5",
-      },
-    },
-    {
-      id: "raster-base",
-      type: "raster",
-      source: "raster",
-      paint: {
-        "raster-opacity": 0.97,
-        "raster-saturation": -0.18,
-      },
-    },
-  ],
-};
 
 const PIN_SRC: Record<MarkerCategory, string> = {
   "Housing": "/images/pins/housing.svg",
@@ -88,6 +79,13 @@ const DEFAULT_VIEW_STATE: ViewState = {
 
 const DEFAULT_DISTRICT_IDS = Array.from({ length: 15 }, (_, index) => index + 1);
 
+/** Close enough to read the street the pin sits on, without leaving its neighbours off-screen. */
+const ASSET_FOCUS_ZOOM = 15;
+/** Mirrors `.neighborhood-detail-host`'s 23rem cap in app.css. Change one, change the other. */
+const PANEL_WIDTH_PX = 368;
+/** The dock's own full-width breakpoint (max-width: 640px), above which the offset is useful. */
+const PANEL_OFFSET_MIN_WIDTH = 641;
+
 const MAP_GUIDANCE_ICON_ITEMS = MARKER_CATEGORIES.map((category) => ({
   label: category,
   src: PIN_SRC[category],
@@ -111,6 +109,38 @@ function buildDistrictFillLayer(selectedDistrictIds: number[]) {
     id: "district-fill-selected",
     filter: selectedDistrictFilter,
   } satisfies typeof districtFillLayer;
+}
+
+/**
+ * Grey wash over every council district except the one in focus, for neighbourhood mode.
+ *
+ * Rendered inside the district `<Source>` — above the district fills but below everything the
+ * neighbourhood overlay draws. That ordering is what makes it correct rather than merely dim:
+ * the CSA polygons extend past CD2 (the Van Nuys CSA is almost entirely CD6), so a scrim drawn
+ * *over* the overlay would grey out part of the very neighbourhoods being focused. Underneath,
+ * it washes out only what the overlay does not cover.
+ *
+ * A light neutral rather than a dark one: the CARTO basemap is already pale, so lifting the
+ * surroundings toward flat grey reads as out-of-focus, where darkening would read as selected.
+ */
+function buildDistrictScrimLayer(focusDistrictId: number) {
+  return {
+    ...districtFillLayer,
+    id: "district-fill-scrim",
+    filter: ["!=", ["get", "District"], focusDistrictId] as FilterSpecification,
+    paint: {
+      "fill-color": "#dfe3e8",
+      "fill-opacity": 0.62,
+    },
+  } satisfies typeof districtFillLayer;
+}
+
+/** District numbers for the focused district only; the rest would fight the scrim. */
+function buildFocusedDistrictLabelsLayer(focusDistrictId: number) {
+  return {
+    ...districtLabelsLayer,
+    filter: ["==", ["get", "District"], focusDistrictId] as FilterSpecification,
+  } satisfies typeof districtLabelsLayer;
 }
 
 function buildDistrictFillDimLayer() {
@@ -212,6 +242,34 @@ export function CityMap({
   const [isAddressCardOpen, setIsAddressCardOpen] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isDistrictFilterOpen, setIsDistrictFilterOpen] = useState(false);
+  /** Neighbourhood resources overlay: off by default so council-file pins stay the headline. */
+  const [isNeighborhoodsOn, setIsNeighborhoodsOn] = useState(false);
+  const [isNeighborhoodPanelOpen, setIsNeighborhoodPanelOpen] = useState(false);
+  const [neighborhoodCategories, setNeighborhoodCategories] = useState<readonly string[]>(CATEGORY_ORDER);
+  const [selectedAsset, setSelectedAsset] = useState<{
+    longitude: number;
+    latitude: number;
+    properties: Partial<AssetProperties>;
+  } | null>(null);
+  /**
+   * Which resource panel is open. Replaces a bare `selectedNeighborhood` because a clicked pin
+   * can now route to the District Overview instead of a neighbourhood; the map's selection fill
+   * still only ever highlights a CSA polygon, so that stays derived below.
+   */
+  const [panelSelection, setPanelSelection] = useState<PanelSelection | null>(null);
+  /** Set only by a pin click: which card the open panel should scroll to and flash. */
+  const [assetFocus, setAssetFocus] = useState<AssetFocus | null>(null);
+  const focusNonceRef = useRef(0);
+  const selectedNeighborhood =
+    panelSelection?.kind === "neighborhood" ? panelSelection.csaLabel : null;
+  /** Desktop-only by nature: onMouseMove never fires from touch input. */
+  const [hoveredNeighborhood, setHoveredNeighborhood] = useState<HoveredNeighborhood | null>(null);
+  const [hoveredAsset, setHoveredAsset] = useState<HoveredAsset | null>(null);
+  /**
+   * Council-file pins while the overlay is on. Turned off with the overlay so the neighbourhood
+   * layer is legible on its own; the flyout's checkbox brings them back.
+   */
+  const [showLegislation, setShowLegislation] = useState(true);
   const [pillPortraitFailed, setPillPortraitFailed] = useState(false);
   const [isDistrictPillVisible, setIsDistrictPillVisible] = useState(true);
   const [selectedDistrictIds, setSelectedDistrictIds] = useState<Set<number>>(
@@ -225,6 +283,27 @@ export function CityMap({
   const hasInitializedMarkerCategoryFilterRef = useRef(false);
   const hasInitializedDistrictFilterRef = useRef(false);
   const previousActiveDistrictIdForPillRef = useRef<number | null | undefined>(undefined);
+
+  // Both files are committed and tiny (32 KB + 45 KB); the hook memoises across mounts.
+  // Gated on the toggle so nothing is fetched for a session that never turns it on.
+  const neighborhoodData = useDistrictAssets(NEIGHBORHOOD_DISTRICT_ID, isNeighborhoodsOn);
+  /**
+   * The pin symbol layers name icon ids, so they must not mount before those ids exist in the
+   * style -- MapLibre warns every frame for an unknown `icon-image` and draws nothing.
+   */
+  const arePinImagesReady = useAssetPinImages(mapRef, isNeighborhoodsOn && isMapReady);
+  const neighborhoodBoundary = useMemo(
+    () => (boundaries ? findDistrictFeature(boundaries, NEIGHBORHOOD_DISTRICT_ID) ?? null : null),
+    [boundaries],
+  );
+  const neighborhoodCounts = useMemo(() => {
+    const tally: Record<string, number> = {};
+    for (const feature of neighborhoodData?.assets.features ?? []) {
+      const key = feature.properties?.category ?? "";
+      tally[key] = (tally[key] ?? 0) + 1;
+    }
+    return tally;
+  }, [neighborhoodData]);
 
   const availableDistrictIds = useMemo(() => {
     const ids = new Set<number>();
@@ -571,9 +650,126 @@ export function CityMap({
     map.easeTo({ zoom: map.getZoom() + delta, duration: 200 });
   }
 
+  function handleMapMouseMove(event: MapLayerMouseEvent) {
+    if (!isNeighborhoodsOn) {
+      return;
+    }
+    // Hit-testing is already scoped by interactiveLayerIds, so no queryRenderedFeatures call is
+    // needed -- the same reasoning HomelessCountPage records for its own hover handler.
+    const assetFeature = event.features?.find(
+      (feature) => feature.layer?.id === ASSET_POINTS_LAYER_ID,
+    );
+    if (assetFeature) {
+      const properties = assetFeature.properties ?? {};
+      const label = typeof properties.label === "string" ? properties.label : null;
+      setHoveredNeighborhood(null);
+      setHoveredAsset(
+        label
+          ? {
+              label,
+              category: typeof properties.category === "string" ? properties.category : "",
+              longitude: event.lngLat.lng,
+              latitude: event.lngLat.lat,
+            }
+          : null,
+      );
+      return;
+    }
+
+    setHoveredAsset(null);
+    const neighborhoodFeature = event.features?.find(
+      (feature) => feature.layer?.id === NEIGHBORHOOD_FILL_LAYER_ID,
+    );
+    const csaLabel = neighborhoodFeature?.properties?.CSA_Label;
+    setHoveredNeighborhood(
+      typeof csaLabel === "string"
+        ? { label: csaLabel, longitude: event.lngLat.lng, latitude: event.lngLat.lat }
+        : null,
+    );
+  }
+
+  function handleMapMouseLeave() {
+    setHoveredNeighborhood(null);
+    setHoveredAsset(null);
+  }
+
+  /**
+   * A card click, in the opposite direction to a pin click: move the map to the pin, select it
+   * (which is what enlarges and lights it), and flash the card back so the two ends of the
+   * round trip are visibly the same row.
+   */
+  function handleSelectAssetFromPanel(asset: PanelAsset) {
+    setSelectedAsset({
+      longitude: asset.longitude,
+      latitude: asset.latitude,
+      properties: asset.properties,
+    });
+    focusNonceRef.current += 1;
+    setAssetFocus({ key: asset.key, nonce: focusNonceRef.current });
+
+    const map = mapRef.current?.getMap();
+    if (!map) {
+      return;
+    }
+    // The panel covers the left edge, so centring the pin would park it underneath. Shifting
+    // the target right by half the dock's width lands it in the visible half instead. Skipped
+    // below the breakpoint where the dock goes full-width and there is no visible half.
+    const width = map.getContainer()?.clientWidth ?? 0;
+    const offset: [number, number] = width >= PANEL_OFFSET_MIN_WIDTH ? [PANEL_WIDTH_PX / 2, 0] : [0, 0];
+    map.easeTo({
+      center: [asset.longitude, asset.latitude],
+      // Never zooms out: the user may have zoomed in deliberately before clicking the card.
+      zoom: Math.max(map.getZoom(), ASSET_FOCUS_ZOOM),
+      offset,
+      duration: 700,
+    });
+  }
+
   function handleMapClick(event: MapLayerMouseEvent) {
     setSearchDismissSignal((n) => n + 1);
     setIsAddressCardOpen(false);
+
+    // Checked before onMapBackgroundClick() and before the district lookup: a resource pin sits
+    // on top of a district fill, so without this a click on one would both open its popup and
+    // re-select the district underneath it.
+    // `layer` is read optionally on purpose, matching how this handler already reads
+    // `properties?.District`: a queried feature is not guaranteed to carry every field.
+    const assetFeature = event.features?.find(
+      (feature) => feature.layer?.id === ASSET_POINTS_LAYER_ID,
+    );
+    if (assetFeature && assetFeature.geometry?.type === "Point") {
+      const [longitude, latitude] = assetFeature.geometry.coordinates;
+      const properties = (assetFeature.properties ?? {}) as Partial<AssetProperties>;
+      setSelectedAsset({ longitude, latitude, properties });
+
+      // Open whichever panel can show this pin -- switching panels if the open one cannot --
+      // then ask it to scroll to the card and flash it. The nonce makes a repeat click on the
+      // same pin re-run the effect instead of being skipped as unchanged state.
+      const nextSelection = resolvePanelSelection(properties, panelSelection);
+      if (nextSelection) {
+        focusNonceRef.current += 1;
+        setPanelSelection(nextSelection);
+        setAssetFocus({ key: assetKey(properties), nonce: focusNonceRef.current });
+      }
+      return;
+    }
+
+    setSelectedAsset(null);
+
+    // A neighbourhood click beats the district fill underneath it, and in overlay mode a click
+    // anywhere on the map must not re-select a district -- both are explicit requirements, and
+    // both have to be handled before onMapBackgroundClick()/the district lookup below.
+    if (isNeighborhoodsOn) {
+      const neighborhoodFeature = event.features?.find(
+        (feature) => feature.layer?.id === NEIGHBORHOOD_FILL_LAYER_ID,
+      );
+      const label = neighborhoodFeature?.properties?.CSA_Label;
+      setPanelSelection(typeof label === "string" ? { kind: "neighborhood", csaLabel: label } : null);
+      setAssetFocus(null);
+      onMapBackgroundClick();
+      return;
+    }
+
     onMapBackgroundClick();
 
     const clickedFeature = event.features?.find((feature) => {
@@ -602,11 +798,20 @@ export function CityMap({
         ref={setMapInstance}
         initialViewState={DEFAULT_VIEW_STATE}
         onClick={handleMapClick}
+        onMouseMove={handleMapMouseMove}
+        onMouseLeave={handleMapMouseLeave}
+        cursor={hoveredAsset || hoveredNeighborhood ? "pointer" : undefined}
+        // Every id here must name a layer that is actually mounted, or MapLibre warns on each
+        // query — which is why the two sets below track what the <Source> above renders.
         interactiveLayerIds={[
           "district-fill-dim",
-          "district-fill-selected",
-          "district-highlight",
           "district-labels",
+          ...(isNeighborhoodsOn
+            ? ["district-fill-scrim"]
+            : ["district-fill-selected", "district-highlight"]),
+          ...(isNeighborhoodsOn && neighborhoodData
+            ? [NEIGHBORHOOD_FILL_LAYER_ID, ASSET_POINTS_LAYER_ID]
+            : []),
         ]}
         mapStyle={LIGHT_BASE_MAP_STYLE}
         attributionControl={false}
@@ -615,10 +820,24 @@ export function CityMap({
         {boundaries ? (
           <Source id="district-boundaries" type="geojson" data={boundaries}>
             <Layer {...buildDistrictFillDimLayer()} />
-            <Layer {...buildDistrictFillLayer(selectedDistrictIdList)} />
+            {/* The per-district colour fill and the pill highlight are both suppressed in
+                neighbourhood mode: a saturated CD6 or CD4 fill alongside the scrim would pull
+                attention straight back out of the district in focus. */}
+            {isNeighborhoodsOn ? null : (
+              <Layer {...buildDistrictFillLayer(selectedDistrictIdList)} />
+            )}
+            {isNeighborhoodsOn ? (
+              <Layer {...buildDistrictScrimLayer(NEIGHBORHOOD_DISTRICT_ID)} />
+            ) : null}
             <Layer {...districtOutlineLayer} />
-            {pillDistrictId != null ? <Layer {...buildHighlightLayer(pillDistrictId)} /> : null}
-            <Layer {...districtLabelsLayer} />
+            {!isNeighborhoodsOn && pillDistrictId != null ? (
+              <Layer {...buildHighlightLayer(pillDistrictId)} />
+            ) : null}
+            <Layer
+              {...(isNeighborhoodsOn
+                ? buildFocusedDistrictLabelsLayer(NEIGHBORHOOD_DISTRICT_ID)
+                : districtLabelsLayer)}
+            />
           </Source>
         ) : null}
 
@@ -664,7 +883,7 @@ export function CityMap({
           </Marker>
         ) : null}
 
-        {visibleMarkers.map((marker) => {
+        {(isNeighborhoodsOn && !showLegislation ? [] : visibleMarkers).map((marker) => {
           const showHoverCard = hoveredMarkerId === marker.id;
           const markerZIndex = activeMarkerId === marker.id ? 4 : showHoverCard ? 6 : 1;
           const titleColor = CATEGORY_COLOR[marker.category];
@@ -692,6 +911,10 @@ export function CityMap({
                 onBlur={() => setHoveredMarkerId((current) => (current === marker.id ? null : current))}
                 onClick={(clickEvent) => {
                   clickEvent.stopPropagation();
+                  // Both panels dock to the left edge; the project sidebar would slide in
+                  // on top of this one, so the neighbourhood selection yields to it.
+                  setPanelSelection(null);
+                  setAssetFocus(null);
                   onMarkerSelect(marker);
                 }}
               >
@@ -743,7 +966,37 @@ export function CityMap({
             </Marker>
           );
         })}
+
+        {/* Last map child: the resource pins must draw above every district fill and label. */}
+        {isNeighborhoodsOn && neighborhoodData && arePinImagesReady ? (
+          <NeighborhoodOverlay
+            assets={neighborhoodData.assets}
+            neighborhoods={neighborhoodData.neighborhoods}
+            districtBoundary={neighborhoodBoundary}
+            activeCategories={neighborhoodCategories}
+            selectedNeighborhood={selectedNeighborhood}
+            hoveredNeighborhood={hoveredNeighborhood}
+            hoveredAsset={hoveredAsset}
+            selected={selectedAsset}
+            onCloseSelected={() => setSelectedAsset(null)}
+          />
+        ) : null}
       </Map>
+
+      {isNeighborhoodsOn && neighborhoodData && panelSelection ? (
+        <ResourceDetailPanel
+          selection={panelSelection}
+          assets={neighborhoodData.assets}
+          focus={assetFocus}
+          sourceUrl={getPanelSourceUrl(neighborhoodData.neighborhoods, panelSelection)}
+          districtId={NEIGHBORHOOD_DISTRICT_ID}
+          onSelectAsset={handleSelectAssetFromPanel}
+          onClose={() => {
+            setPanelSelection(null);
+            setAssetFocus(null);
+          }}
+        />
+      ) : null}
 
       <div
         className={`map-district-pill-shell ${
@@ -860,6 +1113,74 @@ export function CityMap({
                     />
                   </svg>
                 </button>
+                {hasNeighborhoodMap(NEIGHBORHOOD_DISTRICT_ID) ? (
+                  <>
+                    <span className="map-control-pill-rule" aria-hidden="true" />
+                    <button
+                      type="button"
+                      className={`map-figma-ctrl-btn map-figma-ctrl-btn--expandable ${
+                        isNeighborhoodsOn ? "is-active" : ""
+                      }`}
+                      aria-label="Show neighborhood boundaries and resources"
+                      aria-pressed={isNeighborhoodsOn}
+                      onClick={() => {
+                        // The flyout has its own X. Once closed, this button brings it back
+                        // rather than tearing the overlay down and rebuilding it.
+                        if (isNeighborhoodsOn && !isNeighborhoodPanelOpen) {
+                          setIsNeighborhoodPanelOpen(true);
+                          setIsInfoOpen(false);
+                          setIsDistrictFilterOpen(false);
+                          return;
+                        }
+                        const next = !isNeighborhoodsOn;
+                        setIsNeighborhoodsOn(next);
+                        setIsNeighborhoodPanelOpen(next);
+                        setIsInfoOpen(false);
+                        setIsDistrictFilterOpen(false);
+                        if (!next) {
+                          setSelectedAsset(null);
+                          setPanelSelection(null);
+                          setAssetFocus(null);
+                          setHoveredNeighborhood(null);
+                          setHoveredAsset(null);
+                          setShowLegislation(true);
+                        } else {
+                          // Legislation pins off by default so the neighbourhood layer is
+                          // legible on its own; the flyout's checkbox brings them back.
+                          setShowLegislation(false);
+                          // Without this, toggling the layer on while looking at another part of
+                          // the city shows an empty map and reads as broken.
+                          const bounds = getDistrictAssetSource(NEIGHBORHOOD_DISTRICT_ID)?.bounds;
+                          if (bounds) {
+                            mapRef.current?.getMap().fitBounds(bounds, {
+                              padding: 64,
+                              duration: 700,
+                            });
+                          }
+                        }
+                      }}
+                    >
+                      <span className="map-figma-ctrl-btn-label">Neighborhoods</span>
+                      <svg
+                        className="map-figma-ctrl-icon"
+                        width="100%"
+                        height="100%"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M9 20L3 17V4l6 3m0 13 6-3m-6 3V7m6 10 6 3V7l-6-3m0 13V4m0 0L9 7"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  </>
+                ) : null}
               </div>
 
               <div className="map-control-pill map-control-pill--stacked">
@@ -960,6 +1281,100 @@ export function CityMap({
                       </div>
                     </section>
                   </div>
+                </div>
+              ) : null}
+
+              {isNeighborhoodsOn && isNeighborhoodPanelOpen ? (
+                <div
+                  className="map-figma-flyout map-figma-flyout--district-filter map-figma-flyout--neighborhood"
+                  aria-label="Neighborhood resource categories"
+                >
+                  <div className="map-utility-header">
+                    <strong>Neighborhood resources</strong>
+                    <button
+                      type="button"
+                      className="map-flyout-close-btn"
+                      aria-label="Close neighborhood resource filters"
+                      onClick={() => setIsNeighborhoodPanelOpen(false)}
+                    >
+                      <span aria-hidden="true">×</span>
+                    </button>
+                  </div>
+                  <p>
+                    Councils, parks, public-safety facilities and district projects across the
+                    neighborhoods of District {NEIGHBORHOOD_DISTRICT_ID}. Some serve the district
+                    from just outside it.
+                  </p>
+                  <div className="map-neighborhood-legislation-toggle">
+                    <label className="map-district-filter-option">
+                      <input
+                        type="checkbox"
+                        checked={showLegislation}
+                        onChange={() => setShowLegislation((current) => !current)}
+                      />
+                      <span>Also show council file pins</span>
+                    </label>
+                  </div>
+                  <div
+                    className="map-district-filter-actions"
+                    role="group"
+                    aria-label="Neighborhood category quick actions"
+                  >
+                    <button
+                      type="button"
+                      className="map-district-filter-action-btn"
+                      onClick={() => setNeighborhoodCategories(CATEGORY_ORDER)}
+                    >
+                      Select all
+                    </button>
+                    <button
+                      type="button"
+                      className="map-district-filter-action-btn"
+                      onClick={() => setNeighborhoodCategories([])}
+                    >
+                      Deselect all
+                    </button>
+                  </div>
+                  <div className="map-neighborhood-legend">
+                    {CATEGORY_ORDER.map((category) => (
+                      <label key={category} className="map-district-filter-option">
+                        <input
+                          type="checkbox"
+                          checked={neighborhoodCategories.includes(category)}
+                          onChange={() =>
+                            setNeighborhoodCategories((current) =>
+                              current.includes(category)
+                                ? current.filter((item) => item !== category)
+                                : CATEGORY_ORDER.filter(
+                                    (item) => current.includes(item) || item === category,
+                                  ),
+                            )
+                          }
+                        />
+                        {/* The pin itself, not a colour chip. The four hues are close enough
+                            under tritanopia (safety vs district projects, ΔE 2.1) that the glyph
+                            is what actually distinguishes them -- see CATEGORY_COLORS. */}
+                        <img
+                          className="map-neighborhood-legend-icon"
+                          src={pinImageUrl(ASSET_PIN_SOURCES[category])}
+                          alt=""
+                          width={18}
+                          height={18}
+                        />
+                        <span className="map-neighborhood-legend-label">
+                          {CATEGORY_LABELS[category]}
+                        </span>
+                        <span className="map-neighborhood-legend-count">
+                          {neighborhoodCounts[category] ?? 0}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                  <p className="map-neighborhood-legend-note">
+                    Outlines are LAHSA 2020 Community Statistical Areas, which approximate but do
+                    not match council district boundaries — the dashed line is District{" "}
+                    {NEIGHBORHOOD_DISTRICT_ID}&rsquo;s actual edge.
+                  </p>
                 </div>
               ) : null}
 

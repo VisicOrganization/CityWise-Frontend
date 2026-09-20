@@ -1,0 +1,1218 @@
+[
+  {
+    "CSA_Label": "City of Agoura Hills",
+    "Total_Pop": 2
+  },
+  {
+    "CSA_Label": "City of Alhambra",
+    "Total_Pop": 46
+  },
+  {
+    "CSA_Label": "City of Arcadia",
+    "Total_Pop": 68
+  },
+  {
+    "CSA_Label": "City of Artesia",
+    "Total_Pop": 24
+  },
+  {
+    "CSA_Label": "City of Avalon",
+    "Total_Pop": 31
+  },
+  {
+    "CSA_Label": "City of Azusa",
+    "Total_Pop": 271
+  },
+  {
+    "CSA_Label": "City of Baldwin Park",
+    "Total_Pop": 550
+  },
+  {
+    "CSA_Label": "City of Bell",
+    "Total_Pop": 20
+  },
+  {
+    "CSA_Label": "City of Bell Gardens",
+    "Total_Pop": 83
+  },
+  {
+    "CSA_Label": "City of Bellflower",
+    "Total_Pop": 242
+  },
+  {
+    "CSA_Label": "City of Beverly Hills",
+    "Total_Pop": 19
+  },
+  {
+    "CSA_Label": "City of Bradbury",
+    "Total_Pop": 0
+  },
+  {
+    "CSA_Label": "City of Burbank",
+    "Total_Pop": 291
+  },
+  {
+    "CSA_Label": "City of Calabasas",
+    "Total_Pop": 1
+  },
+  {
+    "CSA_Label": "City of Carson",
+    "Total_Pop": 167
+  },
+  {
+    "CSA_Label": "City of Cerritos",
+    "Total_Pop": 46
+  },
+  {
+    "CSA_Label": "City of Claremont",
+    "Total_Pop": 25
+  },
+  {
+    "CSA_Label": "City of Commerce",
+    "Total_Pop": 654
+  },
+  {
+    "CSA_Label": "City of Compton",
+    "Total_Pop": 722
+  },
+  {
+    "CSA_Label": "City of Covina",
+    "Total_Pop": 85
+  },
+  {
+    "CSA_Label": "City of Cudahy",
+    "Total_Pop": 22
+  },
+  {
+    "CSA_Label": "City of Culver City",
+    "Total_Pop": 178
+  },
+  {
+    "CSA_Label": "City of Diamond Bar",
+    "Total_Pop": 3
+  },
+  {
+    "CSA_Label": "City of Downey",
+    "Total_Pop": 258
+  },
+  {
+    "CSA_Label": "City of Duarte",
+    "Total_Pop": 25
+  },
+  {
+    "CSA_Label": "City of El Monte",
+    "Total_Pop": 443
+  },
+  {
+    "CSA_Label": "City of El Segundo",
+    "Total_Pop": 47
+  },
+  {
+    "CSA_Label": "City of Gardena",
+    "Total_Pop": 97
+  },
+  {
+    "CSA_Label": "City of Glendale",
+    "Total_Pop": 169
+  },
+  {
+    "CSA_Label": "City of Glendora",
+    "Total_Pop": 150
+  },
+  {
+    "CSA_Label": "City of Hawaiian Gardens",
+    "Total_Pop": 14
+  },
+  {
+    "CSA_Label": "City of Hawthorne",
+    "Total_Pop": 189
+  },
+  {
+    "CSA_Label": "City of Hermosa Beach",
+    "Total_Pop": 28
+  },
+  {
+    "CSA_Label": "City of Huntington Park",
+    "Total_Pop": 215
+  },
+  {
+    "CSA_Label": "City of Industry",
+    "Total_Pop": 139
+  },
+  {
+    "CSA_Label": "City of Inglewood",
+    "Total_Pop": 503
+  },
+  {
+    "CSA_Label": "City of Irwindale",
+    "Total_Pop": 7
+  },
+  {
+    "CSA_Label": "City of La Canada Flintridge",
+    "Total_Pop": 2
+  },
+  {
+    "CSA_Label": "City of La Habra Heights",
+    "Total_Pop": 0
+  },
+  {
+    "CSA_Label": "City of La Mirada",
+    "Total_Pop": 40
+  },
+  {
+    "CSA_Label": "City of La Puente",
+    "Total_Pop": 78
+  },
+  {
+    "CSA_Label": "City of La Verne",
+    "Total_Pop": 10
+  },
+  {
+    "CSA_Label": "City of Lakewood",
+    "Total_Pop": 87
+  },
+  {
+    "CSA_Label": "City of Lancaster",
+    "Total_Pop": 1980
+  },
+  {
+    "CSA_Label": "City of Lawndale",
+    "Total_Pop": 37
+  },
+  {
+    "CSA_Label": "City of Lomita",
+    "Total_Pop": 23
+  },
+  {
+    "CSA_Label": "City of Long Beach",
+    "Total_Pop": 2034
+  },
+  {
+    "CSA_Label": "City of Lynwood",
+    "Total_Pop": 93
+  },
+  {
+    "CSA_Label": "City of Malibu",
+    "Total_Pop": 80
+  },
+  {
+    "CSA_Label": "City of Manhattan Beach",
+    "Total_Pop": 15
+  },
+  {
+    "CSA_Label": "City of Maywood",
+    "Total_Pop": 49
+  },
+  {
+    "CSA_Label": "City of Monrovia",
+    "Total_Pop": 77
+  },
+  {
+    "CSA_Label": "City of Montebello",
+    "Total_Pop": 170
+  },
+  {
+    "CSA_Label": "City of Monterey Park",
+    "Total_Pop": 78
+  },
+  {
+    "CSA_Label": "City of Norwalk",
+    "Total_Pop": 168
+  },
+  {
+    "CSA_Label": "City of Palmdale",
+    "Total_Pop": 293
+  },
+  {
+    "CSA_Label": "City of Palos Verdes Estates",
+    "Total_Pop": 0
+  },
+  {
+    "CSA_Label": "City of Paramount",
+    "Total_Pop": 85
+  },
+  {
+    "CSA_Label": "City of Pasadena",
+    "Total_Pop": 527
+  },
+  {
+    "CSA_Label": "City of Pico Rivera",
+    "Total_Pop": 168
+  },
+  {
+    "CSA_Label": "City of Pomona",
+    "Total_Pop": 718
+  },
+  {
+    "CSA_Label": "City of Rancho Palos Verdes",
+    "Total_Pop": 0
+  },
+  {
+    "CSA_Label": "City of Redondo Beach",
+    "Total_Pop": 176
+  },
+  {
+    "CSA_Label": "City of Rolling Hills",
+    "Total_Pop": 0
+  },
+  {
+    "CSA_Label": "City of Rolling Hills Estates",
+    "Total_Pop": 0
+  },
+  {
+    "CSA_Label": "City of Rosemead",
+    "Total_Pop": 53
+  },
+  {
+    "CSA_Label": "City of San Dimas",
+    "Total_Pop": 16
+  },
+  {
+    "CSA_Label": "City of San Fernando",
+    "Total_Pop": 23
+  },
+  {
+    "CSA_Label": "City of San Gabriel",
+    "Total_Pop": 7
+  },
+  {
+    "CSA_Label": "City of San Marino",
+    "Total_Pop": 0
+  },
+  {
+    "CSA_Label": "City of Santa Clarita",
+    "Total_Pop": 177
+  },
+  {
+    "CSA_Label": "City of Santa Fe Springs",
+    "Total_Pop": 123
+  },
+  {
+    "CSA_Label": "City of Santa Monica",
+    "Total_Pop": 811
+  },
+  {
+    "CSA_Label": "City of Sierra Madre",
+    "Total_Pop": 0
+  },
+  {
+    "CSA_Label": "City of Signal Hill",
+    "Total_Pop": 46
+  },
+  {
+    "CSA_Label": "City of South El Monte",
+    "Total_Pop": 39
+  },
+  {
+    "CSA_Label": "City of South Gate",
+    "Total_Pop": 399
+  },
+  {
+    "CSA_Label": "City of South Pasadena",
+    "Total_Pop": 15
+  },
+  {
+    "CSA_Label": "City of Temple City",
+    "Total_Pop": 34
+  },
+  {
+    "CSA_Label": "City of Torrance",
+    "Total_Pop": 332
+  },
+  {
+    "CSA_Label": "City of Vernon",
+    "Total_Pop": 70
+  },
+  {
+    "CSA_Label": "City of Walnut",
+    "Total_Pop": 0
+  },
+  {
+    "CSA_Label": "City of West Covina",
+    "Total_Pop": 122
+  },
+  {
+    "CSA_Label": "City of West Hollywood",
+    "Total_Pop": 112
+  },
+  {
+    "CSA_Label": "City of Westlake Village",
+    "Total_Pop": 1
+  },
+  {
+    "CSA_Label": "City of Whittier",
+    "Total_Pop": 229
+  },
+  {
+    "CSA_Label": "Los Angeles - Adams-Normandie",
+    "Total_Pop": 12
+  },
+  {
+    "CSA_Label": "Los Angeles - Alsace",
+    "Total_Pop": 60
+  },
+  {
+    "CSA_Label": "Los Angeles - Angeles National Forest",
+    "Total_Pop": 2
+  },
+  {
+    "CSA_Label": "Los Angeles - Angelino Heights",
+    "Total_Pop": 37
+  },
+  {
+    "CSA_Label": "Los Angeles - Arleta",
+    "Total_Pop": 63
+  },
+  {
+    "CSA_Label": "Los Angeles - Atwater Village",
+    "Total_Pop": 106
+  },
+  {
+    "CSA_Label": "Los Angeles - Baldwin Hills",
+    "Total_Pop": 53
+  },
+  {
+    "CSA_Label": "Los Angeles - Bel Air",
+    "Total_Pop": 5
+  },
+  {
+    "CSA_Label": "Los Angeles - Beverly Crest",
+    "Total_Pop": 1
+  },
+  {
+    "CSA_Label": "Los Angeles - Beverlywood",
+    "Total_Pop": 11
+  },
+  {
+    "CSA_Label": "Los Angeles - Boyle Heights",
+    "Total_Pop": 720
+  },
+  {
+    "CSA_Label": "Los Angeles - Brentwood",
+    "Total_Pop": 55
+  },
+  {
+    "CSA_Label": "Los Angeles - Cadillac-Corning",
+    "Total_Pop": 5
+  },
+  {
+    "CSA_Label": "Los Angeles - Canoga Park",
+    "Total_Pop": 174
+  },
+  {
+    "CSA_Label": "Los Angeles - Carthay",
+    "Total_Pop": 89
+  },
+  {
+    "CSA_Label": "Los Angeles - Central",
+    "Total_Pop": 250
+  },
+  {
+    "CSA_Label": "Los Angeles - Century City",
+    "Total_Pop": 7
+  },
+  {
+    "CSA_Label": "Los Angeles - Century Palms/Cove",
+    "Total_Pop": 404
+  },
+  {
+    "CSA_Label": "Los Angeles - Chatsworth",
+    "Total_Pop": 165
+  },
+  {
+    "CSA_Label": "Los Angeles - Cheviot Hills",
+    "Total_Pop": 46
+  },
+  {
+    "CSA_Label": "Los Angeles - Chinatown",
+    "Total_Pop": 260
+  },
+  {
+    "CSA_Label": "Los Angeles - Cloverdale/Cochran",
+    "Total_Pop": 108
+  },
+  {
+    "CSA_Label": "Los Angeles - Country Club Park",
+    "Total_Pop": 43
+  },
+  {
+    "CSA_Label": "Los Angeles - Crenshaw District",
+    "Total_Pop": 80
+  },
+  {
+    "CSA_Label": "Los Angeles - Crestview",
+    "Total_Pop": 44
+  },
+  {
+    "CSA_Label": "Los Angeles - Del Rey",
+    "Total_Pop": 86
+  },
+  {
+    "CSA_Label": "Los Angeles - Downtown",
+    "Total_Pop": 1229
+  },
+  {
+    "CSA_Label": "Los Angeles - Eagle Rock",
+    "Total_Pop": 121
+  },
+  {
+    "CSA_Label": "Los Angeles - East Hollywood",
+    "Total_Pop": 169
+  },
+  {
+    "CSA_Label": "Los Angeles - Echo Park",
+    "Total_Pop": 298
+  },
+  {
+    "CSA_Label": "Los Angeles - El Sereno",
+    "Total_Pop": 214
+  },
+  {
+    "CSA_Label": "Los Angeles - Elysian Park",
+    "Total_Pop": 70
+  },
+  {
+    "CSA_Label": "Los Angeles - Elysian Valley",
+    "Total_Pop": 74
+  },
+  {
+    "CSA_Label": "Los Angeles - Encino",
+    "Total_Pop": 177
+  },
+  {
+    "CSA_Label": "Los Angeles - Exposition",
+    "Total_Pop": 30
+  },
+  {
+    "CSA_Label": "Los Angeles - Exposition Park",
+    "Total_Pop": 526
+  },
+  {
+    "CSA_Label": "Los Angeles - Faircrest Heights",
+    "Total_Pop": 79
+  },
+  {
+    "CSA_Label": "Los Angeles - Figueroa Park Square",
+    "Total_Pop": 280
+  },
+  {
+    "CSA_Label": "Los Angeles - Florence-Firestone",
+    "Total_Pop": 508
+  },
+  {
+    "CSA_Label": "Los Angeles - Glassell Park",
+    "Total_Pop": 124
+  },
+  {
+    "CSA_Label": "Los Angeles - Gramercy Place",
+    "Total_Pop": 198
+  },
+  {
+    "CSA_Label": "Los Angeles - Granada Hills",
+    "Total_Pop": 101
+  },
+  {
+    "CSA_Label": "Los Angeles - Green Meadows",
+    "Total_Pop": 180
+  },
+  {
+    "CSA_Label": "Los Angeles - Hancock Park",
+    "Total_Pop": 31
+  },
+  {
+    "CSA_Label": "Los Angeles - Harbor City",
+    "Total_Pop": 316
+  },
+  {
+    "CSA_Label": "Los Angeles - Harbor Gateway",
+    "Total_Pop": 276
+  },
+  {
+    "CSA_Label": "Los Angeles - Harbor Pines",
+    "Total_Pop": 2
+  },
+  {
+    "CSA_Label": "Los Angeles - Harvard Heights",
+    "Total_Pop": 103
+  },
+  {
+    "CSA_Label": "Los Angeles - Harvard Park",
+    "Total_Pop": 453
+  },
+  {
+    "CSA_Label": "Los Angeles - Highland Park",
+    "Total_Pop": 213
+  },
+  {
+    "CSA_Label": "Los Angeles - Historic Filipinotown",
+    "Total_Pop": 642
+  },
+  {
+    "CSA_Label": "Los Angeles - Hollywood",
+    "Total_Pop": 1202
+  },
+  {
+    "CSA_Label": "Los Angeles - Hollywood Hills",
+    "Total_Pop": 158
+  },
+  {
+    "CSA_Label": "Los Angeles - Hyde Park",
+    "Total_Pop": 209
+  },
+  {
+    "CSA_Label": "Los Angeles - Jefferson Park",
+    "Total_Pop": 41
+  },
+  {
+    "CSA_Label": "Los Angeles - Koreatown",
+    "Total_Pop": 255
+  },
+  {
+    "CSA_Label": "Los Angeles - Lafayette Square",
+    "Total_Pop": 1
+  },
+  {
+    "CSA_Label": "Los Angeles - Lake Balboa",
+    "Total_Pop": 42
+  },
+  {
+    "CSA_Label": "Los Angeles - Lakeview Terrace",
+    "Total_Pop": 38
+  },
+  {
+    "CSA_Label": "Los Angeles - Leimert Park",
+    "Total_Pop": 106
+  },
+  {
+    "CSA_Label": "Los Angeles - Lincoln Heights",
+    "Total_Pop": 282
+  },
+  {
+    "CSA_Label": "Los Angeles - Little Armenia",
+    "Total_Pop": 92
+  },
+  {
+    "CSA_Label": "Los Angeles - Little Bangladesh",
+    "Total_Pop": 123
+  },
+  {
+    "CSA_Label": "Los Angeles - Little Tokyo",
+    "Total_Pop": 703
+  },
+  {
+    "CSA_Label": "Los Angeles - Longwood",
+    "Total_Pop": 17
+  },
+  {
+    "CSA_Label": "Los Angeles - Los Feliz",
+    "Total_Pop": 77
+  },
+  {
+    "CSA_Label": "Los Angeles - Manchester Square",
+    "Total_Pop": 195
+  },
+  {
+    "CSA_Label": "Los Angeles - Mandeville Canyon",
+    "Total_Pop": 1
+  },
+  {
+    "CSA_Label": "Los Angeles - Mar Vista",
+    "Total_Pop": 309
+  },
+  {
+    "CSA_Label": "Los Angeles - Marina Peninsula",
+    "Total_Pop": 9
+  },
+  {
+    "CSA_Label": "Los Angeles - Melrose",
+    "Total_Pop": 568
+  },
+  {
+    "CSA_Label": "Los Angeles - Mid-city",
+    "Total_Pop": 68
+  },
+  {
+    "CSA_Label": "Los Angeles - Miracle Mile",
+    "Total_Pop": 30
+  },
+  {
+    "CSA_Label": "Los Angeles - Mission Hills",
+    "Total_Pop": 147
+  },
+  {
+    "CSA_Label": "Los Angeles - Mt. Washington",
+    "Total_Pop": 102
+  },
+  {
+    "CSA_Label": "Los Angeles - North Hills",
+    "Total_Pop": 174
+  },
+  {
+    "CSA_Label": "Los Angeles - North Hollywood",
+    "Total_Pop": 1291
+  },
+  {
+    "CSA_Label": "Los Angeles - Northridge",
+    "Total_Pop": 69
+  },
+  {
+    "CSA_Label": "Los Angeles - Pacific Palisades",
+    "Total_Pop": 58
+  },
+  {
+    "CSA_Label": "Los Angeles - Pacoima",
+    "Total_Pop": 425
+  },
+  {
+    "CSA_Label": "Los Angeles - Palisades Highlands",
+    "Total_Pop": 0
+  },
+  {
+    "CSA_Label": "Los Angeles - Palms",
+    "Total_Pop": 174
+  },
+  {
+    "CSA_Label": "Los Angeles - Panorama City",
+    "Total_Pop": 361
+  },
+  {
+    "CSA_Label": "Los Angeles - Park La Brea",
+    "Total_Pop": 18
+  },
+  {
+    "CSA_Label": "Los Angeles - Pico-Union",
+    "Total_Pop": 460
+  },
+  {
+    "CSA_Label": "Los Angeles - Playa Del Rey",
+    "Total_Pop": 21
+  },
+  {
+    "CSA_Label": "Los Angeles - Playa Vista",
+    "Total_Pop": 55
+  },
+  {
+    "CSA_Label": "Los Angeles - Porter Ranch",
+    "Total_Pop": 29
+  },
+  {
+    "CSA_Label": "Los Angeles - Rancho Park",
+    "Total_Pop": 86
+  },
+  {
+    "CSA_Label": "Los Angeles - Regent Square",
+    "Total_Pop": 21
+  },
+  {
+    "CSA_Label": "Los Angeles - Reseda",
+    "Total_Pop": 289
+  },
+  {
+    "CSA_Label": "Los Angeles - Reseda Ranch",
+    "Total_Pop": 2
+  },
+  {
+    "CSA_Label": "Los Angeles - Reynier Village",
+    "Total_Pop": 9
+  },
+  {
+    "CSA_Label": "Los Angeles - San Pedro",
+    "Total_Pop": 560
+  },
+  {
+    "CSA_Label": "Los Angeles - Shadow Hills",
+    "Total_Pop": 6
+  },
+  {
+    "CSA_Label": "Los Angeles - Sherman Oaks",
+    "Total_Pop": 246
+  },
+  {
+    "CSA_Label": "Los Angeles - Silverlake",
+    "Total_Pop": 602
+  },
+  {
+    "CSA_Label": "Los Angeles - South Carthay",
+    "Total_Pop": 15
+  },
+  {
+    "CSA_Label": "Los Angeles - South Park",
+    "Total_Pop": 347
+  },
+  {
+    "CSA_Label": "Los Angeles - St Elmo Village",
+    "Total_Pop": 3
+  },
+  {
+    "CSA_Label": "Los Angeles - Studio City",
+    "Total_Pop": 89
+  },
+  {
+    "CSA_Label": "Los Angeles - Sun Valley",
+    "Total_Pop": 902
+  },
+  {
+    "CSA_Label": "Los Angeles - Sunland",
+    "Total_Pop": 57
+  },
+  {
+    "CSA_Label": "Los Angeles - Sylmar",
+    "Total_Pop": 373
+  },
+  {
+    "CSA_Label": "Los Angeles - Tarzana",
+    "Total_Pop": 62
+  },
+  {
+    "CSA_Label": "Los Angeles - Temple-Beaudry",
+    "Total_Pop": 383
+  },
+  {
+    "CSA_Label": "Los Angeles - Thai Town",
+    "Total_Pop": 39
+  },
+  {
+    "CSA_Label": "Los Angeles - Toluca Lake",
+    "Total_Pop": 46
+  },
+  {
+    "CSA_Label": "Los Angeles - Toluca Woods",
+    "Total_Pop": 4
+  },
+  {
+    "CSA_Label": "Los Angeles - Tujunga",
+    "Total_Pop": 61
+  },
+  {
+    "CSA_Label": "Los Angeles - University Hills",
+    "Total_Pop": 20
+  },
+  {
+    "CSA_Label": "Los Angeles - University Park",
+    "Total_Pop": 307
+  },
+  {
+    "CSA_Label": "Los Angeles - Valley Glen",
+    "Total_Pop": 29
+  },
+  {
+    "CSA_Label": "Los Angeles - Valley Village",
+    "Total_Pop": 69
+  },
+  {
+    "CSA_Label": "Los Angeles - Van Nuys",
+    "Total_Pop": 549
+  },
+  {
+    "CSA_Label": "Los Angeles - Venice",
+    "Total_Pop": 1676
+  },
+  {
+    "CSA_Label": "Los Angeles - Vermont Knolls",
+    "Total_Pop": 899
+  },
+  {
+    "CSA_Label": "Los Angeles - Vermont Square",
+    "Total_Pop": 119
+  },
+  {
+    "CSA_Label": "Los Angeles - Vermont Vista",
+    "Total_Pop": 742
+  },
+  {
+    "CSA_Label": "Los Angeles - Vernon Central",
+    "Total_Pop": 464
+  },
+  {
+    "CSA_Label": "Los Angeles - Victoria Park",
+    "Total_Pop": 27
+  },
+  {
+    "CSA_Label": "Los Angeles - View Heights",
+    "Total_Pop": 32
+  },
+  {
+    "CSA_Label": "Los Angeles - Watts",
+    "Total_Pop": 249
+  },
+  {
+    "CSA_Label": "Los Angeles - Wellington Square",
+    "Total_Pop": 66
+  },
+  {
+    "CSA_Label": "Los Angeles - West Adams",
+    "Total_Pop": 107
+  },
+  {
+    "CSA_Label": "Los Angeles - West Hills",
+    "Total_Pop": 63
+  },
+  {
+    "CSA_Label": "Los Angeles - West Los Angeles",
+    "Total_Pop": 364
+  },
+  {
+    "CSA_Label": "Los Angeles - West Vernon",
+    "Total_Pop": 694
+  },
+  {
+    "CSA_Label": "Los Angeles - Westchester",
+    "Total_Pop": 378
+  },
+  {
+    "CSA_Label": "Los Angeles - Westlake",
+    "Total_Pop": 795
+  },
+  {
+    "CSA_Label": "Los Angeles - Westwood",
+    "Total_Pop": 210
+  },
+  {
+    "CSA_Label": "Los Angeles - Wholesale District",
+    "Total_Pop": 4885
+  },
+  {
+    "CSA_Label": "Los Angeles - Wilmington",
+    "Total_Pop": 545
+  },
+  {
+    "CSA_Label": "Los Angeles - Wilshire Center",
+    "Total_Pop": 330
+  },
+  {
+    "CSA_Label": "Los Angeles - Winnetka",
+    "Total_Pop": 112
+  },
+  {
+    "CSA_Label": "Los Angeles - Woodland Hills",
+    "Total_Pop": 90
+  },
+  {
+    "CSA_Label": "Unincorporated - Acton",
+    "Total_Pop": 80
+  },
+  {
+    "CSA_Label": "Unincorporated - Agua Dulce",
+    "Total_Pop": 9
+  },
+  {
+    "CSA_Label": "Unincorporated - Altadena",
+    "Total_Pop": 49
+  },
+  {
+    "CSA_Label": "Unincorporated - Anaverde",
+    "Total_Pop": 0
+  },
+  {
+    "CSA_Label": "Unincorporated - Angeles National Forest",
+    "Total_Pop": 0
+  },
+  {
+    "CSA_Label": "Unincorporated - Arcadia",
+    "Total_Pop": 36
+  },
+  {
+    "CSA_Label": "Unincorporated - Athens Village",
+    "Total_Pop": 52
+  },
+  {
+    "CSA_Label": "Unincorporated - Athens-Westmont",
+    "Total_Pop": 144
+  },
+  {
+    "CSA_Label": "Unincorporated - Avocado Heights",
+    "Total_Pop": 20
+  },
+  {
+    "CSA_Label": "Unincorporated - Azusa",
+    "Total_Pop": 37
+  },
+  {
+    "CSA_Label": "Unincorporated - Bassett",
+    "Total_Pop": 22
+  },
+  {
+    "CSA_Label": "Unincorporated - Bouquet Canyon",
+    "Total_Pop": 0
+  },
+  {
+    "CSA_Label": "Unincorporated - Canyon Country",
+    "Total_Pop": 0
+  },
+  {
+    "CSA_Label": "Unincorporated - Castaic",
+    "Total_Pop": 3
+  },
+  {
+    "CSA_Label": "Unincorporated - Covina",
+    "Total_Pop": 12
+  },
+  {
+    "CSA_Label": "Unincorporated - Covina (Charter Oak)",
+    "Total_Pop": 39
+  },
+  {
+    "CSA_Label": "Unincorporated - Del Aire",
+    "Total_Pop": 4
+  },
+  {
+    "CSA_Label": "Unincorporated - Del Sur",
+    "Total_Pop": 203
+  },
+  {
+    "CSA_Label": "Unincorporated - Duarte",
+    "Total_Pop": 2
+  },
+  {
+    "CSA_Label": "Unincorporated - East La Mirada",
+    "Total_Pop": 4
+  },
+  {
+    "CSA_Label": "Unincorporated - East Los Angeles",
+    "Total_Pop": 512
+  },
+  {
+    "CSA_Label": "Unincorporated - East Pasadena",
+    "Total_Pop": 13
+  },
+  {
+    "CSA_Label": "Unincorporated - East Rancho Dominguez",
+    "Total_Pop": 104
+  },
+  {
+    "CSA_Label": "Unincorporated - East Whittier",
+    "Total_Pop": 4
+  },
+  {
+    "CSA_Label": "Unincorporated - El Camino Village",
+    "Total_Pop": 13
+  },
+  {
+    "CSA_Label": "Unincorporated - Elizabeth Lake",
+    "Total_Pop": 0
+  },
+  {
+    "CSA_Label": "Unincorporated - Florence-Firestone",
+    "Total_Pop": 997
+  },
+  {
+    "CSA_Label": "Unincorporated - Hacienda Heights",
+    "Total_Pop": 259
+  },
+  {
+    "CSA_Label": "Unincorporated - Hi Vista",
+    "Total_Pop": 202
+  },
+  {
+    "CSA_Label": "Unincorporated - Kagel/Lopez Canyons",
+    "Total_Pop": 11
+  },
+  {
+    "CSA_Label": "Unincorporated - La Crescenta-Montrose",
+    "Total_Pop": 0
+  },
+  {
+    "CSA_Label": "Unincorporated - La Rambla",
+    "Total_Pop": 2
+  },
+  {
+    "CSA_Label": "Unincorporated - Ladera Heights",
+    "Total_Pop": 48
+  },
+  {
+    "CSA_Label": "Unincorporated - Lake Los Angeles",
+    "Total_Pop": 272
+  },
+  {
+    "CSA_Label": "Unincorporated - Lake Manor",
+    "Total_Pop": 0
+  },
+  {
+    "CSA_Label": "Unincorporated - Lennox",
+    "Total_Pop": 179
+  },
+  {
+    "CSA_Label": "Unincorporated - Leona Valley",
+    "Total_Pop": 0
+  },
+  {
+    "CSA_Label": "Unincorporated - Littlerock/Pearblossom",
+    "Total_Pop": 43
+  },
+  {
+    "CSA_Label": "Unincorporated - Llano",
+    "Total_Pop": 382
+  },
+  {
+    "CSA_Label": "Unincorporated - Marina del Rey",
+    "Total_Pop": 14
+  },
+  {
+    "CSA_Label": "Unincorporated - Monrovia",
+    "Total_Pop": 5
+  },
+  {
+    "CSA_Label": "Unincorporated - North Lancaster",
+    "Total_Pop": 73
+  },
+  {
+    "CSA_Label": "Unincorporated - North Whittier",
+    "Total_Pop": 15
+  },
+  {
+    "CSA_Label": "Unincorporated - Northeast San Gabriel",
+    "Total_Pop": 31
+  },
+  {
+    "CSA_Label": "Unincorporated - Palmdale",
+    "Total_Pop": 15
+  },
+  {
+    "CSA_Label": "Unincorporated - Pomona",
+    "Total_Pop": 0
+  },
+  {
+    "CSA_Label": "Unincorporated - Quartz Hill",
+    "Total_Pop": 7
+  },
+  {
+    "CSA_Label": "Unincorporated - Rancho Dominguez",
+    "Total_Pop": 90
+  },
+  {
+    "CSA_Label": "Unincorporated - Roosevelt",
+    "Total_Pop": 21
+  },
+  {
+    "CSA_Label": "Unincorporated - Rosewood/East Gardena",
+    "Total_Pop": 155
+  },
+  {
+    "CSA_Label": "Unincorporated - Rosewood/West Rancho Dominguez",
+    "Total_Pop": 76
+  },
+  {
+    "CSA_Label": "Unincorporated - Rowland Heights",
+    "Total_Pop": 15
+  },
+  {
+    "CSA_Label": "Unincorporated - San Francisquito Canyon/Bouquet Canyon",
+    "Total_Pop": 0
+  },
+  {
+    "CSA_Label": "Unincorporated - San Jose Hills",
+    "Total_Pop": 12
+  },
+  {
+    "CSA_Label": "Unincorporated - San Pasqual",
+    "Total_Pop": 0
+  },
+  {
+    "CSA_Label": "Unincorporated - Santa Catalina Island",
+    "Total_Pop": 0
+  },
+  {
+    "CSA_Label": "Unincorporated - Santa Monica Mountains",
+    "Total_Pop": 164
+  },
+  {
+    "CSA_Label": "Unincorporated - Saugus/Canyon Country",
+    "Total_Pop": 2
+  },
+  {
+    "CSA_Label": "Unincorporated - South Antelope Valley",
+    "Total_Pop": 51
+  },
+  {
+    "CSA_Label": "Unincorporated - South Edwards",
+    "Total_Pop": 2
+  },
+  {
+    "CSA_Label": "Unincorporated - South San Gabriel",
+    "Total_Pop": 35
+  },
+  {
+    "CSA_Label": "Unincorporated - South Whittier",
+    "Total_Pop": 117
+  },
+  {
+    "CSA_Label": "Unincorporated - Southeast Antelope Valley",
+    "Total_Pop": 2
+  },
+  {
+    "CSA_Label": "Unincorporated - Stevenson Ranch",
+    "Total_Pop": 9
+  },
+  {
+    "CSA_Label": "Unincorporated - Sun Village",
+    "Total_Pop": 67
+  },
+  {
+    "CSA_Label": "Unincorporated - Twin Lakes/Oat Mountain",
+    "Total_Pop": 4
+  },
+  {
+    "CSA_Label": "Unincorporated - Universal City",
+    "Total_Pop": 1
+  },
+  {
+    "CSA_Label": "Unincorporated - Val Verde",
+    "Total_Pop": 66
+  },
+  {
+    "CSA_Label": "Unincorporated - Valinda",
+    "Total_Pop": 22
+  },
+  {
+    "CSA_Label": "Unincorporated - View Park/Windsor Hills",
+    "Total_Pop": 10
+  },
+  {
+    "CSA_Label": "Unincorporated - Walnut Park",
+    "Total_Pop": 22
+  },
+  {
+    "CSA_Label": "Unincorporated - West Antelope Valley",
+    "Total_Pop": 88
+  },
+  {
+    "CSA_Label": "Unincorporated - West Carson",
+    "Total_Pop": 170
+  },
+  {
+    "CSA_Label": "Unincorporated - West Chatsworth",
+    "Total_Pop": 0
+  },
+  {
+    "CSA_Label": "Unincorporated - West LA",
+    "Total_Pop": 499
+  },
+  {
+    "CSA_Label": "Unincorporated - West Puente Valley",
+    "Total_Pop": 6
+  },
+  {
+    "CSA_Label": "Unincorporated - West Whittier/Los Nietos",
+    "Total_Pop": 181
+  },
+  {
+    "CSA_Label": "Unincorporated - White Fence Farms",
+    "Total_Pop": 13
+  },
+  {
+    "CSA_Label": "Unincorporated - Whittier",
+    "Total_Pop": 3
+  },
+  {
+    "CSA_Label": "Unincorporated - Whittier Narrows",
+    "Total_Pop": 92
+  },
+  {
+    "CSA_Label": "Unincorporated - Willowbrook",
+    "Total_Pop": 433
+  },
+  {
+    "CSA_Label": "Unincorporated - Wiseburn",
+    "Total_Pop": 7
+  }
+]

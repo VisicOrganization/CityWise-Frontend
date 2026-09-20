@@ -1494,6 +1494,9 @@ a {
   width: auto;
   min-width: 3rem;
   padding-inline: 0.9rem;
+  /* Overrides `--stacked`'s 1.25rem: this pill carries three buttons and two rules, so the
+     end caps need more room than the inter-button gap to stop reading as clipped. */
+  padding-block: 1.6rem;
 }
 
 .map-figma-ctrl-btn--expandable {
@@ -7071,6 +7074,7 @@ a {
     width: 100%;
   }
 
+
   .district-bottom-sheet .district-portrait {
     width: min(11rem, 62vw);
     height: min(11rem, 62vw);
@@ -8376,5 +8380,1601 @@ a {
   .maplibregl-ctrl-top-right,
   .mapboxgl-ctrl-top-right {
     bottom: 8rem;
+  }
+}
+
+/* ==========================================================================
+   LAHSA 2020 homeless count (`/homeless-count`)
+
+   Page shell + map chrome (legend, click-to-inspect popup) and the 304-item
+   neighborhood filter dropdown. The choropleth is a single-hue blue sequential
+   ramp (#e8eaed zero → #0d366b) over a desaturated basemap, so every piece of
+   chrome here stays neutral and never competes with the data for attention.
+   ========================================================================== */
+
+/* Full-height flex chain below the absolutely-positioned top nav, mirroring
+   `.map-demo-shell` — the map has to fill whatever space is left over. */
+.homeless-count-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(248, 247, 243, 0.92)),
+    radial-gradient(circle at top left, rgba(64, 184, 133, 0.12), transparent 22rem);
+}
+
+.homeless-count-shell .shell-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.homeless-count-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  /* Clears the fixed-height top nav; same offset as `.map-demo-screen`. */
+  padding-top: 5.25rem;
+}
+
+/* --- Header band -------------------------------------------------------- */
+
+.homeless-count-header {
+  flex: none;
+  padding: 1rem clamp(1rem, 4vw, 2.5rem) 0.75rem;
+}
+
+.homeless-count-title {
+  margin: 0;
+  color: #17324d;
+  font-family: "Public Sans", "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: clamp(1.15rem, 0.82rem + 1.25vw, 1.6rem);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.homeless-count-subhead {
+  margin: 0.3rem 0 0;
+  max-width: 48rem;
+  color: rgba(23, 50, 77, 0.72);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.homeless-count-controls-status {
+  margin: 0;
+  color: rgba(23, 50, 77, 0.7);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+/* --- Left-hand control panel ---------------------------------------------
+   Flex sibling of `.homeless-count-map-wrap`, not an overlay: absolutely positioning this over
+   the map would cover the county's western edge, including the District 2 slice this page
+   demos. Fixed width chosen to comfortably hold the longest real row label ("Unincorporated -
+   San Francisquito Canyon/Bouquet Canyon") plus its checkbox and population figure without
+   wrapping — the same 320px floor the old portaled dropdown panel used
+   (`PANEL_MIN_WIDTH`, now deleted) for the same reason. */
+.homeless-count-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+}
+
+.homeless-count-panel {
+  flex: 0 0 20rem;
+  width: 20rem;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.9rem 0.85rem;
+  gap: 0.85rem;
+  border-top: 1px solid rgba(23, 50, 77, 0.1);
+  border-right: 1px solid rgba(23, 50, 77, 0.12);
+  background: rgba(255, 255, 255, 0.6);
+  color: #17324d;
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+}
+
+.homeless-count-panel-heading {
+  margin: 0 0 0.5rem;
+  font-family: "Public Sans", "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/* --- Layer toggles -------------------------------------------------------
+   Flex: none — this section stays put at the top of the panel while the neighborhood filter
+   below it scrolls. */
+.homeless-count-layer-section {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid rgba(227, 227, 227, 0.9);
+}
+
+.homeless-count-layer-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(23, 50, 77, 0.85);
+  font-size: 0.82rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+/* Small visual token next to each toggle's label, matching how that layer actually renders on
+   the map — so the toggle row doubles as a key, not just a checkbox list. */
+.homeless-count-layer-swatch {
+  flex: none;
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+.homeless-count-layer-swatch--choropleth {
+  border-radius: 3px;
+  /* Mid-tone step of the choropleth's own blue ramp (see `DENSITY_LEGEND_STOPS`), not the
+     palest or darkest end, so the swatch reads clearly on its own. */
+  background: #5598e7;
+  border: 1px solid rgba(23, 50, 77, 0.22);
+}
+
+.homeless-count-layer-swatch--shelters {
+  border-radius: 50%;
+  /* Same green as `shelterPointLayer`'s `circle-color` (shelterLayers.ts) — the point layer's
+     actual on-map color, not a restated approximation. */
+  background: #1d865e;
+  border: 1.5px solid #ffffff;
+  box-shadow: 0 0 0 1px rgba(23, 50, 77, 0.22);
+}
+
+/* Council district outline. A dash, not a block — the swatch has to say "administrative
+   boundary", the same thing the dash pattern says on the map (`districtBoundaryLineLayer`),
+   rather than read as a third data color. `#111827` matches that layer's `line-color`. */
+.homeless-count-layer-swatch--district {
+  align-self: center;
+  height: 0;
+  border-top: 2.5px dashed #111827;
+}
+
+/* --- District readout ----------------------------------------------------
+   Sits between the Layers section and the neighborhood filter, `flex: none` like
+   `.homeless-count-layer-section` above it — this is a small, fixed-height section (one
+   district's ~7 rows), not a scrolling region, so it cannot compete with
+   `.homeless-count-filter-list` for the panel's one flexible scroll area. */
+.homeless-count-district-summary {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid rgba(227, 227, 227, 0.9);
+}
+
+.homeless-count-district-summary-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.homeless-count-district-summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.5rem;
+  width: 100%;
+  padding: 0.25rem 0.35rem;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.homeless-count-district-summary-row:hover {
+  background: rgba(29, 134, 94, 0.06);
+}
+
+.homeless-count-district-summary-row:focus-visible {
+  outline: 2px solid rgba(29, 134, 94, 0.65);
+  outline-offset: 1px;
+}
+
+.homeless-count-district-summary-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.82rem;
+}
+
+.homeless-count-district-summary-total {
+  flex: none;
+  color: rgba(23, 50, 77, 0.75);
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.homeless-count-district-summary-split {
+  flex: 0 0 100%;
+  color: rgba(23, 50, 77, 0.6);
+  font-size: 0.72rem;
+}
+
+/* --- Map surface -------------------------------------------------------- */
+
+.homeless-count-map-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 18rem;
+  overflow: hidden;
+  border-top: 1px solid rgba(23, 50, 77, 0.1);
+}
+
+/* --- Legend --------------------------------------------------------------
+   Lives in the panel's lower fixed area now, not floating over the map, so its old absolute
+   positioning, max-height cap, and overscroll-behavior are gone — it is no longer a floating
+   card that needs to clip its own scroll or stay clear of the map underneath it. `flex: none`
+   keeps it pinned below the (flexible, scrolling) neighborhood filter. */
+.homeless-count-legend {
+  flex: none;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.7rem 0.85rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(227, 227, 227, 0.9);
+  background: rgba(255, 255, 255, 0.97);
+  color: #17324d;
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+}
+
+.homeless-count-legend-title {
+  margin: 0 0 0.5rem;
+  font-family: "Public Sans", "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.homeless-count-legend-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.homeless-count-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 1.35rem;
+}
+
+.homeless-count-legend-swatch {
+  flex: none;
+  width: 0.95rem;
+  height: 0.95rem;
+  border-radius: 3px;
+  /* The two palest ramp steps sit below 3:1 on white, so each swatch gets a hairline
+     edge — and the swatch is never the only cue: every row keeps its text label. */
+  border: 1px solid rgba(23, 50, 77, 0.22);
+}
+
+.homeless-count-legend-label {
+  min-width: 0;
+  color: rgba(23, 50, 77, 0.88);
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
+.homeless-count-legend-footnote {
+  margin: 0.6rem 0 0;
+  padding-top: 0.55rem;
+  border-top: 1px solid rgba(23, 50, 77, 0.1);
+  color: rgba(23, 50, 77, 0.66);
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
+.homeless-count-legend-error {
+  margin: 0.5rem 0 0;
+  color: #b91c1c;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* --- Data sources (provenance) -------------------------------------------
+   Reference material, so it sits below the legend rather than above the filter.
+
+   `flex: none` like the other fixed sections in the panel (Layers, district summary, legend):
+   it takes exactly its content height and never shrinks, so it can't be squeezed toward zero
+   when the panel's total content exceeds its box. The old `max-height`/`overflow-y` pair only
+   ever engaged once a reader expanded entries, to keep expanded text reachable against the
+   panel's old `overflow: hidden`. Now that `.homeless-count-panel` itself scrolls, that's no
+   longer needed — expanded entries just push the panel's own scroll area taller, so it's removed
+   rather than fighting the panel with a second, smaller nested scrollbar. */
+.homeless-count-data-sources {
+  flex: none;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.7rem 0.85rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(227, 227, 227, 0.9);
+  background: rgba(255, 255, 255, 0.97);
+  color: #17324d;
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+}
+
+/* Names where the controls actually are, since this section deliberately has none of its own —
+   the "Layers" section at the top of the panel owns all three toggles. */
+.homeless-count-data-sources-hint {
+  margin: -0.25rem 0 0.5rem;
+  color: rgba(23, 50, 77, 0.62);
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
+.homeless-count-data-source-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.homeless-count-data-source + .homeless-count-data-source {
+  margin-top: 0.4rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(227, 227, 227, 0.9);
+}
+
+/* Left as `display: list-item` so the native disclosure marker stays — this is a plain
+   <details>/<summary>, with no JS accordion behind it. */
+.homeless-count-data-source-summary {
+  cursor: pointer;
+  padding: 0.1rem 0;
+  list-style-position: outside;
+}
+
+.homeless-count-data-source-summary:focus-visible {
+  outline: 2px solid rgba(29, 134, 94, 0.65);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.homeless-count-data-source-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+/* Reflects the layer's on/off state; never a control. Text, never color alone. */
+.homeless-count-data-source-state {
+  margin-left: 0.35rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.homeless-count-data-source-state--on {
+  background: rgba(29, 134, 94, 0.12);
+  color: #145c41;
+}
+
+.homeless-count-data-source-state--off {
+  background: rgba(23, 50, 77, 0.08);
+  color: rgba(23, 50, 77, 0.7);
+}
+
+/* Entries 4 and 5 have no toggle at all. A distinct dashed-edge badge says "there is nothing to
+   switch here" rather than leaving a gap that reads as a missing control. */
+.homeless-count-data-source-state--static {
+  background: transparent;
+  border: 1px dashed rgba(23, 50, 77, 0.3);
+  color: rgba(23, 50, 77, 0.62);
+}
+
+/* The provenance line. `display: block` inside the <summary> keeps it visible when the entry is
+   COLLAPSED — collapsing hides the detail, never where the data comes from. */
+.homeless-count-data-source-origin {
+  display: block;
+  margin-top: 0.1rem;
+  color: rgba(23, 50, 77, 0.66);
+  font-size: 0.68rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.homeless-count-data-source-body {
+  padding: 0.3rem 0 0.15rem 1rem;
+}
+
+.homeless-count-data-source-describes {
+  margin: 0;
+  color: rgba(23, 50, 77, 0.82);
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.homeless-count-data-source-notes {
+  margin: 0.35rem 0 0;
+  padding-left: 1rem;
+  color: rgba(23, 50, 77, 0.66);
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.homeless-count-data-source-notes li {
+  overflow-wrap: anywhere;
+}
+
+.homeless-count-data-source-notes li + li {
+  margin-top: 0.2rem;
+}
+
+/* --- Map info panel ------------------------------------------------------
+   Top-right of the map surface. MapLibre puts attribution bottom-right and its logo
+   bottom-left, and no NavigationControl/ScaleControl is mounted on this map, so this corner is
+   free. Anchored to `.homeless-count-map-wrap` (already `position: relative`).
+
+   `bottom: 0.6rem` (added alongside the pre-existing `top`) is load-bearing, not cosmetic: it is
+   what gives this box a *definite* height. Without it, `.homeless-count-map-wrap`'s own height
+   never reaches this box (an absolutely-positioned element with `top` but no `bottom`/`height`
+   is sized to its content, i.e. `auto`), which meant `.homeless-count-map-info-panel`'s
+   `max-height: calc(100% - …)` below had no definite ancestor height to take a percentage of —
+   per the CSS spec a percentage height/max-height against an `auto`-height containing block
+   computes to `none`, silently. That is the reported bug: the panel's max-height/overflow-y
+   were never doing anything, so the panel grew past the bottom of the map (and the page) with no
+   scrollbar. Stretching this box top-to-bottom fixes that, but it also turns it into a tall
+   invisible column overlapping the map — `pointer-events: none` here, re-enabled on the two
+   actual visible children below, keeps that column from blocking clicks/hover on the map
+   underneath it wherever the button/panel themselves aren't drawn. */
+.homeless-count-map-info {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  bottom: 0.6rem;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+  max-width: calc(100% - 1.2rem);
+  pointer-events: none;
+}
+
+.homeless-count-map-info-btn,
+.homeless-count-map-info-panel {
+  pointer-events: auto;
+}
+
+.homeless-count-map-info-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 1.9rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid rgba(23, 50, 77, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.97);
+  color: #17324d;
+  font-family: "Schibsted Grotesk", "Public Sans", "Segoe UI", sans-serif;
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: 0 1px 3px rgba(23, 50, 77, 0.18);
+  cursor: pointer;
+}
+
+.homeless-count-map-info-btn:hover {
+  background: #f8f9fb;
+}
+
+.homeless-count-map-info-btn:focus-visible {
+  outline: 2px solid rgba(29, 134, 94, 0.65);
+  outline-offset: 2px;
+}
+
+.homeless-count-map-info-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.95rem;
+  height: 0.95rem;
+  border-radius: 50%;
+  background: #17324d;
+  color: #ffffff;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.68rem;
+  font-style: italic;
+  font-weight: 700;
+}
+
+/* Caps its own height to the map area below it (`.homeless-count-map-info`, now a definite-height
+   box — see its comment above) and scrolls *internally*: the map can be as short as 18rem
+   (`.homeless-count-map-wrap`), and a panel taller than the map would otherwise hang off it, past
+   the bottom of the page, with no way to reach the rest.
+   `display: flex; flex-direction: column` splits the header from the body on purpose: the header
+   (title + close button) is `flex: none` below and never scrolls, while the body is the one
+   flexible, scrolling child (`min-height: 0` is required here — without it a flex child refuses
+   to shrink below its content's height, which would defeat `overflow-y: auto` on the body and
+   push the panel's own box past `max-height` instead). The panel itself no longer scrolls or
+   overflows (`overflow: hidden`); only `.homeless-count-map-info-body` does. */
+.homeless-count-map-info-panel {
+  box-sizing: border-box;
+  width: 20rem;
+  max-width: 100%;
+  max-height: calc(100% - 3.5rem);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0.75rem 0.85rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid rgba(227, 227, 227, 0.9);
+  background: #ffffff;
+  color: #17324d;
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+  box-shadow: 0 6px 20px rgba(23, 50, 77, 0.18);
+}
+
+.homeless-count-map-info-head {
+  flex: none;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+/* The one scrolling region: shrinks to whatever space `.homeless-count-map-info-panel`'s
+   max-height leaves after the fixed header above it, and scrolls its own content rather than
+   growing the panel further. `overscroll-behavior: contain` keeps a scroll-to-the-end here from
+   also scrolling the map underneath, same reasoning as `.homeless-count-data-sources` above. */
+.homeless-count-map-info-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.homeless-count-map-info-title {
+  margin: 0;
+  font-family: "Public Sans", "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.homeless-count-map-info-close {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  margin: -0.2rem -0.25rem 0 0;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: rgba(23, 50, 77, 0.7);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.homeless-count-map-info-close:hover {
+  background: rgba(23, 50, 77, 0.07);
+  color: #17324d;
+}
+
+.homeless-count-map-info-close:focus-visible {
+  outline: 2px solid rgba(29, 134, 94, 0.65);
+  outline-offset: 1px;
+}
+
+.homeless-count-map-info-body p {
+  margin: 0.4rem 0 0;
+  color: rgba(23, 50, 77, 0.82);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.homeless-count-map-info-subhead {
+  margin: 0.7rem 0 0;
+  font-family: "Public Sans", "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/* Scoped through `.homeless-count-map-info-body` on purpose: it needs to outrank that block's
+   own `p` rule above, which is (0,1,1). */
+.homeless-count-map-info-body .homeless-count-map-info-footnote {
+  margin-top: 0.7rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid rgba(23, 50, 77, 0.1);
+  color: rgba(23, 50, 77, 0.66);
+  font-size: 0.7rem;
+}
+
+/* --- Click-to-inspect popup --------------------------------------------- */
+
+/* The only MapLibre <Popup> in the repo; strip its default chrome so the card owns its box. */
+.homeless-count-map-wrap .maplibregl-popup-content {
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(227, 227, 227, 0.9);
+  box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+.homeless-count-map-wrap .maplibregl-popup-close-button {
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 0 10px 0 8px;
+  background: transparent;
+  color: rgba(23, 50, 77, 0.6);
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.homeless-count-map-wrap .maplibregl-popup-close-button:hover {
+  background: #f8f9fb;
+  color: #17324d;
+}
+
+.homeless-count-popup {
+  /* border-box so this 16rem width already includes the padding below — the Popup's maxWidth
+     prop in HomelessCountPage.tsx (258px = 256px card + MapLibre's 2px popup-content border)
+     is sized to match this exact box. Change one, change the other. */
+  box-sizing: border-box;
+  width: 16rem;
+  max-width: calc(100vw - 3rem);
+  padding: 0.7rem 0.85rem 0.75rem;
+  overflow-wrap: anywhere;
+  color: #17324d;
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+}
+
+.homeless-count-popup-title {
+  /* Right margin is intentionally larger than the card's side padding — it clears the
+     absolutely-positioned close button, not a padding mismatch. Left stays flush with the
+     card's own (equal) left/right padding above. */
+  margin: 0 1.4rem 0.5rem 0;
+  font-family: "Public Sans", "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.homeless-count-popup-stats {
+  margin: 0;
+}
+
+.homeless-count-popup-stat {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.18rem 0;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.homeless-count-popup-stat dt {
+  flex: none;
+  color: rgba(23, 50, 77, 0.7);
+}
+
+.homeless-count-popup-stat dd {
+  /* Flex items default to min-width: auto, which refuses to shrink below content size;
+     min-width: 0 lets the longest density line wrap instead of pushing past the card edge. */
+  min-width: 0;
+  margin: 0;
+  text-align: right;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The total is the headline number the choropleth can't show (it encodes density),
+   so the first row gets the visual weight rather than a separate markup block. */
+.homeless-count-popup-stat:first-child {
+  padding-bottom: 0.4rem;
+  margin-bottom: 0.35rem;
+  border-bottom: 1px solid rgba(23, 50, 77, 0.1);
+}
+
+.homeless-count-popup-stat:first-child dd {
+  color: #0d366b;
+  font-family: "Public Sans", "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 1.2rem;
+  line-height: 1.15;
+}
+
+/* Groups the three per-sq-mile stats (total/unsheltered/sheltered) into one visual family,
+   set apart from the total/unsheltered/sheltered count trio above by the same kind of rule the
+   headline stat already uses to set itself apart below it (`.homeless-count-popup-stat:first-child`). */
+.homeless-count-popup-density-group {
+  margin-top: 0.2rem;
+  padding-top: 0.3rem;
+  border-top: 1px solid rgba(23, 50, 77, 0.1);
+}
+
+.homeless-count-popup-source {
+  margin: 0.55rem 0 0;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(23, 50, 77, 0.1);
+  color: rgba(23, 50, 77, 0.68);
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
+.homeless-count-popup-footer {
+  margin: 0.3rem 0 0;
+  color: rgba(23, 50, 77, 0.55);
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+
+/* --- Hover label ---------------------------------------------------------
+   Desktop-only by nature: `onMouseMove` never fires from touch input, so touch devices simply
+   never see this and fall through to the tap-to-open click card above, unchanged. Shares
+   `.homeless-count-map-wrap .maplibregl-popup-content`'s border/radius/shadow above; only the
+   things that make this popup different from the click card live here. */
+.homeless-count-hover-popup {
+  /* Otherwise this popup sits on top of the polygon it names and swallows the very hover/click
+     events driving it, which flickers the hover state and blocks clicks through to the map. */
+  pointer-events: none;
+}
+
+.homeless-count-hover-label {
+  /* Same border-box + overflow-wrap care as `.homeless-count-popup` above — the longest real
+     label ("Unincorporated - San Francisquito Canyon/Bouquet Canyon") is 55 characters. */
+  box-sizing: border-box;
+  max-width: 12rem;
+  padding: 0.3rem 0.5rem;
+  overflow-wrap: anywhere;
+  color: #17324d;
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 0.74rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* --- Neighborhood filter section -----------------------------------------
+   Was `CsaFilterDropdown`, a click-to-open portaled popover; inside the persistent panel it is
+   always visible now, so the trigger button and the portaled floating panel are both gone —
+   deleted along with `CsaFilterDropdown.tsx` itself (see `CsaFilterSection.tsx`).
+   `flex: none` like the panel's other sections now that `.homeless-count-panel` itself scrolls:
+   this section sizes to its own content (search input + action rows + the capped
+   `.homeless-count-filter-list` below) instead of stretching to fill leftover panel space, so it
+   can't be squeezed when the panel's total content exceeds its box. */
+.homeless-count-filter-section {
+  flex: none;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.homeless-count-filter-search {
+  flex: none;
+  width: 100%;
+  min-height: 2.1rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid rgba(23, 50, 77, 0.18);
+  border-radius: 8px;
+  background: #ffffff;
+  color: #17324d;
+  font-size: 0.82rem;
+  line-height: 1.3;
+}
+
+.homeless-count-filter-search::placeholder {
+  color: rgba(23, 50, 77, 0.5);
+}
+
+.homeless-count-filter-search:focus-visible {
+  outline: 2px solid rgba(29, 134, 94, 0.65);
+  outline-offset: 1px;
+}
+
+.homeless-count-filter-section .map-district-filter-actions {
+  flex: none;
+  margin-top: 0.6rem;
+}
+
+/* District shortcut row. Visually matches `.map-district-filter-action-btn` (the shared
+   Select all / Clear all button also used by CityMap's district filter) but does not reuse that
+   class: its `flex: 1 1 0` is written to split a two-button row evenly, which stretches a single
+   district button across the whole panel. Left-aligned and wrapping instead, so more districts
+   can be added later without the row needing to change. */
+.homeless-count-district-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.homeless-count-district-btn {
+  flex: none;
+  min-height: 1.9rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid rgba(23, 50, 77, 0.18);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #17324d;
+  font-family: "Schibsted Grotesk", "Public Sans", "Segoe UI", sans-serif;
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.homeless-count-district-btn:hover {
+  background: #f8f9fb;
+}
+
+.homeless-count-district-btn:focus-visible {
+  outline: 2px solid rgba(29, 134, 94, 0.65);
+  outline-offset: 2px;
+}
+
+/* A nested scroll region on purpose: the 304-row list caps at `max-height` so it can't push the
+   legend and data-sources sections far down the panel, and scrolls within that cap on its own.
+   `.homeless-count-panel` (the outer scroll region) handles everything past that. */
+.homeless-count-filter-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 22rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin-top: 0.7rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid rgba(227, 227, 227, 0.9);
+}
+
+.homeless-count-filter-empty {
+  margin: 0.25rem 0 0.5rem;
+  color: rgba(23, 50, 77, 0.68);
+  font-size: 0.8rem;
+}
+
+.homeless-count-filter-group + .homeless-count-filter-group {
+  margin-top: 0.8rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid rgba(227, 227, 227, 0.9);
+}
+
+/* Sticky so the family stays named while scrolling a 136-row section — the 10 stripped
+   names that repeat across groups rely on this heading to disambiguate visually. */
+.homeless-count-filter-group-head {
+  position: sticky;
+  top: -0.65rem;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.1rem;
+  background: #ffffff;
+}
+
+.homeless-count-filter-group-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 700;
+}
+
+.homeless-count-filter-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin-top: 0.1rem;
+}
+
+.homeless-count-filter-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 1.7rem;
+  padding: 0.1rem 0.15rem 0.1rem 1.35rem;
+  border-radius: 6px;
+}
+
+.homeless-count-filter-row:hover {
+  background: rgba(29, 134, 94, 0.06);
+}
+
+.homeless-count-filter-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.homeless-count-filter-count {
+  flex: none;
+  color: rgba(23, 50, 77, 0.6);
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Below this width the panel stacks above the map, full-width, instead of sitting beside it —
+   the map keeps its own `min-height: 18rem` from `.homeless-count-map-wrap` above, unchanged.
+   `max-height: 50%` still gives the panel a definite height here (percentages resolve off
+   `.homeless-count-body`, itself definite via the `min-height: 0` chain), so the base rule's
+   `overflow-y: auto` keeps scrolling — needed even more at this width, since the panel is
+   shorter. */
+@media (max-width: 900px) {
+  .homeless-count-body {
+    flex-direction: column;
+  }
+
+  .homeless-count-panel {
+    flex: 1 1 auto;
+    width: 100%;
+    max-height: 50%;
+    border-right: none;
+    border-bottom: 1px solid rgba(23, 50, 77, 0.12);
+  }
+}
+
+@media (max-width: 720px) {
+  .homeless-count-page {
+    padding-top: 4.85rem;
+  }
+
+  /* 44px touch targets for the two rows of the filter list that are still tappable controls. */
+  .homeless-count-filter-group-head,
+  .homeless-count-filter-row {
+    min-height: 44px;
+  }
+}
+
+/* ============================================================================
+   Neighborhood resources overlay on /map
+   ========================================================================== */
+
+/* MapLibre's default .maplibregl-popup-content padding (10px 10px 15px) would sit OUTSIDE the
+   card's own padding and make the box lopsided at the bottom. Zeroed here so the card alone
+   owns its padding, exactly as `.homeless-count-map-wrap` does for that page's popups. Scoped
+   to this popup's own class rather than to .city-demo-map so it cannot disturb any other popup
+   on the map. */
+.neighborhood-asset-popup-shell .maplibregl-popup-content {
+  padding: 0;
+  border-radius: 12px;
+  border: 1px solid rgba(227, 227, 227, 0.9);
+  box-shadow: 1px 1px 6px rgba(0, 0, 0, 0.22);
+}
+
+.neighborhood-asset-popup-shell .maplibregl-popup-close-button {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0 12px 0 8px;
+  background: transparent;
+  color: rgba(23, 50, 77, 0.55);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.neighborhood-asset-popup-shell .maplibregl-popup-close-button:hover {
+  background: #f8f9fb;
+  color: #17324d;
+}
+
+/* border-box so this 17rem already includes the padding below. NeighborhoodOverlay passes
+   calc(17rem + 2px) as the Popup's maxWidth — 17rem card + MapLibre's 1px border each side.
+   Change one, change the other. */
+.neighborhood-asset-popup {
+  box-sizing: border-box;
+  width: 17rem;
+  max-width: calc(100vw - 3rem);
+  padding: 0.75rem 0.875rem 0.8125rem;
+  overflow-wrap: anywhere;
+  color: #17324d;
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+}
+
+.neighborhood-asset-popup-eyebrow {
+  margin: 0 1.5rem 0.1875rem 0;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+/* Right margin clears the absolutely-positioned close button; it is deliberately larger than
+   the card's side padding and is not a padding mismatch. */
+.neighborhood-asset-popup-title {
+  margin: 0 1.25rem 0 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #111827;
+}
+
+.neighborhood-asset-popup-address {
+  margin: 0.3125rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: #4b5563;
+}
+
+.neighborhood-asset-popup-fields {
+  margin: 0.625rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3125rem;
+}
+
+/* Each field is its own two-column row rather than one shared grid with `subgrid`: the fixed
+   label column already aligns every value to the same x, which is what makes a card with two
+   fields and one with four read as the same component. */
+.neighborhood-asset-popup-fields > div {
+  display: grid;
+  grid-template-columns: 4.25rem 1fr;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.neighborhood-asset-popup-fields dt {
+  margin: 0;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  line-height: 1.5;
+  text-transform: uppercase;
+  color: #9ca3af;
+}
+
+.neighborhood-asset-popup-fields dd {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: #1f2937;
+}
+
+.neighborhood-asset-popup-fields a {
+  color: #2a78d6;
+  text-decoration: underline;
+}
+
+.neighborhood-asset-popup-note {
+  margin: 0.625rem 0 0;
+  padding-top: 0.5rem;
+  border-top: 1px solid #f1f2f4;
+  font-size: 0.6875rem;
+  line-height: 1.45;
+  color: #6b7280;
+}
+
+/* Legend inside the existing district-filter flyout, so it inherits that panel's chrome. */
+.map-neighborhood-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.map-neighborhood-legend .map-district-filter-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.map-neighborhood-legend-swatch {
+  width: 0.6875rem;
+  height: 0.6875rem;
+  border-radius: 999px;
+  flex: none;
+  /* Matches the white stroke on the map pins, so the key reads as the same mark. */
+  box-shadow: 0 0 0 1.5px #fff inset;
+}
+
+/* The legend key is the pin's own artwork, so the map and the key share one mark. Sized to
+   sit on the same baseline the colour swatch used, and the file already carries its colour. */
+.map-neighborhood-legend-icon {
+  display: block;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border-radius: 999px;
+}
+
+/* Same mark inside the detail panel's group headings. */
+.neighborhood-detail-group-icon {
+  display: block;
+  width: 16px;
+  height: 16px;
+  flex: none;
+  border-radius: 999px;
+}
+
+.map-neighborhood-legend-label {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.map-neighborhood-legend-count {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  color: #9ca3af;
+}
+
+.map-neighborhood-legend-note {
+  margin-top: 0.5rem;
+  font-size: 0.6875rem;
+  line-height: 1.45;
+  color: #9ca3af;
+}
+
+/* Cursor-following hover labels for the neighbourhood overlay. */
+.map-neighborhood-hover-popup {
+  /* Without this the tooltip sits under the cursor, over the very polygon or pin driving the
+     hover, and swallows the mousemove that keeps it alive -- which flickers it and blocks the
+     click through to the map. Same fix `.homeless-count-hover-popup` records. */
+  pointer-events: none;
+  z-index: 7;
+}
+
+.map-neighborhood-hover-popup .maplibregl-popup-content {
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  border: 0;
+}
+
+.map-neighborhood-hover-popup .maplibregl-popup-tip {
+  display: none;
+}
+
+.map-neighborhood-hover-label {
+  box-sizing: border-box;
+  max-width: 12rem;
+  padding: 0.3rem 0.55rem;
+  border-radius: 8px;
+  background: #17324d;
+  color: #fff;
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+/* Pin hover card: names the category as well as the place, so the grown pin says what it is
+   rather than only that it is hoverable. */
+.map-neighborhood-hover-card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  max-width: 14rem;
+  padding: 0.4rem 0.6rem 0.45rem;
+  border-radius: 10px;
+  background: #17324d;
+  color: #fff;
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+  overflow-wrap: anywhere;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+}
+
+.map-neighborhood-hover-category {
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1.3;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.map-neighborhood-hover-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.map-neighborhood-hover-cta {
+  margin-top: 0.125rem;
+  font-size: 0.625rem;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.map-neighborhood-legislation-toggle {
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #f1f2f4;
+}
+
+/* ----------------------------------------------------------------------------
+   Neighborhood filter flyout: close control and breathing room
+   -------------------------------------------------------------------------- */
+
+/* Sits in the flyout's existing `.map-utility-header` flex row, where it replaces the old
+   "Pins" caption. `align-self: center` because that header aligns on `baseline`, which would
+   otherwise hang a 1.25rem glyph box off the strong's baseline. */
+.map-flyout-close-btn {
+  flex: none;
+  align-self: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(23, 50, 77, 0.6);
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.map-flyout-close-btn:hover {
+  color: #17324d;
+}
+
+.map-flyout-close-btn:focus-visible {
+  outline: 2px solid rgba(29, 134, 94, 0.65);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Clearance under the quick-action row: the four checkbox rows used to start hard against the
+   buttons. Spacing rather than another rule -- the legislation toggle right above already draws
+   one, and a third hairline in an 18rem popup is noise. Scoped to the neighborhood flyout so the
+   district-filter flyout, which reuses `.map-district-filter-actions`, keeps its own rhythm. */
+.map-figma-flyout--neighborhood .map-district-filter-actions {
+  margin-top: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+/* 0.125rem stacked four 0.8rem rows into a solid block of text. */
+.map-figma-flyout--neighborhood .map-neighborhood-legend {
+  gap: 0.45rem;
+}
+
+.map-figma-flyout--neighborhood .map-neighborhood-legend .map-district-filter-option {
+  line-height: 1.35;
+}
+
+.map-figma-flyout--neighborhood .map-neighborhood-legend-note {
+  margin-top: 1rem;
+}
+
+/* ----------------------------------------------------------------------------
+   Neighborhood overlay stacking
+   -------------------------------------------------------------------------- */
+
+/* Council-file markers carry an inline z-index of 1 / 4 (active) / 6 (hovered) -- see the
+   `markerZIndex` in CityMap. Both markers and popups are absolutely positioned children of the
+   same MapLibre container, so without a value here the asset popup lands at `auto` and every
+   project pin draws over it. 9 clears the hovered marker and the 7 on the hover tooltip.
+   NOTE: this cannot lift the asset *pins* over the project pins -- those pins are circles
+   painted into the WebGL canvas, which is one DOM node underneath every marker. */
+.neighborhood-asset-popup-shell {
+  z-index: 9;
+}
+
+/* ----------------------------------------------------------------------------
+   Neighborhood detail panel (left dock)
+   -------------------------------------------------------------------------- */
+
+/* Same left dock and slide as `.project-sidebar-host`; `top: 0` rather than 5.25rem because
+   this one mounts inside `.city-demo-map`, which already starts below the nav. Narrower than
+   the project sidebar (which has to hold a whole council file) and capped so it never eats the
+   map on a small laptop. */
+.neighborhood-detail-host {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 18;
+  width: min(23rem, calc(100% - 3rem));
+  pointer-events: none;
+  animation: project-sidebar-enter-from-left 320ms cubic-bezier(0.2, 0.9, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .neighborhood-detail-host {
+    animation: none;
+  }
+}
+
+.neighborhood-detail-panel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #ffffff;
+  border-right: 1px solid #e1e1e1;
+  box-shadow: 1px 0 8px rgba(0, 0, 0, 0.25);
+  pointer-events: auto;
+  color: #17324d;
+  font-family: "Schibsted Grotesk", "Segoe UI", sans-serif;
+}
+
+.neighborhood-detail-header {
+  flex: none;
+  padding: 1.15rem 1.1rem 0.9rem;
+  border-bottom: 1px solid #f1f2f4;
+}
+
+.neighborhood-detail-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.neighborhood-detail-eyebrow {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #9ca3af;
+}
+
+.neighborhood-detail-title {
+  margin: 0.15rem 0 0;
+  font-family: "Public Sans", "Schibsted Grotesk", sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: #333333;
+}
+
+.neighborhood-detail-close {
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(23, 50, 77, 0.55);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.neighborhood-detail-close:hover {
+  background: #f8f9fb;
+  color: #17324d;
+}
+
+.neighborhood-detail-close:focus-visible {
+  outline: 2px solid rgba(29, 134, 94, 0.65);
+  outline-offset: 2px;
+}
+
+.neighborhood-detail-count {
+  margin: 0.5rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: rgba(23, 50, 77, 0.72);
+}
+
+.neighborhood-detail-page-link {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  margin: 0.55rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.neighborhood-detail-page-link-label {
+  flex: none;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.neighborhood-detail-page-link-empty {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.neighborhood-detail-page-link a {
+  color: #1d865e;
+}
+
+/* The District Overview's caveat line: smaller and quieter than the count, because it explains
+   the panel rather than describing its contents. */
+.neighborhood-detail-note {
+  margin: 0.45rem 0 0;
+  font-size: 0.6875rem;
+  line-height: 1.45;
+  color: #9ca3af;
+}
+
+.neighborhood-detail-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.9rem 1.1rem 1.5rem;
+}
+
+.neighborhood-detail-empty {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #6b7280;
+}
+
+.neighborhood-detail-group + .neighborhood-detail-group {
+  margin-top: 1.25rem;
+}
+
+.neighborhood-detail-group-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #4b5563;
+}
+
+.neighborhood-detail-group-count {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #9ca3af;
+}
+
+.neighborhood-detail-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.neighborhood-detail-card {
+  padding: 0.7rem 0.8rem 0.75rem;
+  border: 1px solid #ececf0;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(15, 43, 32, 0.05);
+  overflow-wrap: anywhere;
+}
+
+/* Scroll-to-card feedback: the panel flashes the card a pin click landed on for
+   ASSET_FLASH_MS (1s), then transitions back. Green is this app's "you picked this" accent
+   (#1d865e), the same ink the sidebar CTAs use. The border and inset ring carry the state as
+   well as the tint, so it does not depend on colour alone. */
+.neighborhood-detail-card.is-flashing {
+  border-color: #1d865e;
+  background: #ecfdf3;
+  box-shadow: 0 0 0 2px rgba(29, 134, 94, 0.35) inset;
+}
+
+.neighborhood-detail-card {
+  transition:
+    background-color 420ms ease,
+    border-color 420ms ease,
+    box-shadow 420ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .neighborhood-detail-card {
+    transition: none;
+  }
+}
+
+.neighborhood-detail-card-title {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #17324d;
+}
+
+/* A clickable card moves the map to its pin. The hover lift is the affordance -- there is no
+   "Show on map" button, because the whole card is the target. */
+.neighborhood-detail-card.is-selectable {
+  cursor: pointer;
+}
+
+.neighborhood-detail-card.is-selectable:hover {
+  border-color: #cfd8e3;
+  box-shadow: 0 2px 8px rgba(15, 43, 32, 0.1);
+}
+
+/* The keyboard path to the same action. Styled as the title rather than as a button so the card
+   reads as one thing, with the focus ring the only visible difference. */
+.neighborhood-detail-card-title-btn {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.neighborhood-detail-card-title-btn:focus-visible {
+  outline: 2px solid rgba(29, 134, 94, 0.65);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.neighborhood-detail-card-address {
+  margin: 0.3rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: #6b7280;
+}
+
+.neighborhood-detail-card-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  margin: 0.5rem 0 0;
+}
+
+.neighborhood-detail-card-fields > div {
+  display: grid;
+  grid-template-columns: 4.25rem minmax(0, 1fr);
+  gap: 0.4rem;
+}
+
+.neighborhood-detail-card-fields dt {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: #9ca3af;
+}
+
+.neighborhood-detail-card-fields dd {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: #374151;
+}
+
+.neighborhood-detail-card-fields a {
+  color: #1d865e;
+}
+
+/* Below the project sidebar's mobile breakpoint the dock becomes full width; the map keeps its
+   own gestures underneath because the host is only as tall as the viewport. */
+@media (max-width: 640px) {
+  .neighborhood-detail-host {
+    width: 100%;
   }
 }

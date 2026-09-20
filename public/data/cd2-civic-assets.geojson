@@ -1,0 +1,1334 @@
+{
+ "features": [
+  {
+   "geometry": {
+    "coordinates": [
+     -118.367375,
+     34.168345
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "10844 Chandler Blvd, North Hollywood, CA 91601",
+    "category": "DISTRICT PROJECTS & OFFICE",
+    "council_district": 2,
+    "label": "Chandler Bike Path Outdoor Gallery & Recreation Area",
+    "neighborhood": "Districtwide",
+    "precision": "rooftop"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.37514,
+     34.166717
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "5250 Lankershim Blvd #200, North Hollywood CA",
+    "category": "DISTRICT PROJECTS & OFFICE",
+    "council_district": 2,
+    "label": "District Office",
+    "neighborhood": "Districtwide",
+    "precision": "street"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.36842,
+     34.172076
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "10900 Burbank Blvd, North Hollywood, CA 91601",
+    "category": "DISTRICT PROJECTS & OFFICE",
+    "council_district": 2,
+    "label": "Faces of NoHo mural",
+    "neighborhood": "Districtwide",
+    "precision": "rooftop"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.376391,
+     34.172656
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "5623 Elmer Ave, North Hollywood, CA 91601",
+    "category": "DISTRICT PROJECTS & OFFICE",
+    "council_district": 2,
+    "label": "Homes4Famiilies Veterans Housing",
+    "neighborhood": "Districtwide",
+    "precision": "rooftop"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.356492,
+     34.211112
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "San Fernando Rd & Arvilla Ave, Los Angeles, CA 91352",
+    "category": "DISTRICT PROJECTS & OFFICE",
+    "council_district": 2,
+    "label": "Improved Intersection & Grade Crossing",
+    "neighborhood": "Districtwide",
+    "precision": "intersection"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.396514,
+     34.210281
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "Laurel Canyon Blvd & Keswick St",
+    "category": "DISTRICT PROJECTS & OFFICE",
+    "council_district": 6,
+    "label": "Keswick Pocket Park",
+    "neighborhood": "Districtwide",
+    "precision": "intersection"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.373553,
+     34.163297
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "5108 Lankershim Blvd",
+    "category": "DISTRICT PROJECTS & OFFICE",
+    "council_district": 2,
+    "label": "Lankershim Arts Center",
+    "neighborhood": "Districtwide",
+    "precision": "rooftop"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.375388,
+     34.165616
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "5225 Lankershim Blvd",
+    "category": "DISTRICT PROJECTS & OFFICE",
+    "council_district": 2,
+    "label": "NoHo Plaza (People Street)",
+    "neighborhood": "Districtwide",
+    "precision": "rooftop"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.400779,
+     34.183892
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "6226 Laurelgrove Ave, Valley Glen, CA 91606",
+    "category": "DISTRICT PROJECTS & OFFICE",
+    "council_district": 2,
+    "label": "Renovation & Improvements Laurelgrove Park",
+    "neighborhood": "Districtwide",
+    "precision": "rooftop"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.362027,
+     34.139435
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "3919 Lankershim Blvd, Studio City, CA 91604",
+    "category": "DISTRICT PROJECTS & OFFICE",
+    "council_district": 2,
+    "label": "Renovation of Campo De Cahuenga Historic Site",
+    "neighborhood": "Districtwide",
+    "precision": "rooftop"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.402994,
+     34.191711
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "6636 Rhodes Ave",
+    "category": "DISTRICT PROJECTS & OFFICE",
+    "council_district": 2,
+    "label": "Rhodes Avenue Park",
+    "neighborhood": "Districtwide",
+    "precision": "rooftop"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.405658,
+     34.208552
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "12541 Saticoy St",
+    "category": "DISTRICT PROJECTS & OFFICE",
+    "council_district": 2,
+    "label": "Strathern Park West",
+    "neighborhood": "Districtwide",
+    "precision": "rooftop"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.379059,
+     34.190321
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "Tujunga/Kittridge",
+    "category": "DISTRICT PROJECTS & OFFICE",
+    "council_district": 2,
+    "label": "Tujunga/Kittridge",
+    "neighborhood": "Districtwide",
+    "precision": "intersection"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.370385,
+     34.14924
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "4541 Vineland Ave, Toluca Lake, CA 91602",
+    "category": "DISTRICT PROJECTS & OFFICE",
+    "council_district": 2,
+    "label": "Vineland Avenue Median",
+    "neighborhood": "Districtwide",
+    "precision": "street"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.360649,
+     34.17551
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "5753 Whitnall Hwy, North Hollywood, CA 91601",
+    "category": "DISTRICT PROJECTS & OFFICE",
+    "council_district": 2,
+    "label": "Whitnall Highway Dog Park",
+    "neighborhood": "Districtwide",
+    "precision": "rooftop"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.405151,
+     34.197534
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "6950 Whitsett Ave, North Hollywood, CA 91605",
+    "category": "DISTRICT PROJECTS & OFFICE",
+    "council_district": 2,
+    "label": "Whitsett Ave Sports Complex",
+    "neighborhood": "Districtwide",
+    "precision": "rooftop"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.379403,
+     34.165667
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "5211 Tujunga Ave., North Hollywood, CA 91601",
+    "category": "NEIGHBORHOOD ORGANIZATIONS AND RESOURCES",
+    "council_district": 2,
+    "label": "North Hollywood Amelia Earhart Regional Library",
+    "neighborhood": "Multiple neighborhoods",
+    "phone": "(818) 766-7185",
+    "precision": "rooftop",
+    "serves": "North Hollywood, Toluca Lake, Valley Village",
+    "website": "http://www.lapl.org/branches/north-hollywood"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.385686,
+     34.172069
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "11640 Burbank Blvd., North Hollywood, CA 91601",
+    "category": "PUBLIC SAFETY",
+    "council_district": 2,
+    "label": "North Hollywood Police Station",
+    "neighborhood": "Multiple neighborhoods",
+    "phone": "(818) 623-4016",
+    "precision": "rooftop",
+    "serves": "Studio City, Toluca Lake, Valley Glen, Valley Village",
+    "website": "http://www.lapdonline.org/north_hollywood_community_police_station"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.420341,
+     34.175758
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "5800 Fulton Ave",
+    "category": "DISTRICT PROJECTS & OFFICE",
+    "council_district": 2,
+    "email": "ValleyGlenCC@aol.com",
+    "label": "Tujunga Green Belt",
+    "meeting_information": "Board meetings: 1st Monday at 7 p.m.",
+    "neighborhood": "Multiple neighborhoods",
+    "precision": "rooftop",
+    "serves": "Districtwide, Valley Glen",
+    "website": "http://www.greatervalleyglencouncil.org/"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.382294,
+     34.161726
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "5000 Westpark Drive, North Hollywood, CA 91601",
+    "category": "RECREATION & PARKS",
+    "council_district": 2,
+    "label": "Valley Village Park",
+    "neighborhood": "Multiple neighborhoods",
+    "phone": "(818) 756-8189",
+    "precision": "name",
+    "serves": "Toluca Lake, Valley Village",
+    "website": "https://www.laparks.org/park/valley-village"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.44643,
+     34.183499
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "6240 Sylmar Ave., Van Nuys, CA 91401",
+    "category": "PUBLIC SAFETY",
+    "council_district": 6,
+    "label": "Van Nuys Community Police Station",
+    "neighborhood": "Multiple neighborhoods",
+    "phone": "(818) 374-9500",
+    "precision": "rooftop",
+    "serves": "Valley Glen, Van Nuys",
+    "website": "http://www.lapdonline.org/van_nuys_community_police_station"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.375851,
+     34.150289
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "11240 Moorpark St., Studio City, CA 91602",
+    "category": "RECREATION & PARKS",
+    "council_district": 2,
+    "label": "Woodbridge Park",
+    "neighborhood": "Multiple neighborhoods",
+    "phone": "(818) 769-4415",
+    "precision": "rooftop",
+    "serves": "Studio City, Toluca Lake",
+    "website": "http://www.laparks.org/dos/parks/facility/woodbridgepk.htm"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.405273,
+     34.21574
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "Strathern St. and Whitsett Ave., Los Angeles, CA 91605",
+    "category": "RECREATION & PARKS",
+    "council_district": 2,
+    "label": "Jamie Beth Slaven Park",
+    "neighborhood": "North Hollywood",
+    "phone": "(818) 765-5885",
+    "precision": "intersection",
+    "website": "https://www.laparks.org/park/jamie-beth-slavin"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.391148,
+     34.179723
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "6013 Carpenter Avenue, North Hollywood, CA 91606",
+    "category": "NEIGHBORHOOD ORGANIZATIONS AND RESOURCES",
+    "council_district": 2,
+    "email": "laurelgroveneighborhood@gmail.com",
+    "label": "Laurel Grove Neighborhood Association",
+    "neighborhood": "North Hollywood",
+    "precision": "rooftop"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.37954,
+     34.167001
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "5301 Tujunga Ave., North Hollywood, CA 91601",
+    "category": "NEIGHBORHOOD ORGANIZATIONS AND RESOURCES",
+    "council_district": 2,
+    "email": "outreach@midtownnoho.org",
+    "label": "NoHo Neighborhood Council",
+    "meeting_information": "Board Meeting: 2nd Wed. at 6:30 p.m.",
+    "neighborhood": "North Hollywood",
+    "precision": "rooftop",
+    "website": "http://www.midtownnoho.org/"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.396452,
+     34.181565
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "7063 Laurel Canyon, North Hollywood, CA 91605",
+    "category": "NEIGHBORHOOD ORGANIZATIONS AND RESOURCES",
+    "council_district": 2,
+    "email": "Board@NHNENC.org",
+    "label": "NoHo Northeast Neighborhood Council",
+    "meeting_information": "Board Meeting: 2nd Wed. at 7:00 p.m.",
+    "neighborhood": "North Hollywood",
+    "phone": "(818) 627-8505",
+    "precision": "street",
+    "website": "http://www.nhnenc.org/"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.401162,
+     34.19468
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "12311 Vanowen St, North Hollywood, CA 91605",
+    "category": "NEIGHBORHOOD ORGANIZATIONS AND RESOURCES",
+    "council_district": 2,
+    "email": "nohowest@gmail.com",
+    "label": "NoHo West Neighborhood Council",
+    "meeting_information": "Board Meeting: 3rd Wed. at 7 p.m.",
+    "neighborhood": "North Hollywood",
+    "phone": "(818) 765-9251",
+    "precision": "rooftop",
+    "website": "http://nohowest.org/"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.372407,
+     34.161777
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "5026 Lankershim Blvd, North Hollywood, CA 91601",
+    "category": "NEIGHBORHOOD ORGANIZATIONS AND RESOURCES",
+    "council_district": 2,
+    "label": "North Hollywood Business Improvement District",
+    "meeting_information": "Board Meeting: 2nd Wed. at 11 a.m.",
+    "neighborhood": "North Hollywood",
+    "precision": "rooftop",
+    "website": "https://www.nohobid.com/"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.398856,
+     34.185942
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "6369 Bellingham Ave, North Hollywood, CA 91606",
+    "category": "NEIGHBORHOOD ORGANIZATIONS AND RESOURCES",
+    "council_district": 2,
+    "label": "Universal City-North Hollywood Chamber of Commerce",
+    "neighborhood": "North Hollywood",
+    "phone": "(818) 508-5155",
+    "precision": "rooftop",
+    "website": "http://www.noho.org/"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.400809,
+     34.191849
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "12240 Archwood St., North Hollywood, CA 91606",
+    "category": "RECREATION & PARKS",
+    "council_district": 2,
+    "label": "Valley Plaza Park",
+    "neighborhood": "North Hollywood",
+    "phone": "(818) 765-5885",
+    "precision": "rooftop",
+    "website": "http://www.laparks.org/dos/parks/facility/valleyPlazaPk.htm"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.37946,
+     34.12248
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "8260 Mulholland Dr., Los Angeles, CA 90046",
+    "category": "RECREATION & PARKS",
+    "council_district": 4,
+    "label": "Coldwater Canyon Open Space",
+    "neighborhood": "Studio City",
+    "phone": "(818) 766-8445",
+    "precision": "rooftop"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.402047,
+     34.129047
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "12601 N. Mulholland Dr., Beverly Hills, CA 90210",
+    "category": "RECREATION & PARKS",
+    "council_district": 4,
+    "label": "Coldwater Canyon Park",
+    "neighborhood": "Studio City",
+    "phone": "(818) 769-4415",
+    "precision": "name",
+    "website": "https://www.laparks.org/park/coldwater-canyon"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.405563,
+     34.14441
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "4041 Whitsett Ave., Los Angeles, CA 91604",
+    "category": "PUBLIC SAFETY",
+    "council_district": 4,
+    "label": "Fire Station 78",
+    "neighborhood": "Studio City",
+    "phone": "(818) 756-8678",
+    "precision": "rooftop"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.385546,
+     34.12183
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "8401 Mulholland Dr., Studio City, CA 91604",
+    "category": "RECREATION & PARKS",
+    "council_district": 4,
+    "label": "Fryman Canyon Park",
+    "neighborhood": "Studio City",
+    "phone": "(323) 644-6661",
+    "precision": "rooftop"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.395517,
+     34.15088
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "Laurel Canyon Blvd. and Moorpark St., Studio City, CA 91604",
+    "category": "RECREATION & PARKS",
+    "council_district": 4,
+    "label": "Moorpark Park",
+    "neighborhood": "Studio City",
+    "precision": "name"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.365555,
+     34.141652
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "Valleyheart Dr. and Lankershim Blvd., Studio City, CA 91604",
+    "category": "RECREATION & PARKS",
+    "council_district": 2,
+    "label": "South Weddington Park",
+    "neighborhood": "Studio City",
+    "precision": "name"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.392663,
+     34.14491
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "4024 Radford Ave., Ed.2, Suite F, Studio City, CA 91604",
+    "category": "NEIGHBORHOOD ORGANIZATIONS AND RESOURCES",
+    "council_district": 4,
+    "label": "Studio City Chamber of Commerce",
+    "neighborhood": "Studio City",
+    "phone": "(818) 655-5916",
+    "precision": "rooftop"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.394676,
+     34.144334
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "2052 Ventura Pl, Studio City, CA 91604",
+    "category": "NEIGHBORHOOD ORGANIZATIONS AND RESOURCES",
+    "council_district": 4,
+    "label": "Studio City Farmers Market",
+    "meeting_information": "Sundays from 8 a.m. to 2 p.m.",
+    "neighborhood": "Studio City",
+    "phone": "(818) 655-7744",
+    "precision": "rooftop",
+    "website": "https://www.studiocityfarmersmarket.com/"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.405594,
+     34.150647
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "12511 Moorpark St., Studio City, CA 91604",
+    "category": "NEIGHBORHOOD ORGANIZATIONS AND RESOURCES",
+    "council_district": 4,
+    "label": "Studio City Library",
+    "neighborhood": "Studio City",
+    "phone": "(818) 755-7873",
+    "precision": "rooftop",
+    "website": "http://www.lapl.org/branches/studio-city"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.392707,
+     34.143969
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "4024 Radford Ave, Studio City, CA 91604",
+    "category": "NEIGHBORHOOD ORGANIZATIONS AND RESOURCES",
+    "council_district": 4,
+    "label": "Studio City Neighborhood Council",
+    "meeting_information": "Board Meetings: 3rd Wed. at 7 p.m.",
+    "neighborhood": "Studio City",
+    "phone": "(818) 655-5400",
+    "precision": "rooftop",
+    "website": "http://studiocitync.org/"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.407764,
+     34.151424
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "12621 Rye St., Studio City, CA 91604",
+    "category": "RECREATION & PARKS",
+    "council_district": 4,
+    "label": "Studio City Recreation Center",
+    "neighborhood": "Studio City",
+    "phone": "(818) 769-4415",
+    "precision": "rooftop",
+    "website": "https://www.laparks.org/reccenter/studio-city"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.394032,
+     34.144308
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "12069 Ventura Pl # H, Studio City, CA 91604",
+    "category": "NEIGHBORHOOD ORGANIZATIONS AND RESOURCES",
+    "council_district": 4,
+    "label": "Studio City Residents Association",
+    "meeting_information": "Board Meetings: Even months, 2nd Tues. at 7 p.m.",
+    "neighborhood": "Studio City",
+    "precision": "rooftop",
+    "website": "http://studiocityresidents.org/"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.407692,
+     34.129397
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "12601 Mulholland Dr., Studio City, CA 91604",
+    "category": "RECREATION & PARKS",
+    "council_district": 5,
+    "label": "Wilacre Park",
+    "neighborhood": "Studio City",
+    "phone": "(818) 766-8445",
+    "precision": "rooftop",
+    "website": "http://www.laparks.org/dos/parks/facility/wilacrePk.htm"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.401949,
+     34.230174
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "8851 Laurel Canyon Blvd., Sun Valley, CA 91352",
+    "category": "RECREATION & PARKS",
+    "council_district": 6,
+    "label": "Fernangeles Recreation Center",
+    "neighborhood": "Sun Valley",
+    "phone": "(818) 767-4171",
+    "precision": "rooftop",
+    "website": "http://www.laparks.org/dos/reccenter/facility/fernangelesRC.htm"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.367022,
+     34.236292
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "9224 Sunland Blvd., Los Angeles, CA 91352",
+    "category": "PUBLIC SAFETY",
+    "council_district": 7,
+    "label": "Fire Station 77",
+    "neighborhood": "Sun Valley",
+    "phone": "(818) 756-8677",
+    "precision": "rooftop"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.410413,
+     34.25339
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "12760 Osborne St., Pacoima, CA 91331",
+    "category": "PUBLIC SAFETY",
+    "council_district": 7,
+    "label": "Foothill Community Police Station",
+    "neighborhood": "Sun Valley",
+    "phone": "(818) 756-8861",
+    "precision": "rooftop",
+    "website": "http://www.lapdonline.org/foothill_community_police_station"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.407247,
+     34.226822
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "14215 W. Devonshire St., Pacoima, CA 91331",
+    "category": "RECREATION & PARKS",
+    "council_district": 6,
+    "label": "Sheldon Arleta Park",
+    "neighborhood": "Sun Valley",
+    "phone": "(818) 756-9404",
+    "precision": "name",
+    "website": "http://www.laparks.org/dos/parks/facility/devonshireArletaPk.htm"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.366517,
+     34.222074
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "8642 Sunland Blvd., Sun Valley, CA 91352",
+    "category": "NEIGHBORHOOD ORGANIZATIONS AND RESOURCES",
+    "council_district": 2,
+    "email": "info@svanc.com",
+    "label": "Sun Valley Area Neighborhood Council",
+    "meeting_information": "Board meetings: 2nd Tuesday at 6:30 p.m.",
+    "neighborhood": "Sun Valley",
+    "precision": "street",
+    "website": "http://www.svanc.com/"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.379904,
+     34.216873
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "11501 Strathern St., North Hollywood, CA 91605",
+    "category": "NEIGHBORHOOD ORGANIZATIONS AND RESOURCES",
+    "council_district": 6,
+    "label": "Sun Valley Chamber of Commerce",
+    "neighborhood": "Sun Valley",
+    "phone": "(818) 768-2014",
+    "precision": "rooftop",
+    "website": "http://www.svacc.com/"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.370431,
+     34.214546
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "7935 Vineland Ave., Sun Valley, CA 91352",
+    "category": "NEIGHBORHOOD ORGANIZATIONS AND RESOURCES",
+    "council_district": 6,
+    "label": "Sun Valley Library",
+    "neighborhood": "Sun Valley",
+    "phone": "(818) 764-1338",
+    "precision": "rooftop",
+    "website": "http://www.lapl.org/branches/sun-valley"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.370435,
+     34.218142
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "8133 Vineland Ave., Sun Valley, CA 91352",
+    "category": "RECREATION & PARKS",
+    "council_district": 6,
+    "label": "Sun Valley Park",
+    "neighborhood": "Sun Valley",
+    "phone": "(818) 767-6151",
+    "precision": "rooftop",
+    "website": "https://www.laparks.org/reccenter/sun-valley"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.370757,
+     34.148441
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "4305 Vineland Avenue, Los Angeles, CA 91602",
+    "category": "PUBLIC SAFETY",
+    "council_district": 2,
+    "label": "Fire Station 86",
+    "neighborhood": "Toluca Lake",
+    "phone": "(818) 756-8686",
+    "precision": "rooftop",
+    "website": "https://www.lafd.org/fire-stations/station-86"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.350963,
+     34.131049
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "3330 Cahuenga Blvd W #505, Los Angeles, CA 90068",
+    "category": "NEIGHBORHOOD ORGANIZATIONS AND RESOURCES",
+    "council_district": 4,
+    "label": "Greater Toluca Lake Neighborhood Council",
+    "meeting_information": "Board Meetings: 3rd Tuesday of every month at 7:00 p.m.; Zoom Call: https://zoom.us/j/97941372867; Email/contact: https://www.gtlnc.org/contact-us/",
+    "neighborhood": "Toluca Lake",
+    "precision": "rooftop",
+    "website": "https://www.gtlnc.org/"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.366189,
+     34.145833
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "10844 Acama St., Studio City, CA 91602",
+    "category": "RECREATION & PARKS",
+    "council_district": 2,
+    "email": "northweddington.recreationcenter@lacity.org",
+    "label": "North Weddington Recreation Center",
+    "neighborhood": "Toluca Lake",
+    "phone": "(818) 506-1467",
+    "precision": "rooftop"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.361556,
+     34.141917
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "10600 Valleyheart Dr., Studio City, CA 91604",
+    "category": "RECREATION & PARKS",
+    "council_district": 2,
+    "label": "South Weddington Park",
+    "neighborhood": "Toluca Lake",
+    "phone": "(818) 506-1467",
+    "precision": "rooftop",
+    "website": "https://www.laparks.org/park/weddington-south"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.420708,
+     34.171849
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "13200 Burbank Blvd., Los Angeles, CA 91401",
+    "category": "PUBLIC SAFETY",
+    "council_district": 4,
+    "label": "Fire Station 102",
+    "neighborhood": "Valley Glen",
+    "phone": "(818) 756-8602",
+    "precision": "rooftop"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.430862,
+     34.19478
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "Woodman Ave. and Hartland St., Van Nuys, CA",
+    "category": "RECREATION & PARKS",
+    "council_district": 2,
+    "label": "Hartland Mini Park",
+    "neighborhood": "Valley Glen",
+    "precision": "name"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.400314,
+     34.18354
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "Westpark Dr. and Laurelgrove Ave., North Hollywood, CA 91606",
+    "category": "RECREATION & PARKS",
+    "council_district": 2,
+    "label": "Laurel Grove Park",
+    "neighborhood": "Valley Glen",
+    "precision": "name",
+    "website": "https://www.laparks.org/parks/laurel-grove-park"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.419267,
+     34.182417
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "6150 Atoll Ave., Van Nuys, CA 91436",
+    "category": "RECREATION & PARKS",
+    "council_district": 2,
+    "label": "Valley Glen Community Park",
+    "neighborhood": "Valley Glen",
+    "phone": "(818) 756-8188",
+    "precision": "name",
+    "website": "https://www.laparks.org/park/valley-glen-community"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.469586,
+     34.186658
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "13300 Victory Blvd, Van Nuys, CA 91401",
+    "category": "NEIGHBORHOOD ORGANIZATIONS AND RESOURCES",
+    "council_district": 6,
+    "email": "info@vgna.com",
+    "label": "Valley Glen Neighborhood Association",
+    "meeting_information": "Board meetings: 3rd Tuesday of even months at 7 p.m.",
+    "neighborhood": "Valley Glen",
+    "precision": "street",
+    "website": "http://www.valleyglen.org/"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.378751,
+     34.167758
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "5320 Tujunga Ave., Los Angeles, CA 91601",
+    "category": "PUBLIC SAFETY",
+    "council_district": 2,
+    "label": "Fire Station 60",
+    "neighborhood": "Valley Village",
+    "phone": "(818) 756-8660",
+    "precision": "rooftop"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.387779,
+     34.1697
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "5000 Colfax Avenue, Valley Village, CA 91607",
+    "category": "NEIGHBORHOOD ORGANIZATIONS AND RESOURCES",
+    "council_district": 2,
+    "email": "info@myvalleyvillage.com",
+    "label": "Neighborhood Council Valley Village",
+    "meeting_information": "Board Meetings: 4th Wed. at 6:30 p.m.",
+    "neighborhood": "Valley Village",
+    "precision": "street",
+    "website": "http://www.myvalleyvillage.com/index.php"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.373933,
+     34.167005
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "11909 Weddington St, North Hollywood, CA 91607",
+    "category": "NEIGHBORHOOD ORGANIZATIONS AND RESOURCES",
+    "council_district": 2,
+    "label": "Valley Village Homeowners Association",
+    "neighborhood": "Valley Village",
+    "precision": "street",
+    "website": "http://valleyvillageha.com/"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.462912,
+     34.182943
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "15100 Erwin St., Van Nuys, CA 91411",
+    "category": "RECREATION & PARKS",
+    "council_district": 6,
+    "label": "Delano Park",
+    "neighborhood": "Van Nuys",
+    "phone": "(818) 756-8529",
+    "precision": "rooftop",
+    "website": "http://www.laparks.org/reccenter/delano"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.447117,
+     34.184938
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "14415 Sylvan St., Los Angeles, CA 91401",
+    "category": "PUBLIC SAFETY",
+    "council_district": 6,
+    "label": "Fire Station 39",
+    "neighborhood": "Van Nuys",
+    "phone": "(818) 756-8639",
+    "precision": "rooftop"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.446153,
+     34.183958
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "6250 Sylmar Ave., Van Nuys, CA 91401",
+    "category": "NEIGHBORHOOD ORGANIZATIONS AND RESOURCES",
+    "council_district": 6,
+    "label": "Van Nuys Branch Library",
+    "neighborhood": "Van Nuys",
+    "phone": "(818) 756-8453",
+    "precision": "rooftop",
+    "website": "http://www.lapl.org/branches/van-nuys"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.448614,
+     34.184068
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "6262 Van Nuys Blvd., Van Nuys, CA 91401",
+    "category": "NEIGHBORHOOD ORGANIZATIONS AND RESOURCES",
+    "council_district": 6,
+    "email": "info@vnnc.org",
+    "label": "Van Nuys Neighborhood Council",
+    "meeting_information": "Board Meetings: 2nd Wed. at 7 p.m.",
+    "neighborhood": "Van Nuys",
+    "precision": "rooftop",
+    "website": "http://vnnc.org/"
+   },
+   "type": "Feature"
+  },
+  {
+   "geometry": {
+    "coordinates": [
+     -118.444502,
+     34.194011
+    ],
+    "type": "Point"
+   },
+   "properties": {
+    "address": "14301 Vanowen St., Van Nuys, CA 91405",
+    "category": "RECREATION & PARKS",
+    "council_district": 6,
+    "label": "Van Nuys Recreation Center",
+    "neighborhood": "Van Nuys",
+    "phone": "(818) 756-8131",
+    "precision": "rooftop",
+    "website": "https://www.laparks.org/recenter/van-nuys"
+   },
+   "type": "Feature"
+  }
+ ],
+ "type": "FeatureCollection"
+}

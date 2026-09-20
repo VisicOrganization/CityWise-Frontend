@@ -144,6 +144,29 @@ export const districtOutlineLayer: Omit<LineLayerSpecification, "source"> = {
   },
 };
 
+/**
+ * Dashed, near-black outline for one council district's true administrative boundary.
+ *
+ * A line layer with no fill on purpose: it is drawn on top of whatever the map's content
+ * layer is (a density choropleth on /homeless-count, neighbourhood fills on the district
+ * overview) and a fill would tint every class underneath it. The dash pattern is the primary
+ * cue and it is the conventional one -- a dashed edge reads as an administrative boundary
+ * rather than as another data polygon.
+ *
+ * Lives here rather than in a feature folder because two features draw it now. It carries no
+ * district id; the caller supplies the single-district `<Source>` it renders against.
+ */
+export const districtBoundaryLineLayer: Omit<LineLayerSpecification, "source"> = {
+  id: "council-district-boundary-line",
+  type: "line",
+  paint: {
+    "line-color": "#111827",
+    "line-width": 2.5,
+    "line-opacity": 0.9,
+    "line-dasharray": [3, 2],
+  },
+};
+
 export const districtHighlightLayer: Omit<FillLayerSpecification, "source"> = {
   id: "district-highlight",
   type: "fill",
