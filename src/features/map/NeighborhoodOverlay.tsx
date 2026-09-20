@@ -50,6 +50,8 @@ export interface HoveredAsset {
   latitude: number;
   label: string;
   category: string;
+  /** Part of the pin's identity, not display: `label` alone is not unique. */
+  neighborhood: string;
 }
 
 export interface HoveredNeighborhood {
@@ -149,12 +151,16 @@ export function NeighborhoodOverlay({
         <Layer {...buildSelectedAssetGlowLayer(visibleSelected?.properties ?? null)} />
         <Layer {...buildSelectedAssetBackingLayer(visibleSelected?.properties ?? null)} />
         <Layer {...buildSelectedAssetLayer(visibleSelected?.properties ?? null)} />
-        <Layer {...buildAssetHoverLayer(hoveredAsset?.label ?? null)} />
+        {/* Composite identity, not `label`: "South Weddington Park" is two different points
+            in the source data, and matching by name lit up both at once. */}
+        <Layer {...buildAssetHoverLayer(hoveredAsset)} />
       </Source>
 
       {/* Follows the cursor. Only one of the two tooltips is ever shown: over a pin the pin's
-          identity is what the user is asking about, not the neighbourhood under it. */}
-      {hoveredAsset ? (
+          identity is what the user is asking about, not the neighbourhood under it.
+          Both are suppressed entirely while a click popup is open -- a cursor tooltip stacking
+          over an open contact card is two overlapping answers to the same question. */}
+      {visibleSelected ? null : hoveredAsset ? (
         <Popup
           longitude={hoveredAsset.longitude}
           latitude={hoveredAsset.latitude}

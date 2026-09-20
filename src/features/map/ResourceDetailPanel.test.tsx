@@ -183,10 +183,12 @@ describe("ResourceDetailPanel, district selection", () => {
     asset({ label: "Beeman Park", neighborhood: "Studio City" }),
   ]);
 
-  it("is titled District Overview and scoped to the council district", () => {
+  it("is titled District-wide resources and scoped to the council district", () => {
     renderPanel({ selection: DISTRICT, assets: districtAssets });
 
-    expect(screen.getByRole("heading", { level: 2 }).textContent).toBe("District Overview");
+    // Deliberately not "District Overview" -- DistrictOverviewSheet owns that name.
+    expect(screen.getByRole("heading", { level: 2 }).textContent).toBe("District-wide resources");
+    expect(screen.getByLabelText("District-wide resources")).toBeTruthy();
     expect(screen.getByText("Council District 2")).toBeTruthy();
   });
 

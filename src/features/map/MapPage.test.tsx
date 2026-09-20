@@ -36,7 +36,15 @@ vi.mock("./assetPinImages", async (importOriginal) => ({
 
 vi.mock("react-map-gl/maplibre", () => ({
   default: React.forwardRef(function MockMap(
-    { children, onClick }: { children?: ReactNode; onClick?: (event: unknown) => void },
+    {
+      children,
+      onClick,
+      onMouseMove,
+    }: {
+      children?: ReactNode;
+      onClick?: (event: unknown) => void;
+      onMouseMove?: (event: unknown) => void;
+    },
     ref: React.ForwardedRef<{ getMap: () => typeof mockMap } | null>,
   ) {
     React.useImperativeHandle(ref, () => ({ getMap: () => mockMap }));
@@ -58,6 +66,27 @@ vi.mock("react-map-gl/maplibre", () => ({
           }
         >
           mock boundary click
+        </button>
+        <button
+          type="button"
+          data-testid="mock-asset-hover"
+          onClick={() =>
+            onMouseMove?.({
+              features: [
+                {
+                  layer: { id: "cd2-asset-points" },
+                  properties: {
+                    label: "Fire Station 60",
+                    category: "PUBLIC SAFETY",
+                    neighborhood: "Valley Village",
+                  },
+                },
+              ],
+              lngLat: { lng: -118.39, lat: 34.16 },
+            })
+          }
+        >
+          mock asset hover
         </button>
         <button
           type="button"
@@ -1323,12 +1352,12 @@ describe("mock app routes", () => {
       expect(screen.queryByLabelText("Valley Village resources")).not.toBeInTheDocument();
     });
 
-    it("opens the District Overview panel from a District projects & office pin", async () => {
+    it("opens the district-wide panel from a District projects & office pin", async () => {
       const user = await enterNeighborhoodMode();
 
       await user.click(screen.getByTestId("mock-district-asset-click"));
 
-      const panel = await screen.findByLabelText("District Overview resources");
+      const panel = await screen.findByLabelText("District-wide resources");
       expect(within(panel).getByText("Council District 2")).toBeInTheDocument();
       // Straight from the sheet's source_url column, via the generated neighborhoods file.
       expect(
@@ -1344,12 +1373,12 @@ describe("mock app routes", () => {
       const user = await enterNeighborhoodMode();
 
       await user.click(screen.getByTestId("mock-district-asset-click"));
-      expect(await screen.findByLabelText("District Overview resources")).toBeInTheDocument();
+      expect(await screen.findByLabelText("District-wide resources")).toBeInTheDocument();
 
       await user.click(screen.getByTestId("mock-asset-click"));
 
       expect(await screen.findByLabelText("Valley Village resources")).toBeInTheDocument();
-      expect(screen.queryByLabelText("District Overview resources")).not.toBeInTheDocument();
+      expect(screen.queryByLabelText("District-wide resources")).not.toBeInTheDocument();
     });
 
     it("moves the map to a card's pin when the card is clicked", async () => {
@@ -1511,6 +1540,37 @@ describe("mock app routes", () => {
         "data-filter",
         expect.stringContaining("no-asset"),
       );
+    });
+
+    it("shows a hover tooltip over a pin when nothing is selected", async () => {
+      const user = await enterNeighborhoodMode();
+
+      await user.click(screen.getByTestId("mock-asset-hover"));
+
+      expect(screen.getByText("Click for contact details.")).toBeInTheDocument();
+    });
+
+    // A cursor tooltip stacking over an open contact card is two answers to one question.
+    it("suppresses hover tooltips while a click popup is open", async () => {
+      const user = await enterNeighborhoodMode();
+      await user.click(screen.getByTestId("mock-asset-click"));
+
+      await user.click(screen.getByTestId("mock-asset-hover"));
+
+      expect(screen.queryByText("Click for contact details.")).not.toBeInTheDocument();
+    });
+
+    // The hover LAYER still tracks the cursor; only the tooltips are suppressed.
+    it("keeps the hover highlight matching one pin, not every pin sharing its name", async () => {
+      const user = await enterNeighborhoodMode();
+
+      await user.click(screen.getByTestId("mock-asset-hover"));
+
+      const filter = screen.getByTestId("layer-cd2-asset-points-hover").dataset.filter ?? "";
+      expect(filter).toContain("Fire Station 60");
+      // Label alone would match a same-named pin in another neighborhood.
+      expect(filter).toContain("Valley Village");
+      expect(filter).toContain("PUBLIC SAFETY");
     });
 
     it("flashes the clicked pin's card and clears the flash a second later", async () => {

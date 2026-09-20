@@ -13,7 +13,7 @@ import { ASSET_PIN_SOURCES, pinImageUrl } from "./assetPinImages";
 
 /**
  * Left-hand slide-in for whatever the user just clicked: one neighbourhood's resources, or the
- * District Overview (the district-level items the sheet never categorised).
+ * the district-wide items (those the sheet never categorised).
  *
  * One component for both because everything below the header is identical -- the cards, the
  * grouping, the scroll-to-and-flash, the dock, the close. The two differ only in which pins
@@ -78,7 +78,15 @@ export function ResourceDetailPanel({
   onClose,
 }: ResourceDetailPanelProps) {
   const isDistrict = selection.kind === "district";
-  const name = isDistrict ? "District Overview" : shortNeighborhoodName(selection.csaLabel);
+  /**
+   * NOT "District Overview": that name already belongs to `DistrictOverviewSheet`, the council
+   * district profile this same map opens from its district pill (`CityMap.tsx`, "District
+   * Overview" button). Two different surfaces under one name on one page is a bug in the words.
+   */
+  const title = isDistrict ? "District-wide resources" : shortNeighborhoodName(selection.csaLabel);
+  // The heading already says "resources" in the district case; appending it again would make the
+  // accessible name "District-wide resources resources".
+  const accessibleName = isDistrict ? title : `${title} resources`;
   const eyebrow = isDistrict ? `Council District ${districtId}` : "Neighborhood";
 
   // Grouped in the legend's fixed category order so the panel's sections and the map's colour
@@ -122,17 +130,17 @@ export function ResourceDetailPanel({
 
   return (
     <div className="neighborhood-detail-host">
-      <aside className="neighborhood-detail-panel" aria-label={`${name} resources`}>
+      <aside className="neighborhood-detail-panel" aria-label={accessibleName}>
         <header className="neighborhood-detail-header">
           <div className="neighborhood-detail-header-row">
             <div>
               <p className="neighborhood-detail-eyebrow">{eyebrow}</p>
-              <h2 className="neighborhood-detail-title">{name}</h2>
+              <h2 className="neighborhood-detail-title">{title}</h2>
             </div>
             <button
               type="button"
               className="neighborhood-detail-close"
-              aria-label={`Close ${name} panel`}
+              aria-label={`Close ${title} panel`}
               onClick={onClose}
             >
               <span aria-hidden="true">×</span>
@@ -176,7 +184,7 @@ export function ResourceDetailPanel({
           ) : (
             groups.map((group) => (
               <section key={group.category} className="neighborhood-detail-group">
-                {/* A single-group panel (the District Overview is always one) would otherwise
+                {/* A single-group panel (the district-wide one always is) would otherwise
                     carry a heading that just repeats its own title. */}
                 {groups.length > 1 ? (
                   <h3 className="neighborhood-detail-group-title">

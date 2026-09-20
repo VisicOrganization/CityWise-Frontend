@@ -328,12 +328,14 @@ export const assetPointBackingLayer: Omit<CircleLayerSpecification, "source"> = 
  * base layer's paint constant so MapLibre is not rebuilding it on every mouse move.
  */
 export function buildAssetHoverLayer(
-  label: string | null,
+  identity: AssetIdentity | null,
 ): Omit<SymbolLayerSpecification, "source"> {
   return {
     id: "cd2-asset-points-hover",
     type: "symbol",
-    filter: ["==", ["get", "label"], label ?? "\u0000no-asset"] as unknown as ExpressionSpecification,
+    // Composite, like the selection layers: filtering on `label` alone enlarged both
+    // "South Weddington Park" pins whenever the cursor was over either one.
+    filter: buildAssetSelectionFilter(identity),
     layout: {
       "icon-image": categoryIconExpression,
       "icon-size": iconSizeAtScale(HOVER_ICON_SCALE),

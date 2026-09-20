@@ -195,8 +195,14 @@ describe("buildNeighborhoodFilter", () => {
 
 describe("buildAssetHoverLayer", () => {
   it("filters to the hovered pin and draws bigger than the base layer", () => {
-    const hover = buildAssetHoverLayer("Fire Station 60");
-    expect(hover.filter).toEqual(["==", ["get", "label"], "Fire Station 60"]);
+    const hovered = {
+      label: "Fire Station 60",
+      category: "PUBLIC SAFETY",
+      neighborhood: "Valley Village",
+    };
+    const hover = buildAssetHoverLayer(hovered);
+    // Composite identity: two pins can share a label, and both used to light up together.
+    expect(hover.filter).toEqual(buildAssetSelectionFilter(hovered));
     expect(hover.id).not.toBe(ASSET_POINTS_LAYER_ID);
 
     // The grow-on-hover effect is this layer's icon-size exceeding the base layer's at both
@@ -290,7 +296,7 @@ describe("selected asset layers", () => {
     const ids = [
       assetPointLayer.id,
       assetPointBackingLayer.id,
-      buildAssetHoverLayer("x").id,
+      buildAssetHoverLayer(identity).id,
       buildSelectedAssetGlowLayer(identity).id,
       buildSelectedAssetBackingLayer(identity).id,
       buildSelectedAssetLayer(identity).id,

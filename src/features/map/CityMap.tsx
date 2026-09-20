@@ -668,6 +668,10 @@ export function CityMap({
           ? {
               label,
               category: typeof properties.category === "string" ? properties.category : "",
+              // Carried so the hover layer can match this one pin rather than every pin
+              // sharing its name.
+              neighborhood:
+                typeof properties.neighborhood === "string" ? properties.neighborhood : "",
               longitude: event.lngLat.lng,
               latitude: event.lngLat.lat,
             }
