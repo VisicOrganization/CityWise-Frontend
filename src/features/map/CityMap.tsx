@@ -51,21 +51,11 @@ import { CATEGORY_COLOR, MARKER_CATEGORIES, type MapMarker, type MarkerCategory 
 import { ProjectAffiliationChips, AFFILIATION_CATEGORY_ORDER } from "./projectDetails/ProjectAffiliations";
 import { CategoryPillStatic } from "../../shared/ui/CategoryPill";
 import { LocationPinIcon } from "../../shared/ui/visicIcons";
+import { PROJECT_PIN_SRC as PIN_SRC } from "../../shared/map/projectPinSources";
 
 /** Style-guide forest green (Figma Visic UI primary, `--ps-forest`) for the searched-address pin. */
 const ADDRESS_PIN_COLOR = "#1d865e";
 
-const PIN_SRC: Record<MarkerCategory, string> = {
-  "Housing": "/images/pins/housing.svg",
-  "Education": "/images/pins/education.svg",
-  "Infrastructure": "/images/pins/infrastructure.svg",
-  "Public Resources": "/images/pins/public-resources.svg",
-  "Equity & Community Works": "/images/pins/equity-and-community-works.svg",
-  "Environmental": "/images/pins/environmental.svg",
-  "Public Safety": "/images/pins/public-safety.svg",
-  "Economic": "/images/pins/economic.svg",
-  "Miscellaneous": "/images/pins/miscellaneous.svg",
-};
 
 
 const DEFAULT_VIEW_STATE: ViewState = {
@@ -985,6 +975,7 @@ export function CityMap({
             hoveredAsset={hoveredAsset}
             selected={selectedAsset}
             onCloseSelected={() => setSelectedAsset(null)}
+            districtId={NEIGHBORHOOD_DISTRICT_ID}
           />
         ) : null}
       </Map>

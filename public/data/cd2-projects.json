@@ -1,0 +1,38 @@
+{
+  "generated_at": "2026-09-20T21:22:21.841Z",
+  "district_id": 2,
+  "projects": [
+    {
+      "id": "10-1280",
+      "title": "4533 Laurel Canyon Boulevard / Campbell Hall (Episcopal) / Revenue Bonds / Council District 2 / Tax Equity and Fiscal Responsibility Act of 1982 (TEFRA)",
+      "category": "Education",
+      "latitude": 34.1623307,
+      "longitude": -118.3964993,
+      "url": "https://cityclerk.lacity.org/lacityclerkconnect/index.cfm?fa=ccfi.viewrecord&cfnumber=10-1280"
+    },
+    {
+      "id": "14-1174-S53",
+      "title": "5225 Lankershim Boulevard / Lankershim People Street Improvements Project / Hollywood Redevelopment Project / CRA/LA Excess Bond Proceeds",
+      "category": "Public Resources",
+      "latitude": 34.1656163,
+      "longitude": -118.3753879,
+      "url": "https://cityclerk.lacity.org/lacityclerkconnect/index.cfm?fa=ccfi.viewrecord&cfnumber=14-1174-S53"
+    },
+    {
+      "id": "16-0520",
+      "title": "4958 Cahuenga Boulevard / Hollywood United Methodist Church / Greater Toluca Lake Neighborhood Council / Toluca Lake Beautification Partners / Lease",
+      "category": "Environmental",
+      "latitude": 34.153794,
+      "longitude": -118.3614943,
+      "url": "https://cityclerk.lacity.org/lacityclerkconnect/index.cfm?fa=ccfi.viewrecord&cfnumber=16-0520"
+    },
+    {
+      "id": "25-0160-S181",
+      "title": "10721 West Wixom Street / Building and Safety / Lien",
+      "category": "Housing",
+      "latitude": 34.2107555,
+      "longitude": -118.4096277,
+      "url": "https://cityclerk.lacity.org/lacityclerkconnect/index.cfm?fa=ccfi.viewrecord&cfnumber=25-0160-S181"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import type { FeatureCollection, Point, Polygon } from "geojson";
+import type { FeatureCollection, MultiPolygon, Point, Polygon } from "geojson";
 
 import { DISTRICT_PROJECTS_CATEGORY } from "./neighborhoodMapLayers";
 
@@ -55,7 +55,16 @@ export type AssetCollection = FeatureCollection<Point, AssetProperties>;
  * own page has no polygon to hang on, because "Districtwide" is a pin grouping rather than a
  * CSA. RFC 7946 s6.1 allows it, and `build_cd2_assets.py` writes it from the same sheet column.
  */
-export type NeighborhoodCollection = FeatureCollection<Polygon, NeighborhoodProperties> & {
+/**
+ * `Polygon | MultiPolygon`, not `Polygon`: clipping the CSA polygons to the district boundary in
+ * `build_cd2_assets.py` splits North Hollywood into two pieces, so the shipped file genuinely
+ * contains both. Declaring it as Polygon alone let a consumer walk `coordinates` as rings and
+ * silently produce NaN.
+ */
+export type NeighborhoodCollection = FeatureCollection<
+  Polygon | MultiPolygon,
+  NeighborhoodProperties
+> & {
   district_source_url?: string;
 };
 
@@ -153,26 +162,40 @@ async function readCollection(response: Response): Promise<FeatureCollection> {
  * `enabled` is gated on the map's toggle so a session that never turns the overlay on never
  * fetches either file -- the same shape as `useCouncilDistrictBoundary(enabled)`.
  */
-export function useDistrictAssets(districtId: number, enabled = true): LoadedAssets | null {
-  const [loaded, setLoaded] = useState<LoadedAssets | null>(null);
+/**
+ * Loading and failure are distinct states here, unlike in `useDistrictAssets` below.
+ *
+ * On /map a failed load is correctly silent -- the overlay is context beside the legislation, so
+ * collapsing "failed" into "absent" leaves the rest of the sheet alone. The embed has no "rest of
+ * the page": it IS this data, inside an iframe on someone else's site that nobody is watching, so
+ * an indistinguishable null would render a spinner that never resolves. Callers that need to tell
+ * the two apart use this; callers that genuinely do not keep using `useDistrictAssets`.
+ */
+export type DistrictAssetsState =
+  | { status: "loading" }
+  | { status: "ready"; loaded: LoadedAssets }
+  | { status: "error" }
+  | { status: "unavailable" };
+
+export function useDistrictAssetsState(districtId: number, enabled = true): DistrictAssetsState {
+  const [state, setState] = useState<DistrictAssetsState>({ status: "loading" });
 
   useEffect(() => {
     if (!enabled || !hasNeighborhoodMap(districtId)) {
-      setLoaded(null);
+      setState({ status: "unavailable" });
       return;
     }
     let ignore = false;
+    setState({ status: "loading" });
     loadDistrictAssetsOnce(districtId)
       .then((result) => {
         if (!ignore) {
-          setLoaded(result);
+          setState({ status: "ready", loaded: result });
         }
       })
       .catch(() => {
-        // Silent by design: this panel is context beside the legislation, not the page's
-        // content. A failed load must leave the rest of the overview sheet alone.
         if (!ignore) {
-          setLoaded(null);
+          setState({ status: "error" });
         }
       });
     return () => {
@@ -180,7 +203,15 @@ export function useDistrictAssets(districtId: number, enabled = true): LoadedAss
     };
   }, [districtId, enabled]);
 
-  return loaded;
+  return state;
+}
+
+export function useDistrictAssets(districtId: number, enabled = true): LoadedAssets | null {
+  // Silent by design: this panel is context beside the legislation, not the page's content. A
+  // failed load must leave the rest of the overview sheet alone, so every non-ready state is
+  // flattened to null exactly as before.
+  const state = useDistrictAssetsState(districtId, enabled);
+  return state.status === "ready" ? state.loaded : null;
 }
 
 /**
@@ -224,6 +255,36 @@ export function shortNeighborhoodName(label: string): string {
 /** The inverse, for routing a pin's `neighborhood`/`serves` value back to a CSA polygon. */
 export function csaLabelFor(shortName: string): string {
   return shortName.startsWith("Los Angeles - ") ? shortName : `Los Angeles - ${shortName}`;
+}
+
+/**
+ * "Los Angeles - Valley Glen" -> "valley-glen", matching CD2's own website URLs.
+ *
+ * Built on `shortNeighborhoodName` so this has no naming scheme of its own: whatever the label
+ * shortens to is what gets slugified.
+ */
+export function neighborhoodSlug(csaLabel: string): string {
+  return shortNeighborhoodName(csaLabel)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/**
+ * "valley-glen" -> "Los Angeles - Valley Glen", or `null` if no polygon in `collection` matches.
+ *
+ * Resolved by scanning the real data rather than a hardcoded table, so this can never drift from
+ * the committed geojson: a slug is valid exactly when some feature's `CSA_Label` slugifies to it.
+ */
+export function csaLabelFromSlug(
+  slug: string,
+  collection: NeighborhoodCollection,
+): string | null {
+  const normalized = neighborhoodSlug(slug);
+  const match = collection.features.find(
+    (feature) => neighborhoodSlug(feature.properties?.CSA_Label ?? "") === normalized,
+  );
+  return match?.properties?.CSA_Label ?? null;
 }
 
 /** Pin grouping values that are not real neighbourhoods and have no CSA polygon. */
@@ -304,6 +365,19 @@ export function selectNeighborhoodAssets(
  * Valley Glen"`, so it also appears in the Valley Glen panel. That is correct: it genuinely
  * serves both. Its click routes here, because category is what decides.
  */
+/**
+ * Every located asset in the district, in file order.
+ *
+ * Distinct from `selectDistrictAssets`, which is the "Districtwide" *bucket* -- the right
+ * content for the district panel on /map, where it sits beside seven neighbourhood panels that
+ * carry the rest. A district-wide embed has no such siblings: its map draws all four categories,
+ * so a list of one category would leave most of the pins with no text equivalent, which is the
+ * accessibility property the embed exists to preserve.
+ */
+export function selectAllAssets(assets: AssetCollection): PanelAsset[] {
+  return toPanelAssets(assets, () => true);
+}
+
 export function selectDistrictAssets(assets: AssetCollection): PanelAsset[] {
   return toPanelAssets(
     assets,

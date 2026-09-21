@@ -4,7 +4,7 @@ import type { FeatureCollection } from "geojson";
 
 import { districtBoundaryLineLayer } from "../../shared/map/districtLayers";
 import type { DistrictBoundaryFeature } from "../../shared/map/districtBoundaries";
-import { NEIGHBORHOOD_DISTRICT_ID, type AssetProperties } from "./cd2Assets";
+import type { AssetProperties } from "./cd2Assets";
 import { NeighborhoodAssetPopup } from "./NeighborhoodAssetPopup";
 import {
   assetPointBackingLayer,
@@ -70,6 +70,8 @@ export interface NeighborhoodOverlayProps {
   hoveredAsset: HoveredAsset | null;
   selected: { longitude: number; latitude: number; properties: Partial<AssetProperties> } | null;
   onCloseSelected: () => void;
+  /** Which council district's resources this overlay is drawing -- see cd2Assets.ts. */
+  districtId: number;
 }
 
 /** Mounted in place of a missing boundary so the layer's position in the style never moves. */
@@ -93,6 +95,7 @@ export function NeighborhoodOverlay({
   hoveredAsset,
   selected,
   onCloseSelected,
+  districtId,
 }: NeighborhoodOverlayProps) {
   // Hover suppressed on the already-selected neighbourhood: stacking both fills would read as a
   // third, darker state that means nothing. Expressed as the filter's input rather than by not
@@ -208,7 +211,7 @@ export function NeighborhoodOverlay({
         >
           <NeighborhoodAssetPopup
             properties={visibleSelected.properties}
-            districtId={NEIGHBORHOOD_DISTRICT_ID}
+            districtId={districtId}
           />
         </Popup>
       ) : null}

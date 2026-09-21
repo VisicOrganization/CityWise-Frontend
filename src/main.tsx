@@ -5,6 +5,7 @@ import posthog from "posthog-js";
 import { PostHogProvider } from "@posthog/react";
 
 import App from "./app/App";
+import { isEmbedPath } from "./shared/analytics/isEmbedPath";
 import { maintainCityWiseLocalStorageForNewDay } from "./shared/storage/cityWiseLocalStorage";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./tailwind.css";
@@ -15,11 +16,14 @@ maintainCityWiseLocalStorageForNewDay();
 const posthogToken = import.meta.env.VITE_PUBLIC_POSTHOG_TOKEN;
 const posthogHost = import.meta.env.VITE_PUBLIC_POSTHOG_HOST;
 
+const isEmbedRoute = isEmbedPath(window.location.pathname, import.meta.env.BASE_URL);
+
 // Require a build-time token so we never call posthog.init(undefined) in production.
 const isPostHogEnabled =
   import.meta.env.PROD &&
   typeof posthogToken === "string" &&
-  posthogToken.length > 0;
+  posthogToken.length > 0 &&
+  !isEmbedRoute;
 
 if (isPostHogEnabled) {
   posthog.init(posthogToken, {

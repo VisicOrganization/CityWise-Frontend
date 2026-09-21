@@ -109,6 +109,10 @@ LEVEL_ALIASES = {"NorthHollywood": "North Hollywood"}
 
 FIELDS = ("label", "address", "phone", "email", "meeting_information", "website", "category")
 
+# Row data source: currently reads from an xlsx file. A future read_rows_from_cd2_pages()
+# function will be swapped in here to regenerate the dataset from cd2.lacity.gov instead.
+ROW_SOURCE = read_rows_from_xlsx
+
 STREET_SUFFIX_EXPANSIONS = {
     "st": "street", "ave": "avenue", "av": "avenue", "blvd": "boulevard",
     "dr": "drive", "rd": "road", "pl": "place", "ln": "lane", "ct": "court",
@@ -126,7 +130,7 @@ def expand_suffixes(value: str) -> str:
 # --------------------------------------------------------------------------- xlsx
 
 
-def read_xlsx_rows(path: Path) -> list[dict[str, str]]:
+def read_rows_from_xlsx(path: Path) -> list[dict[str, str]]:
     """Parse a single flat sheet with the stdlib. openpyxl would be a dependency for nothing."""
     with zipfile.ZipFile(path) as archive:
         shared = [
@@ -621,7 +625,7 @@ def main() -> int:
     if not args.xlsx.exists():
         raise SystemExit(f"spreadsheet not found: {args.xlsx}")
 
-    rows = [normalize(row) for row in read_xlsx_rows(args.xlsx) if row.get("label")]
+    rows = [normalize(row) for row in ROW_SOURCE(args.xlsx) if row.get("label")]
     total = len(rows)
     print(f"{total} rows in {args.xlsx.name}")
 
