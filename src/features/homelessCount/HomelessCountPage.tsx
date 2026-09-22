@@ -316,10 +316,13 @@ export function HomelessCountPage() {
       // they render as points, which the branch below lists together.
       const source = mapRef.current?.getSource?.(ENCAMPMENT_SOURCE_ID) as GeoJSONSource | undefined;
       const clusterId = feature.properties.cluster_id;
-      if (source && typeof clusterId === "number") {
-        void source
+      const center = (feature.geometry as { coordinates?: [number, number] } | undefined)?.coordinates;
+      if (source && typeof clusterId === "number" && center) {
+        source
           .getClusterExpansionZoom(clusterId)
-          .then((zoom) => mapRef.current?.easeTo({ center: event.lngLat, zoom }));
+          .then((zoom) => mapRef.current?.easeTo({ center, zoom }))
+          // Rejects if the source is removed mid-request (layer toggled off); nothing to do then.
+          .catch(() => {});
       }
       return;
     }
@@ -478,6 +481,8 @@ export function HomelessCountPage() {
                     setShowEncampments(event.target.checked);
                     // Same reasoning as hiding a selected CSA: no card for points no longer drawn.
                     if (!event.target.checked) setSelectedEncampment(null);
+                    // A fresh mount is a fresh fetch, so a past failure no longer describes it.
+                    if (event.target.checked) setHasEncampmentError(false);
                   }}
                 />
                 <span

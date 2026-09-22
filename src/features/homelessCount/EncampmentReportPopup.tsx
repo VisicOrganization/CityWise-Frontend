@@ -5,9 +5,10 @@ import { useState } from "react";
  * `reportsAtClickedPoint`). Every field was already normalized by
  * `scripts/build_encampment_reports.py`, so this only formats — it never cleans.
  *
- * Location fields (address, council, ZIP, planning area, LAPD area) are read once off the newest
- * report: they describe the point, and every report at one coordinate shares them. The per-report
- * list below carries only what actually varies between reports at the same spot.
+ * Location fields are read once off the newest report. Council, planning area and LAPD area are
+ * identical across every stack in the data; address and ZIP usually are, but 18 stacks mix a
+ * street address with unit variants ("…, #3-40") and 24 mix ZIPs — so a report whose own address
+ * or ZIP differs from the header gets its own row rather than being silently relabeled.
  *
  * `readText` is copied from `ShelterDetailPopup` rather than shared, the same call that file makes.
  */
@@ -85,9 +86,13 @@ export function EncampmentReportPopup({ reports }: EncampmentReportPopupProps) {
       <ol className="homeless-count-report-list">
         {visible.map((report) => {
           const via = readText(report.origin);
+          const ownAddress = readText(report.address);
+          const ownZip = readText(report.zip);
           return (
             <li key={readText(report.caseNumber)} className="homeless-count-report">
               <dl>
+                {ownAddress !== address ? <Stat label="Address" value={ownAddress} /> : null}
+                {ownZip !== readText(location.zip) ? <Stat label="ZIP" value={ownZip} /> : null}
                 <Stat label="Reported" value={formatReportTimestamp(report.created)} />
                 {/* Present only where the export's close date differs from its intake time —
                     see the build script; everywhere else it just repeats "Reported". */}

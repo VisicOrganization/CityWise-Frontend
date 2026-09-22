@@ -64,14 +64,25 @@ LAPD_AREAS = {"9": "Van Nuys", "15": "North Hollywood", "16": "Foothill", "19": 
 
 DIRECTIONALS = {"N", "S", "E", "W"}
 # Tail segments of the address that carry no information beyond `zip` / the district itself.
-# City, state, ZIP, or "CITY 91601". The two-letter minimum on the last form keeps pole-number
-# segments like "P 35104" (one letter + five digits), which would otherwise read as a ZIP tail.
-LOCALITY_SEGMENT = re.compile(r"^([A-Z ]+|\d{5}|[A-Z][A-Z ]+ \d{5})$")
+# Named explicitly, not "any all-letters segment": that rule also swallowed suite segments like
+# "STE C". An unlisted city is kept in the address rather than silently dropped.
+LOCALITIES = {"LOS ANGELES", "NORTH HOLLYWOOD", "SUN VALLEY", "STUDIO CITY", "LA", "CA"}
+# A ZIP alone, or "CITY 91601". Anchored on a listed city so pole numbers like "P 35104" survive.
+ZIP_SEGMENT = re.compile(r"^(?:(?P<city>[A-Z ]+) )?\d{5}$")
+
+
+def is_locality(segment: str) -> bool:
+    if segment in LOCALITIES:
+        return True
+    match = ZIP_SEGMENT.match(segment)
+    return bool(match) and (match["city"] is None or match["city"] in LOCALITIES)
 
 
 def title_token(token: str) -> str:
     if token in DIRECTIONALS or token.startswith("#") or any(ch.isdigit() for ch in token):
         return token  # "W", "1/2", "CA-170", "#A-F" stay as written
+    if token.startswith("MC") and len(token) > 2:
+        return "Mc" + token[2:].capitalize()  # "McCormick", not "Mccormick"
     return token.capitalize()
 
 
@@ -86,7 +97,7 @@ def normalize_address(raw: str) -> tuple[str, str | None]:
     if " : " in raw:
         place, raw = (part.strip() for part in raw.split(" : ", 1))
     segments = [s.strip() for s in raw.split(",")]
-    kept = [segments[0]] + [s for s in segments[1:] if not LOCALITY_SEGMENT.match(s)]
+    kept = [segments[0]] + [s for s in segments[1:] if not is_locality(s)]
     return ", ".join(normalize_street(s) for s in kept), place
 
 

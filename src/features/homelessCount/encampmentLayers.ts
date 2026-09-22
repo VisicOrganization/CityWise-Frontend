@@ -101,12 +101,18 @@ function pointKey(geometry: unknown): string | null {
  * so no second `queryRenderedFeatures` call is needed. Narrowed to the exact coordinate of the
  * topmost report so a neighboring point whose circle happens to overlap isn't listed as if it were
  * at the same address. Newest first (`created` is ISO, so string order is date order).
+ *
+ * De-duplicated by case number: a point near a tile edge is drawn in both tiles' buffers, and
+ * MapLibre only de-duplicates hits for features with an id, which this source's features lack.
  */
 export function reportsAtClickedPoint(features: ClickedFeature[]): Record<string, unknown>[] {
   const points = features.filter((feature) => feature.layer?.id === encampmentPointLayer.id);
   const key = points[0] ? pointKey(points[0].geometry) : null;
-  return points
-    .filter((feature) => pointKey(feature.geometry) === key)
-    .map((feature) => feature.properties)
-    .sort((a, b) => String(b.created ?? "").localeCompare(String(a.created ?? "")));
+  const byCase = new Map<unknown, Record<string, unknown>>();
+  for (const feature of points) {
+    if (pointKey(feature.geometry) === key && !byCase.has(feature.properties.caseNumber)) {
+      byCase.set(feature.properties.caseNumber, feature.properties);
+    }
+  }
+  return [...byCase.values()].sort((a, b) => String(b.created ?? "").localeCompare(String(a.created ?? "")));
 }

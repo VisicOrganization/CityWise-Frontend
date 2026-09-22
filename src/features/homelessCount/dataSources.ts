@@ -105,9 +105,9 @@ export const DATA_SOURCES: DataSourceEntry[] = [
     describes:
       "Homeless-encampment reports filed through MyLA311 in Council District 2, January 1 – September 21, 2026, one point per report.",
     notes: [
-      "A report is a request for service, not an encampment and not a count of people: one site can be reported many times (up to 48 reports share a single point), and reports can come from anyone.",
-      "Every record's status is \u201cReported\u201d. The export's close date matches the intake time to the second in 4,926 of 4,936 records, so it is shown only in the 10 where it differs.",
-      "44 reports fall outside any neighborhood council.",
+      "A report is a request for service, not an encampment and not a count of people: one site can be reported many times, and reports can come from anyone.",
+      "Every record's status is \u201cReported\u201d. The export's close date matches the intake time to the second in almost every record, so it is shown only where it differs.",
+      "A few dozen reports fall outside any neighborhood council.",
       "Collected six years after the 2020 count underneath, by a different method — the two layers are not comparable.",
     ],
     toggleKey: "encampments",

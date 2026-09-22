@@ -35,6 +35,12 @@ describe("reportsAtClickedPoint", () => {
     expect(reports).toHaveLength(1);
   });
 
+  it("lists a report once even when MapLibre hits it in two tiles' buffers", () => {
+    const here = [-118.370633, 34.144452];
+    const twice = hit(encampmentPointLayer.id, here, "2026-02-01T10:00:00.000");
+    expect(reportsAtClickedPoint([twice, { ...twice }])).toHaveLength(1);
+  });
+
   it("ignores features from other layers", () => {
     expect(
       reportsAtClickedPoint([hit(encampmentClusterLayer.id, [-118.37, 34.14], "2026-02-01T10:00:00.000")]),

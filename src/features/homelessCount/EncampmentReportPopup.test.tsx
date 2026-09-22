@@ -78,6 +78,21 @@ describe("EncampmentReportPopup", () => {
     expect(screen.getByText("10600 W Valleyheart Dr")).toBeInTheDocument();
   });
 
+  it("gives a stacked report its own address and ZIP rows only where they differ from the header", () => {
+    render(
+      <EncampmentReportPopup
+        reports={[
+          report({ caseNumber: "a", address: "11100 W Cumpston St" }),
+          report({ caseNumber: "b", address: "11100 W Cumpston St, #3-40", zip: "91601" }),
+        ]}
+      />,
+    );
+    const [first, second] = screen.getAllByRole("listitem");
+    expect(first).not.toHaveTextContent("Address");
+    expect(second).toHaveTextContent("11100 W Cumpston St, #3-40");
+    expect(second).toHaveTextContent("91601");
+  });
+
   it("marks anonymous reports", () => {
     render(<EncampmentReportPopup reports={[report({ anonymous: true })]} />);
     expect(screen.getByText("Self Service, anonymous")).toBeInTheDocument();
