@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { MONTH_ABBREVIATIONS } from "./encampmentLayers";
+
 /**
  * Click card for the 311 encampment reports stacked at one map point (see
  * `reportsAtClickedPoint`). Every field was already normalized by
@@ -20,7 +22,6 @@ export interface EncampmentReportPopupProps {
 /** Enough to cover the common case at a glance; the 48-report stack gets a "show all" instead. */
 const INITIAL_VISIBLE_REPORTS = 5;
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 function readText(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
@@ -43,7 +44,7 @@ export function formatReportTimestamp(value: unknown): string {
   const hour24 = Number(hour);
   const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
   const meridiem = hour24 < 12 ? "AM" : "PM";
-  return `${MONTHS[Number(month) - 1]} ${Number(day)}, ${year}, ${hour12}:${minute} ${meridiem}`;
+  return `${MONTH_ABBREVIATIONS[Number(month) - 1]} ${Number(day)}, ${year}, ${hour12}:${minute} ${meridiem}`;
 }
 
 function Stat({ label, value }: { label: string; value: string }) {

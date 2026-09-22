@@ -28,15 +28,18 @@ import { CsaDistrictSummary } from "./CsaDistrictSummary";
 import { CsaFilterSection } from "./CsaFilterSection";
 import { useCsaIndex } from "./csaIndex";
 import { DataSourcesSection } from "./DataSourcesSection";
+import { EncampmentMonthFilter } from "./EncampmentMonthFilter";
 import { EncampmentReportPopup } from "./EncampmentReportPopup";
 import {
+  buildMonthOptions,
   encampmentClusterCountLayer,
   encampmentClusterLayer,
   encampmentPointLayer,
+  filterReportsByMonth,
   reportsAtClickedPoint,
+  useEncampmentReports,
   ENCAMPMENT_CLUSTER_MAX_ZOOM,
   ENCAMPMENT_CLUSTER_RADIUS,
-  ENCAMPMENT_GEOJSON_PATH,
   ENCAMPMENT_NOTE,
 } from "./encampmentLayers";
 import { MapInfoPanel } from "./MapInfoPanel";
@@ -78,7 +81,7 @@ const CSA_SOURCE_ID = "csa";
  */
 const SHELTER_SOURCE_ID = "shelters";
 
-/** The 311 encampment-report GeoJSON `<Source>`; read back for cluster expansion and onError. */
+/** The 311 encampment-report GeoJSON `<Source>`; read back for cluster expansion. */
 const ENCAMPMENT_SOURCE_ID = "encampments";
 
 /**
@@ -190,9 +193,20 @@ export function HomelessCountPage() {
   const [showDistrictBoundary, setShowDistrictBoundary] = useState(true);
   /** Off by default, unlike the three layers above: 2026 311 reports are a different kind of data
    * from the 2020 count this page opens on, and leaving it off means the ~140 KB (gzipped) file is
-   * only fetched by someone who asks for it. Unmounting its `<Source>` is what skips the fetch. */
+   * only fetched by someone who asks for it (`useEncampmentReports` is gated on it). */
   const [showEncampments, setShowEncampments] = useState(false);
-  const [hasEncampmentError, setHasEncampmentError] = useState(false);
+  const { collection: encampmentCollection, hasError: hasEncampmentError } =
+    useEncampmentReports(showEncampments);
+  /** Months switched off in the "Month filed" filter. Empty = every month shown. */
+  const [hiddenEncampmentMonths, setHiddenEncampmentMonths] = useState<Set<string>>(() => new Set());
+  const encampmentMonthOptions = useMemo(
+    () => buildMonthOptions(encampmentCollection),
+    [encampmentCollection],
+  );
+  const visibleEncampments = useMemo(
+    () => encampmentCollection && filterReportsByMonth(encampmentCollection, hiddenEncampmentMonths),
+    [encampmentCollection, hiddenEncampmentMonths],
+  );
   const districtBoundaryFeature = useCouncilDistrictBoundary(showDistrictBoundary);
   const needsDefaultDistrictRef = useRef(storedHidden === null);
   /** Only set by a real click through `updateHidden`, never by the default-district effect —
@@ -395,9 +409,6 @@ export function HomelessCountPage() {
     if (event.sourceId === CSA_SOURCE_ID) {
       setHasTileError(true);
     }
-    if (event.sourceId === ENCAMPMENT_SOURCE_ID) {
-      setHasEncampmentError(true);
-    }
   }
 
   // The click card already names this neighborhood, so the hover label is suppressed for it —
@@ -481,8 +492,6 @@ export function HomelessCountPage() {
                     setShowEncampments(event.target.checked);
                     // Same reasoning as hiding a selected CSA: no card for points no longer drawn.
                     if (!event.target.checked) setSelectedEncampment(null);
-                    // A fresh mount is a fresh fetch, so a past failure no longer describes it.
-                    if (event.target.checked) setHasEncampmentError(false);
                   }}
                 />
                 <span
@@ -635,13 +644,13 @@ export function HomelessCountPage() {
             ) : null}
 
             {/* Last source, so its points draw above every other layer and win the hit-test that
-                `handleMapClick` reads off `features[0]`. Handed the URL, not parsed data — see
-                `ENCAMPMENT_GEOJSON_PATH`. */}
-            {showEncampments ? (
+                `handleMapClick` reads off `features[0]`. Fed the month-filtered collection, so
+                cluster counts only ever count reports in the selected months. */}
+            {showEncampments && visibleEncampments ? (
               <Source
                 id={ENCAMPMENT_SOURCE_ID}
                 type="geojson"
-                data={ENCAMPMENT_GEOJSON_PATH}
+                data={visibleEncampments}
                 cluster
                 clusterMaxZoom={ENCAMPMENT_CLUSTER_MAX_ZOOM}
                 clusterRadius={ENCAMPMENT_CLUSTER_RADIUS}
@@ -713,6 +722,19 @@ export function HomelessCountPage() {
           {/* Sibling of <Map>, not a child: it is page chrome over the map surface, and MapLibre
               owns its own control corners. Top-right is unoccupied here — see MapInfoPanel. */}
           <MapInfoPanel />
+          {/* Right edge, under the Info button. Only while the layer it filters is on — a filter
+              for dots that aren't drawn would read as broken. */}
+          {showEncampments && encampmentMonthOptions.length > 0 ? (
+            <EncampmentMonthFilter
+              options={encampmentMonthOptions}
+              hiddenMonths={hiddenEncampmentMonths}
+              onHiddenMonthsChange={(next) => {
+                setHiddenEncampmentMonths(next);
+                // The open card may list reports from a month that was just hidden.
+                setSelectedEncampment(null);
+              }}
+            />
+          ) : null}
           </div>
         </div>
       </main>

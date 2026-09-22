@@ -2,7 +2,14 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-import { encampmentClusterLayer, encampmentPointLayer, reportsAtClickedPoint } from "./encampmentLayers";
+import {
+  buildMonthOptions,
+  encampmentClusterLayer,
+  encampmentPointLayer,
+  filterReportsByMonth,
+  reportsAtClickedPoint,
+  type EncampmentCollection,
+} from "./encampmentLayers";
 
 function hit(layerId: string, coordinates: number[], created: string) {
   return {
@@ -62,5 +69,39 @@ describe("committed cd2-encampment-reports.geojson", () => {
       // A close date equal to the intake time is dropped at build time, never shipped.
       expect(properties.closed).not.toBe(properties.created);
     }
+  });
+});
+
+describe("month filter helpers", () => {
+  function collectionOf(...created: string[]): EncampmentCollection {
+    return {
+      type: "FeatureCollection",
+      features: created.map((value) => ({
+        type: "Feature",
+        geometry: { type: "Point", coordinates: [-118.37, 34.14] },
+        properties: { created: value },
+      })),
+    };
+  }
+
+  it("lists only months that have reports, oldest first, with counts", () => {
+    const collection = collectionOf(
+      "2026-03-09T15:02:15.000",
+      "2026-01-01T09:19:55.000",
+      "2026-03-31T23:59:00.000",
+    );
+    expect(buildMonthOptions(collection)).toEqual([
+      { key: "2026-01", label: "Jan", count: 1 },
+      { key: "2026-03", label: "Mar", count: 2 },
+    ]);
+    expect(buildMonthOptions(null)).toEqual([]);
+  });
+
+  it("drops reports filed in hidden months, and passes the collection through when none are hidden", () => {
+    const collection = collectionOf("2026-01-05T10:00:00.000", "2026-02-05T10:00:00.000");
+    expect(filterReportsByMonth(collection, new Set())).toBe(collection);
+    expect(
+      filterReportsByMonth(collection, new Set(["2026-01"])).features.map((f) => f.properties.created),
+    ).toEqual(["2026-02-05T10:00:00.000"]);
   });
 });

@@ -13,6 +13,7 @@ import {
 import { buildHiddenForDistrict, COUNCIL_DISTRICTS } from "./councilDistricts";
 import { resetCsaIndexCacheForTests, type CsaRow } from "./csaIndex";
 import { DATA_SOURCES } from "./dataSources";
+import { ENCAMPMENT_GEOJSON_PATH, resetEncampmentReportsCacheForTests } from "./encampmentLayers";
 import { HomelessCountPage } from "./HomelessCountPage";
 
 
@@ -158,8 +159,22 @@ vi.mock("react-map-gl/maplibre", () => ({
   Popup: ({ children }: { children?: ReactNode }) => <div data-testid="mock-popup">{children}</div>,
   // Introspectable on `id`/`type` too, so a test can confirm the CSA source is a geojson source
   // (not the vector tile source it used to be) without needing to see real map tiles.
-  Source: ({ children, id, type }: { children?: ReactNode; id?: string; type?: string }) => (
-    <div data-testid={id ? `source-${id}` : undefined} data-source-type={type}>
+  Source: ({
+    children,
+    id,
+    type,
+    data,
+  }: {
+    children?: ReactNode;
+    id?: string;
+    type?: string;
+    data?: { features?: unknown[] } | string;
+  }) => (
+    <div
+      data-testid={id ? `source-${id}` : undefined}
+      data-source-type={type}
+      data-feature-count={typeof data === "object" ? data.features?.length : undefined}
+    >
       {children}
     </div>
   ),
@@ -251,10 +266,26 @@ const districtBoundariesPayload = {
  * array of CSA rows. The district path comes from `COUNCIL_DISTRICTS_GEOJSON_PATH`, which
  * `councilDistrictBoundary.test.ts` in turn pins to the shared loader's real request.
  */
+/** Two reports in January, one in February — enough to see the month filter change the source. */
+const encampmentPayload = {
+  type: "FeatureCollection",
+  features: ["2026-01-05T10:00:00.000", "2026-01-20T10:00:00.000", "2026-02-03T10:00:00.000"].map(
+    (created, index) => ({
+      type: "Feature",
+      geometry: { type: "Point", coordinates: [-118.37 + index * 0.01, 34.14] },
+      properties: { caseNumber: `case-${index}`, created },
+    }),
+  ),
+};
+
 function mockFetchByPath(indexData: unknown) {
   fetchMock.mockImplementation((input: unknown) => {
     const url = String(input);
-    const body = url.includes(COUNCIL_DISTRICTS_GEOJSON_PATH) ? districtBoundariesPayload : indexData;
+    const body = url.includes(COUNCIL_DISTRICTS_GEOJSON_PATH)
+      ? districtBoundariesPayload
+      : url === ENCAMPMENT_GEOJSON_PATH
+        ? encampmentPayload
+        : indexData;
     return Promise.resolve(new Response(JSON.stringify(body)));
   });
 }
@@ -274,6 +305,7 @@ describe("HomelessCountPage", () => {
     // The boundary loader memoizes across mounts on purpose (1.5 MB file); without this reset a
     // test would inherit the previous test's resolved feature.
     resetCouncilDistrictBoundaryCacheForTests();
+    resetEncampmentReportsCacheForTests();
     fetchMock.mockReset();
     // The index path is resolved at module scope, so an unstubbed fetch renders the empty state
     // and every assertion below fails for the wrong reason.
@@ -479,11 +511,12 @@ describe("HomelessCountPage", () => {
       renderPage();
       await screen.findByTestId("layer-csa-fill");
 
-      // Off by default: no source mounted means MapLibre never fetches the file.
+      // Off by default: the file is never requested until the layer is switched on.
       expect(screen.queryByTestId("source-encampments")).not.toBeInTheDocument();
+      expect(fetchMock.mock.calls.map(([url]) => String(url))).not.toContain(ENCAMPMENT_GEOJSON_PATH);
 
       await user.click(screen.getByRole("checkbox", { name: TOGGLE_NAME }));
-      expect(screen.getByTestId("source-encampments")).toHaveAttribute("data-source-type", "geojson");
+      expect(await screen.findByTestId("source-encampments")).toHaveAttribute("data-source-type", "geojson");
       expect(screen.getByTestId("layer-encampment-clusters")).toBeInTheDocument();
       expect(screen.getByTestId("layer-encampment-points")).toBeInTheDocument();
       expect(screen.getByText(/Each dot is a 311 report/)).toBeInTheDocument();
@@ -521,6 +554,25 @@ describe("HomelessCountPage", () => {
 
       await user.click(screen.getByRole("checkbox", { name: TOGGLE_NAME }));
       expect(screen.queryByText("2 reports at this location")).not.toBeInTheDocument();
+    });
+
+    it("shows the month filter only while the layer is on, and feeds the map only the selected months", async () => {
+      const user = userEvent.setup();
+      renderPage();
+      await screen.findByTestId("layer-csa-fill");
+      const filterButton = { name: "Filter encampment reports by month filed" };
+      expect(screen.queryByRole("button", filterButton)).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole("checkbox", { name: TOGGLE_NAME }));
+      expect(await screen.findByTestId("source-encampments")).toHaveAttribute("data-feature-count", "3");
+
+      await user.click(screen.getByRole("button", filterButton));
+      await user.click(screen.getByRole("checkbox", { name: /Jan/ }));
+      // Filtered on the data, not with a layer filter, so clusters can't count hidden reports.
+      expect(screen.getByTestId("source-encampments")).toHaveAttribute("data-feature-count", "1");
+
+      await user.click(screen.getByRole("checkbox", { name: TOGGLE_NAME }));
+      expect(screen.queryByRole("button", filterButton)).not.toBeInTheDocument();
     });
 
     it("does not open a card for a cluster click — a cluster is a count, not a report", async () => {

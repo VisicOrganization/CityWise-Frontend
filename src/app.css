@@ -9144,6 +9144,33 @@ a {
   line-height: 1.4;
 }
 
+/* --- Encampment "Month filed" filter ---------------------------------------
+   Everything visual comes from the /map page's own filter classes (`map-control-pill--tools`,
+   `map-figma-flyout--district-filter`, `map-district-filter-*`); this only places it on the right
+   edge, under `.homeless-count-map-info`'s Info button (top 0.6rem + its ~2rem height). Below the
+   info panel's z-index (3) so an open Info panel covers the filter rather than the reverse. */
+.homeless-count-map-filter {
+  position: absolute;
+  top: 3.4rem;
+  right: 0.6rem;
+  z-index: 2;
+}
+
+/* /map's month-agnostic grid is 3 columns of short labels; each option here also carries a count,
+   so the count sits at the far end of its cell like the neighborhood legend's does. */
+.homeless-count-map-filter .map-district-filter-option .map-neighborhood-legend-count {
+  margin-left: auto;
+}
+
+@media (max-width: 640px) {
+  /* /map re-anchors its flyouts to open upward from a bottom-docked control stack. This control
+     stays at the top of the map, so its flyout keeps opening downward. */
+  .homeless-count-map-filter .map-figma-flyout {
+    top: 0;
+    bottom: auto;
+  }
+}
+
 /* --- 311 encampment report card -------------------------------------------
    Reuses the card shell above. Own row class rather than `.homeless-count-popup-stat`, whose
    `:first-child` rule styles the first row as a headline number — nothing here is a headline. */
