@@ -37,6 +37,20 @@ describe("EncampmentMonthFilter", () => {
     expect(screen.queryByRole("group", { name: "Encampment report filters" })).not.toBeInTheDocument();
   });
 
+  it("returns focus to the Filter button when closed with × or Escape", async () => {
+    await renderOpen();
+    const trigger = screen.getByRole("button", { name: "Filter encampment reports by month filed" });
+
+    await userEvent.click(screen.getByRole("button", { name: "Close month filter" }));
+    expect(trigger).toHaveFocus();
+
+    await userEvent.click(trigger);
+    await userEvent.click(screen.getByRole("checkbox", { name: /Jan/ }));
+    await userEvent.keyboard("{Escape}");
+    expect(screen.queryByRole("group", { name: "Encampment report filters" })).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+  });
+
   it("checks every month that is not hidden, and counts only the shown reports", async () => {
     await renderOpen(new Set(["2026-02"]));
     expect(screen.getByRole("checkbox", { name: /Jan/ })).toBeChecked();

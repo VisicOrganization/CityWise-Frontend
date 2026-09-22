@@ -9,7 +9,8 @@ const INFO_PANEL_TITLE_ID = "homeless-count-map-info-title";
  * Placement: the map is rendered with react-map-gl's defaults, so the only MapLibre chrome on it
  * is the attribution control (bottom-right) and the MapLibre logo (bottom-left) — no
  * `NavigationControl`, `ScaleControl` or `GeolocateControl` is mounted anywhere in
- * `HomelessCountPage.tsx`. Top-right is therefore free, and the panel is positioned against
+ * `HomelessCountPage.tsx`. Top-right is therefore free of MapLibre chrome (the page's own month
+ * filter sits under this panel's button), and the panel is positioned against
  * `.homeless-count-map-wrap` (already `position: relative`) rather than over the left panel.
  *
  * Audience is a council staffer, not an engineer: no tile URLs, no zoom levels, no source-layer

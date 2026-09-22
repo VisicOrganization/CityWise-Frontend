@@ -81,6 +81,10 @@ const CSA_SOURCE_ID = "csa";
  */
 const SHELTER_SOURCE_ID = "shelters";
 
+/** Empty, always-mounted layer that every non-encampment layer is inserted under; see the JSX. */
+const OVERLAY_ANCHOR_LAYER_ID = "overlay-anchor";
+const EMPTY_FEATURE_COLLECTION: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
+
 /** The 311 encampment-report GeoJSON `<Source>`; read back for cluster expansion. */
 const ENCAMPMENT_SOURCE_ID = "encampments";
 
@@ -468,7 +472,7 @@ export function HomelessCountPage() {
                 />
                 Shelters &amp; services
               </label>
-              {/* Third layer. This section stays the single owner of all three toggles — the
+              {/* Third layer. This section stays the single owner of all four toggles — the
                   "Data sources" section below only reflects this state (see
                   `DataSourcesSection.tsx`), so there is never a second checkbox to disagree
                   with. */}
@@ -498,7 +502,7 @@ export function HomelessCountPage() {
                   className="homeless-count-layer-swatch homeless-count-layer-swatch--encampments"
                   aria-hidden="true"
                 />
-                311 encampment reports (2026)
+                311 encampment reports (CD2, 2026)
               </label>
             </section>
 
@@ -596,6 +600,16 @@ export function HomelessCountPage() {
             // `attributionControl` is deliberately left at its default (on): ODbL requires
             // visible attribution, and the other map surfaces in this repo suppress it.
           >
+            {/* Always mounted, first, and draws nothing. Every non-encampment layer below mounts
+                with `beforeId={OVERLAY_ANCHOR_LAYER_ID}`, so however late it (re)mounts on a
+                toggle or selection, it lands under this anchor -- and so under the encampment
+                layers, which have no `beforeId` and append above it. Without it, a remounted
+                layer lands on TOP of the style (see `NeighborhoodOverlay.tsx`), covering the dots
+                and stealing `features[0]` in `handleMapClick`. */}
+            <Source id="overlay-anchor" type="geojson" data={EMPTY_FEATURE_COLLECTION}>
+              <Layer id={OVERLAY_ANCHOR_LAYER_ID} type="circle" paint={{ "circle-radius": 0 }} />
+            </Source>
+
             {/* A geojson source, not a tile source — see `CSA_GEOJSON_PATH` in `csaLayers.ts`.
                 `data` is the already-parsed collection (`csaCollection`), not the URL, which is
                 what keeps this to a single fetch of the 1.1 MB file; rendered only once that
@@ -608,10 +622,14 @@ export function HomelessCountPage() {
                 data={csaCollection}
                 attribution={CSA_ATTRIBUTION}
               >
-                <Layer {...csaFillLayer} filter={filter} />
-                <Layer {...csaOutlineLayer} filter={filter} />
+                <Layer {...csaFillLayer} filter={filter} beforeId={OVERLAY_ANCHOR_LAYER_ID} />
+                <Layer {...csaOutlineLayer} filter={filter} beforeId={OVERLAY_ANCHOR_LAYER_ID} />
                 {selectedLabel ? (
-                  <Layer {...csaHighlightLayer} filter={buildSelectedCsaFilter(selectedLabel)} />
+                  <Layer
+                    {...csaHighlightLayer}
+                    filter={buildSelectedCsaFilter(selectedLabel)}
+                    beforeId={OVERLAY_ANCHOR_LAYER_ID}
+                  />
                 ) : null}
               </Source>
             ) : null}
@@ -628,7 +646,11 @@ export function HomelessCountPage() {
                 minzoom={0}
                 maxzoom={SHELTER_TILE_MAX_ZOOM}
               >
-                <Layer {...shelterPointLayer} source-layer={SHELTER_SOURCE_LAYER} />
+                <Layer
+                  {...shelterPointLayer}
+                  source-layer={SHELTER_SOURCE_LAYER}
+                  beforeId={OVERLAY_ANCHOR_LAYER_ID}
+                />
               </Source>
             ) : null}
 
@@ -639,12 +661,13 @@ export function HomelessCountPage() {
                 slow or failed load leaves the rest of the map untouched. */}
             {showDistrictBoundary && districtBoundaryFeature ? (
               <Source id={DISTRICT_BOUNDARY_SOURCE_ID} type="geojson" data={districtBoundaryFeature}>
-                <Layer {...districtBoundaryLineLayer} />
+                <Layer {...districtBoundaryLineLayer} beforeId={OVERLAY_ANCHOR_LAYER_ID} />
               </Source>
             ) : null}
 
-            {/* Last source, so its points draw above every other layer and win the hit-test that
-                `handleMapClick` reads off `features[0]`. Fed the month-filtered collection, so
+            {/* No `beforeId`, so these layers append above the overlay anchor and every layer
+                placed under it, and win the hit-test that `handleMapClick` reads off
+                `features[0]`. Fed the month-filtered collection, so
                 cluster counts only ever count reports in the selected months. */}
             {showEncampments && visibleEncampments ? (
               <Source
@@ -699,7 +722,11 @@ export function HomelessCountPage() {
                 onClose={() => setSelectedEncampment(null)}
                 maxWidth="calc(16rem + 2px)"
               >
-                <EncampmentReportPopup reports={selectedEncampment.reports} />
+                {/* Keyed on the clicked point so "Show all" doesn't carry over to the next stack. */}
+                <EncampmentReportPopup
+                  key={`${selectedEncampment.longitude},${selectedEncampment.latitude}`}
+                  reports={selectedEncampment.reports}
+                />
               </Popup>
             ) : null}
 
@@ -720,7 +747,8 @@ export function HomelessCountPage() {
             ) : null}
           </Map>
           {/* Sibling of <Map>, not a child: it is page chrome over the map surface, and MapLibre
-              owns its own control corners. Top-right is unoccupied here — see MapInfoPanel. */}
+              owns its own control corners. Top-right holds only this and, under it, the month
+              filter below — see MapInfoPanel. */}
           <MapInfoPanel />
           {/* Right edge, under the Info button. Only while the layer it filters is on — a filter
               for dots that aren't drawn would read as broken. */}

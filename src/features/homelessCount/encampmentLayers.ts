@@ -91,27 +91,23 @@ interface ClickedFeature {
   properties: Record<string, unknown>;
 }
 
-function pointKey(geometry: unknown): string | null {
-  const coordinates = (geometry as { coordinates?: unknown } | null)?.coordinates;
-  return Array.isArray(coordinates) ? JSON.stringify(coordinates) : null;
-}
-
 /**
- * Every report stacked at the topmost clicked point. `features` is MapLibre's own hit-test of the
+ * Every report whose point is under the cursor. `features` is MapLibre's own hit-test of the
  * interactive layers under the cursor, which already includes every circle drawn at that spot —
- * so no second `queryRenderedFeatures` call is needed. Narrowed to the exact coordinate of the
- * topmost report so a neighboring point whose circle happens to overlap isn't listed as if it were
- * at the same address. Newest first (`created` is ISO, so string order is date order).
+ * so no second `queryRenderedFeatures` call is needed. Deliberately not narrowed to the topmost
+ * point's exact coordinate: 110 pairs of distinct coordinates in the data sit under 3 m apart,
+ * their circles overlap almost fully, and narrowing would leave the hidden stack unreachable. The
+ * popup gives a report its own Address/ZIP row when it differs from the header, so a mixed list
+ * stays honest. Newest first (`created` is ISO, so string order is date order).
  *
  * De-duplicated by case number: a point near a tile edge is drawn in both tiles' buffers, and
  * MapLibre only de-duplicates hits for features with an id, which this source's features lack.
  */
 export function reportsAtClickedPoint(features: ClickedFeature[]): Record<string, unknown>[] {
   const points = features.filter((feature) => feature.layer?.id === encampmentPointLayer.id);
-  const key = points[0] ? pointKey(points[0].geometry) : null;
   const byCase = new Map<unknown, Record<string, unknown>>();
   for (const feature of points) {
-    if (pointKey(feature.geometry) === key && !byCase.has(feature.properties.caseNumber)) {
+    if (!byCase.has(feature.properties.caseNumber)) {
       byCase.set(feature.properties.caseNumber, feature.properties);
     }
   }
@@ -198,7 +194,7 @@ export function reportMonth(properties: Record<string, unknown>): string {
 export interface MonthOption {
   /** "2026-03" */
   key: string;
-  /** "Mar" — every report is from 2026, which the layer's own name already says. */
+  /** "Mar", or "Mar 2026" when the options span more than one year. */
   label: string;
   count: number;
 }
@@ -210,9 +206,13 @@ export function buildMonthOptions(collection: EncampmentCollection | null): Mont
     const key = reportMonth(feature.properties);
     if (key) counts.set(key, (counts.get(key) ?? 0) + 1);
   }
-  return [...counts.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([key, count]) => ({ key, label: MONTH_ABBREVIATIONS[Number(key.slice(5, 7)) - 1] ?? key, count }));
+  const entries = [...counts.entries()].sort(([a], [b]) => a.localeCompare(b));
+  const multiYear = new Set(entries.map(([key]) => key.slice(0, 4))).size > 1;
+  return entries.map(([key, count]) => {
+    const abbr = MONTH_ABBREVIATIONS[Number(key.slice(5, 7)) - 1];
+    const label = abbr ? (multiYear ? `${abbr} ${key.slice(0, 4)}` : abbr) : key;
+    return { key, label, count };
+  });
 }
 
 /**

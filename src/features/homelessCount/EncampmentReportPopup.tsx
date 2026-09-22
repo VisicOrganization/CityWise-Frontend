@@ -116,7 +116,7 @@ export function EncampmentReportPopup({ reports }: EncampmentReportPopupProps) {
         </button>
       ) : null}
 
-      <p className="homeless-count-popup-footer">MyLA311 encampment reports, 2026. Status: Reported.</p>
+      <p className="homeless-count-popup-footer">MyLA311 encampment reports. Status: Reported.</p>
     </div>
   );
 }

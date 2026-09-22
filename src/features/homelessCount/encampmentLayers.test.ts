@@ -34,12 +34,15 @@ describe("reportsAtClickedPoint", () => {
     ]);
   });
 
-  it("leaves out a neighboring point whose circle merely overlaps the click", () => {
+  it("includes a neighboring point whose circle overlaps the click, so no stack is hidden", () => {
     const reports = reportsAtClickedPoint([
       hit(encampmentPointLayer.id, [-118.3706, 34.1444], "2026-02-01T10:00:00.000"),
-      hit(encampmentPointLayer.id, [-118.3707, 34.1445], "2026-03-01T10:00:00.000"),
+      hit(encampmentPointLayer.id, [-118.37061, 34.14441], "2026-03-01T10:00:00.000"),
     ]);
-    expect(reports).toHaveLength(1);
+    expect(reports.map((report) => report.created)).toEqual([
+      "2026-03-01T10:00:00.000",
+      "2026-02-01T10:00:00.000",
+    ]);
   });
 
   it("lists a report once even when MapLibre hits it in two tiles' buffers", () => {
@@ -95,6 +98,11 @@ describe("month filter helpers", () => {
       { key: "2026-03", label: "Mar", count: 2 },
     ]);
     expect(buildMonthOptions(null)).toEqual([]);
+  });
+
+  it("adds the year to every label once the options span more than one year", () => {
+    const collection = collectionOf("2026-12-09T15:02:15.000", "2027-01-01T09:19:55.000");
+    expect(buildMonthOptions(collection).map((option) => option.label)).toEqual(["Dec 2026", "Jan 2027"]);
   });
 
   it("drops reports filed in hidden months, and passes the collection through when none are hidden", () => {

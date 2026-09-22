@@ -139,6 +139,26 @@ vi.mock("react-map-gl/maplibre", () => ({
         >
           mock encampment cluster click
         </button>
+        {/* Two different stacks, each long enough (6) to collapse behind "Show all". */}
+        {[-118.36, -118.35].map((lng) => (
+          <button
+            key={lng}
+            type="button"
+            data-testid={`mock-encampment-stack-click-${lng}`}
+            onClick={() =>
+              onClick?.({
+                lngLat: { lng, lat: 34.14 },
+                features: Array.from({ length: 6 }, (_, index) => ({
+                  layer: { id: "encampment-points" },
+                  geometry: { type: "Point", coordinates: [lng, 34.14] },
+                  properties: { caseNumber: `${lng}-${index}`, created: `2026-0${index + 1}-01T09:00:00.000` },
+                })),
+              })
+            }
+          >
+            mock encampment stack click {lng}
+          </button>
+        ))}
         <button type="button" data-testid="mock-csa-mouseleave" onClick={() => onMouseLeave?.({})}>
           mock csa mouseleave
         </button>
@@ -149,9 +169,10 @@ vi.mock("react-map-gl/maplibre", () => ({
   // Introspectable so the tests can read the MapLibre filter the page actually hands MapLibre,
   // and (post-migration) whether a `source-layer` prop leaked back in — a geojson source has
   // none, and passing one is silently wrong rather than a visible error.
-  Layer: (props: { id?: string; filter?: unknown; "source-layer"?: string }) => (
+  Layer: (props: { id?: string; filter?: unknown; "source-layer"?: string; beforeId?: string }) => (
     <div
       data-testid={`layer-${props.id}`}
+      data-before-id={props.beforeId}
       data-filter={props.filter ? JSON.stringify(props.filter) : undefined}
       data-has-source-layer={"source-layer" in props ? "true" : "false"}
     />
@@ -504,7 +525,7 @@ describe("HomelessCountPage", () => {
   });
 
   describe("311 encampment reports layer", () => {
-    const TOGGLE_NAME = "311 encampment reports (2026)";
+    const TOGGLE_NAME = "311 encampment reports (CD2, 2026)";
 
     it("is off by default, and mounts a clustered source only once switched on", async () => {
       const user = userEvent.setup();
@@ -538,6 +559,34 @@ describe("HomelessCountPage", () => {
       // Newest first.
       const cases = within(popups[0]).getAllByText(/-case$/).map((node) => node.textContent);
       expect(cases).toEqual(["newer-case", "older-case"]);
+    });
+
+    it("keeps encampment layers above every other layer, however late those remount", async () => {
+      const user = userEvent.setup();
+      renderPage();
+      await user.click(await screen.findByRole("checkbox", { name: TOGGLE_NAME }));
+      await screen.findByTestId("layer-encampment-points");
+      await waitFor(() => expect(screen.getByTestId("layer-shelter-points")).toBeInTheDocument());
+
+      expect(screen.getByTestId("layer-overlay-anchor")).not.toHaveAttribute("data-before-id");
+      expect(screen.getByTestId("layer-csa-fill")).toHaveAttribute("data-before-id", "overlay-anchor");
+      expect(screen.getByTestId("layer-shelter-points")).toHaveAttribute("data-before-id", "overlay-anchor");
+      expect(screen.getByTestId("layer-encampment-clusters")).not.toHaveAttribute("data-before-id");
+      expect(screen.getByTestId("layer-encampment-points")).not.toHaveAttribute("data-before-id");
+    });
+
+    it("opens a newly clicked stack collapsed, even after “Show all” on the previous one", async () => {
+      const user = userEvent.setup();
+      renderPage();
+      await user.click(await screen.findByRole("checkbox", { name: TOGGLE_NAME }));
+
+      await user.click(screen.getByTestId("mock-encampment-stack-click--118.36"));
+      await user.click(screen.getByRole("button", { name: "Show all 6 reports" }));
+      expect(within(screen.getByTestId("mock-popup")).getAllByRole("listitem")).toHaveLength(6);
+
+      await user.click(screen.getByTestId("mock-encampment-stack-click--118.35"));
+      expect(within(screen.getByTestId("mock-popup")).getAllByRole("listitem")).toHaveLength(5);
+      expect(screen.getByRole("button", { name: "Show all 6 reports" })).toBeInTheDocument();
     });
 
     it("replaces an open CSA card, and closes when the layer is switched off", async () => {

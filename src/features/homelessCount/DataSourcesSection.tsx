@@ -3,7 +3,7 @@ import { DATA_SOURCES, type DataSourceToggleKey } from "./dataSources";
 const DATA_SOURCES_HEADING_ID = "homeless-count-data-sources-heading";
 
 interface DataSourcesSectionProps {
-  /** Live state of the three layer toggles, owned by the "Layers" section above. */
+  /** Live state of the four layer toggles, owned by the "Layers" section above. */
   layerState: Record<DataSourceToggleKey, boolean>;
 }
 

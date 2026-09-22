@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { MonthOption } from "./encampmentLayers";
 
@@ -21,8 +21,28 @@ export interface EncampmentMonthFilterProps {
 
 export function EncampmentMonthFilter({ options, hiddenMonths, onHiddenMonthsChange }: EncampmentMonthFilterProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const total = options.reduce((sum, option) => sum + option.count, 0);
   const shown = options.reduce((sum, option) => sum + (hiddenMonths.has(option.key) ? 0 : option.count), 0);
+
+  /** Single close path, as in `MapInfoPanel`, so focus always lands back on the trigger. */
+  const close = useCallback(() => {
+    setIsOpen(false);
+    triggerRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        close();
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, close]);
 
   function toggle(key: string) {
     const next = new Set(hiddenMonths);
@@ -39,6 +59,7 @@ export function EncampmentMonthFilter({ options, hiddenMonths, onHiddenMonthsCha
       <div className="map-figma-controls-wrap">
         <div className="map-control-pill map-control-pill--stacked map-control-pill--tools">
           <button
+            ref={triggerRef}
             type="button"
             className={`map-figma-ctrl-btn map-figma-ctrl-btn--expandable ${isOpen ? "is-active" : ""}`}
             aria-label="Filter encampment reports by month filed"
@@ -79,12 +100,12 @@ export function EncampmentMonthFilter({ options, hiddenMonths, onHiddenMonthsCha
                 type="button"
                 className="map-flyout-close-btn"
                 aria-label="Close month filter"
-                onClick={() => setIsOpen(false)}
+                onClick={close}
               >
                 <span aria-hidden="true">×</span>
               </button>
             </div>
-            <p>Select the months of 2026 to show 311 encampment reports from.</p>
+            <p>Select the months to show 311 encampment reports from.</p>
             <div className="map-district-filter-actions" role="group" aria-label="Month filter quick actions">
               <button
                 type="button"
