@@ -5,6 +5,7 @@ import type { FeatureCollection } from "geojson";
 import { districtBoundaryLineLayer } from "../../shared/map/districtLayers";
 import type { DistrictBoundaryFeature } from "../../shared/map/districtBoundaries";
 import type { AssetProperties } from "./cd2Assets";
+import { neighborhoodChatHighlightLayer } from "../neighborhood-chat/mapHighlights";
 import { NeighborhoodAssetPopup } from "./NeighborhoodAssetPopup";
 import {
   assetPointBackingLayer,
@@ -65,6 +66,7 @@ export interface NeighborhoodOverlayProps {
   neighborhoods: NeighborhoodCollection;
   districtBoundary: DistrictBoundaryFeature | null;
   activeCategories: readonly string[];
+  chatResultKeys?: readonly string[];
   selectedNeighborhood: string | null;
   hoveredNeighborhood: HoveredNeighborhood | null;
   hoveredAsset: HoveredAsset | null;
@@ -90,6 +92,7 @@ export function NeighborhoodOverlay({
   neighborhoods,
   districtBoundary,
   activeCategories,
+  chatResultKeys = [],
   selectedNeighborhood,
   hoveredNeighborhood,
   hoveredAsset,
@@ -149,6 +152,7 @@ export function NeighborhoodOverlay({
           selection stack, then hover. The selected pin sits above the base layer so a neighbour
           can never cover it, and below hover so pointing at it still reads as a hover. */}
       <Source id="cd2-assets" type="geojson" data={assets}>
+        <Layer {...neighborhoodChatHighlightLayer(chatResultKeys)} />
         <Layer {...assetPointBackingLayer} filter={buildCategoryFilter(activeCategories)} />
         <Layer {...assetPointLayer} filter={buildCategoryFilter(activeCategories)} />
         <Layer {...buildSelectedAssetGlowLayer(visibleSelected?.properties ?? null)} />

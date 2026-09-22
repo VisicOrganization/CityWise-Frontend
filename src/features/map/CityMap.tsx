@@ -23,11 +23,14 @@ import {
   hasNeighborhoodMap,
   NEIGHBORHOOD_DISTRICT_ID,
   resolvePanelSelection,
-  useDistrictAssets,
+  useDistrictAssetsState,
   type AssetProperties,
   type PanelAsset,
   type PanelSelection,
 } from "./cd2Assets";
+import { NeighborhoodChatPanel } from "../neighborhood-chat/NeighborhoodChatPanel";
+import { NeighborhoodResults } from "../neighborhood-chat/NeighborhoodResults";
+import { useNeighborhoodChat, type Origin } from "../neighborhood-chat/useNeighborhoodChat";
 import { ResourceDetailPanel, type AssetFocus } from "./ResourceDetailPanel";
 import { NeighborhoodOverlay } from "./NeighborhoodOverlay";
 import {
@@ -38,7 +41,7 @@ import {
 } from "./neighborhoodMapLayers";
 import { ASSET_PIN_SOURCES, pinImageUrl, useAssetPinImages } from "./assetPinImages";
 import type { HoveredAsset, HoveredNeighborhood } from "./NeighborhoodOverlay";
-import { findDistrictFeature, getFeatureBounds, type DistrictBoundaryCollection } from "../../shared/map/districtBoundaries";
+import { findDistrictFeature, findDistrictIdForPoint, getFeatureBounds, type DistrictBoundaryCollection } from "../../shared/map/districtBoundaries";
 import {
   districtFillLayer,
   districtFillOpacityExpression,
@@ -276,7 +279,76 @@ export function CityMap({
 
   // Both files are committed and tiny (32 KB + 45 KB); the hook memoises across mounts.
   // Gated on the toggle so nothing is fetched for a session that never turns it on.
-  const neighborhoodData = useDistrictAssets(NEIGHBORHOOD_DISTRICT_ID, isNeighborhoodsOn);
+  const neighborhoodState = useDistrictAssetsState(NEIGHBORHOOD_DISTRICT_ID, isNeighborhoodsOn);
+  const neighborhoodData = neighborhoodState.status === "ready" ? neighborhoodState.loaded : null;
+  const [isNeighborhoodChatOpen, setIsNeighborhoodChatOpen] = useState(false);
+  const [isPickingChatPoint, setIsPickingChatPoint] = useState(false);
+  const [chatPointError, setChatPointError] = useState<string | null>(null);
+  const [showChatResults, setShowChatResults] = useState(false);
+  const neighborhoodChat = useNeighborhoodChat(neighborhoodData?.assets ?? null);
+  const chatResult = isNeighborhoodChatOpen ? neighborhoodChat.result : null;
+  const previousChatMapState = useRef<{ enabled: boolean; legislation: boolean } | null>(null);
+  const chatResultKeys = useMemo(() => chatResult?.items.map((item) => item.key) ?? [], [chatResult]);
+  const chatAssets = useMemo(() => neighborhoodData && chatResult
+    ? { ...neighborhoodData.assets, features: neighborhoodData.assets.features.filter((item) => chatResultKeys.includes(assetKey(item.properties))) }
+    : neighborhoodData?.assets, [neighborhoodData, chatResult, chatResultKeys]);
+
+  useEffect(() => {
+    if (!chatResult) { setShowChatResults(false); return; }
+    setShowChatResults(true);
+    setSelectedAsset(null);
+    setPanelSelection(null);
+    const map = mapRef.current?.getMap();
+    if (!map || !chatResult.items.length) return;
+    const points = chatResult.items;
+    const width = map.getContainer()?.clientWidth ?? 0;
+    map.fitBounds([
+      [Math.min(...points.map((point) => point.longitude)), Math.min(...points.map((point) => point.latitude))],
+      [Math.max(...points.map((point) => point.longitude)), Math.max(...points.map((point) => point.latitude))],
+    ], { padding: width > 640 ? { top: 80, bottom: 80, left: Math.min(380, width * .4), right: 60 } : 48, maxZoom: 14, duration: 500 });
+  }, [chatResult]);
+
+  function closeNeighborhoodChat() {
+    neighborhoodChat.clearResults();
+    setIsNeighborhoodChatOpen(false);
+    setIsPickingChatPoint(false);
+    setSelectedAsset(null);
+    setPanelSelection(null);
+    if (previousChatMapState.current) {
+      setIsNeighborhoodsOn(previousChatMapState.current.enabled);
+      setShowLegislation(previousChatMapState.current.legislation);
+      previousChatMapState.current = null;
+    }
+  }
+
+  function openNeighborhoodChat() {
+    onMapBackgroundClick();
+    previousChatMapState.current = { enabled: isNeighborhoodsOn, legislation: showLegislation };
+    neighborhoodChat.setNeighborhood(selectedNeighborhood?.replace(/^Los Angeles - /, "") ?? null);
+    setIsNeighborhoodChatOpen(true);
+    setIsNeighborhoodsOn(true);
+    setShowLegislation(false);
+    setIsNeighborhoodPanelOpen(false);
+    setIsInfoOpen(false);
+    setIsDistrictFilterOpen(false);
+    const bounds = getDistrictAssetSource(NEIGHBORHOOD_DISTRICT_ID)?.bounds;
+    if (bounds) mapRef.current?.getMap().fitBounds(bounds, { padding: 60, duration: 500 });
+  }
+
+  function chooseChatPoint(point: Origin) {
+    if (!boundaries || findDistrictIdForPoint(boundaries, point.longitude, point.latitude) !== 2) {
+      setChatPointError("Choose a point inside the Council District 2 boundary.");
+      return;
+    }
+    setChatPointError(null);
+    setIsPickingChatPoint(false);
+    neighborhoodChat.choosePoint(point);
+  }
+
+  // Existing parent navigation closes this independent mode; council-file chat stays untouched.
+  useEffect(() => {
+    if (isNeighborhoodChatOpen && (hideMapChrome || districtOverviewOpen || activeMarkerId)) closeNeighborhoodChat();
+  }, [hideMapChrome, districtOverviewOpen, activeMarkerId]);
   /**
    * The pin symbol layers name icon ids, so they must not mount before those ids exist in the
    * style -- MapLibre warns every frame for an unknown `icon-image` and draws nothing.
@@ -693,6 +765,12 @@ export function CityMap({
    * round trip are visibly the same row.
    */
   function handleSelectAssetFromPanel(asset: PanelAsset) {
+    if (isNeighborhoodChatOpen) {
+      if (chatResult && !chatResultKeys.includes(asset.key)) neighborhoodChat.clearResults();
+      neighborhoodChat.chooseResource(asset);
+      setShowChatResults(false);
+      setPanelSelection(resolvePanelSelection(asset.properties, panelSelection));
+    }
     setSelectedAsset({
       longitude: asset.longitude,
       latitude: asset.latitude,
@@ -720,6 +798,10 @@ export function CityMap({
   }
 
   function handleMapClick(event: MapLayerMouseEvent) {
+    if (isPickingChatPoint) {
+      chooseChatPoint({ longitude: event.lngLat.lng, latitude: event.lngLat.lat });
+      return;
+    }
     setSearchDismissSignal((n) => n + 1);
     setIsAddressCardOpen(false);
 
@@ -739,6 +821,11 @@ export function CityMap({
       // Open whichever panel can show this pin -- switching panels if the open one cannot --
       // then ask it to scroll to the card and flash it. The nonce makes a repeat click on the
       // same pin re-run the effect instead of being skipped as unchanged state.
+      if (isNeighborhoodChatOpen) {
+        const item = chatResult?.items.find((candidate) => candidate.key === assetKey(properties));
+        if (item) neighborhoodChat.chooseResource(item);
+        setShowChatResults(false);
+      }
       const nextSelection = resolvePanelSelection(properties, panelSelection);
       if (nextSelection) {
         focusNonceRef.current += 1;
@@ -758,6 +845,10 @@ export function CityMap({
         (feature) => feature.layer?.id === NEIGHBORHOOD_FILL_LAYER_ID,
       );
       const label = neighborhoodFeature?.properties?.CSA_Label;
+      if (isNeighborhoodChatOpen && typeof label === "string") {
+        neighborhoodChat.clearResults();
+        neighborhoodChat.setNeighborhood(label.replace(/^Los Angeles - /, ""));
+      }
       setPanelSelection(typeof label === "string" ? { kind: "neighborhood", csaLabel: label } : null);
       setAssetFocus(null);
       onMapBackgroundClick();
@@ -794,7 +885,7 @@ export function CityMap({
         onClick={handleMapClick}
         onMouseMove={handleMapMouseMove}
         onMouseLeave={handleMapMouseLeave}
-        cursor={hoveredAsset || hoveredNeighborhood ? "pointer" : undefined}
+        cursor={isPickingChatPoint ? "crosshair" : hoveredAsset || hoveredNeighborhood ? "pointer" : undefined}
         // Every id here must name a layer that is actually mounted, or MapLibre warns on each
         // query — which is why the two sets below track what the <Source> above renders.
         interactiveLayerIds={[
@@ -905,6 +996,11 @@ export function CityMap({
                 onBlur={() => setHoveredMarkerId((current) => (current === marker.id ? null : current))}
                 onClick={(clickEvent) => {
                   clickEvent.stopPropagation();
+                  if (isPickingChatPoint) {
+                    chooseChatPoint({ longitude: marker.longitude, latitude: marker.latitude });
+                    return;
+                  }
+                  if (isNeighborhoodChatOpen) closeNeighborhoodChat();
                   // Both panels dock to the left edge; the project sidebar would slide in
                   // on top of this one, so the neighbourhood selection yields to it -- highlight
                   // and popup included, or the council file opens over a still-glowing CD2 pin.
@@ -966,10 +1062,11 @@ export function CityMap({
         {/* Last map child: the resource pins must draw above every district fill and label. */}
         {isNeighborhoodsOn && neighborhoodData && arePinImagesReady ? (
           <NeighborhoodOverlay
-            assets={neighborhoodData.assets}
+            assets={chatAssets ?? neighborhoodData.assets}
             neighborhoods={neighborhoodData.neighborhoods}
             districtBoundary={neighborhoodBoundary}
-            activeCategories={neighborhoodCategories}
+            activeCategories={chatResult ? CATEGORY_ORDER : neighborhoodCategories}
+            chatResultKeys={chatResultKeys}
             selectedNeighborhood={selectedNeighborhood}
             hoveredNeighborhood={hoveredNeighborhood}
             hoveredAsset={hoveredAsset}
@@ -978,9 +1075,31 @@ export function CityMap({
             districtId={NEIGHBORHOOD_DISTRICT_ID}
           />
         ) : null}
+        {isNeighborhoodChatOpen && neighborhoodChat.origin ? (
+          <Marker longitude={neighborhoodChat.origin.longitude} latitude={neighborhoodChat.origin.latitude}>
+            <div className="nc-origin" role="img" aria-label="Your selected search point" />
+          </Marker>
+        ) : null}
       </Map>
 
-      {isNeighborhoodsOn && neighborhoodData && panelSelection ? (
+      {isPickingChatPoint ? <div className="nc-point-picker" role="region" aria-label="Choose search location">
+        <p>Click a point inside CD2, or move the map and use its center.</p>
+        {chatPointError ? <p role="alert">{chatPointError}</p> : null}
+        <button type="button" onClick={() => {
+          const center = mapRef.current?.getMap().getCenter();
+          if (center) chooseChatPoint({ longitude: center.lng, latitude: center.lat });
+        }}>Use map center</button>
+        <button type="button" onClick={() => setIsPickingChatPoint(false)}>Cancel</button>
+      </div> : null}
+      {isNeighborhoodChatOpen ? <NeighborhoodChatPanel chat={neighborhoodChat}
+        loading={neighborhoodState.status === "loading" || neighborhoodState.status === "unavailable"}
+        loadError={neighborhoodState.status === "error"} picking={isPickingChatPoint}
+        onPick={() => { setChatPointError(null); setIsPickingChatPoint(true); }} onClose={closeNeighborhoodChat} /> : null}
+      {chatResult && showChatResults && neighborhoodData && !isPickingChatPoint ? <NeighborhoodResults
+        result={chatResult} neighborhoods={neighborhoodData.neighborhoods}
+        onSelect={handleSelectAssetFromPanel} onClose={neighborhoodChat.clearResults} /> : null}
+
+      {isNeighborhoodsOn && neighborhoodData && panelSelection && !showChatResults && !isPickingChatPoint ? (
         <ResourceDetailPanel
           selection={panelSelection}
           assets={neighborhoodData.assets}
@@ -1126,6 +1245,7 @@ export function CityMap({
                       onClick={() => {
                         // The flyout has its own X. Once closed, this button brings it back
                         // rather than tearing the overlay down and rebuilding it.
+                        if (isNeighborhoodChatOpen) closeNeighborhoodChat();
                         if (isNeighborhoodsOn && !isNeighborhoodPanelOpen) {
                           setIsNeighborhoodPanelOpen(true);
                           setIsInfoOpen(false);
@@ -1177,6 +1297,16 @@ export function CityMap({
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         />
+                      </svg>
+                    </button>
+                    <span className="map-control-pill-rule" aria-hidden="true" />
+                    <button type="button" className={`map-figma-ctrl-btn map-figma-ctrl-btn--expandable ${isNeighborhoodChatOpen ? "is-active" : ""}`}
+                      aria-label="Open CD2 neighborhood chat" aria-expanded={isNeighborhoodChatOpen}
+                      onClick={() => isNeighborhoodChatOpen ? closeNeighborhoodChat() : openNeighborhoodChat()}>
+                      <span className="map-figma-ctrl-btn-label">Neighborhood chat</span>
+                      <svg className="map-figma-ctrl-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M4 4h16v12H9l-5 4V4Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                        <path d="M8 8h8M8 12h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                       </svg>
                     </button>
                   </>

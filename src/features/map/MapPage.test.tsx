@@ -5,6 +5,8 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import App from "../../app/App";
+import { interpretQuestion } from "../neighborhood-chat/client";
+vi.mock("../neighborhood-chat/client", () => ({ interpretQuestion: vi.fn() }));
 import { clearApiCacheForTests } from "../../shared/api/client";
 import { formatPersonNameForDisplay } from "../../shared/formatPersonName";
 import { resetCouncilMemberBiosCacheForTests } from "../districts/useCouncilMemberBios";
@@ -1238,6 +1240,34 @@ describe("mock app routes", () => {
     expect(await screen.findByText("Yes")).toBeInTheDocument();
 
     randomSpy.mockRestore();
+  });
+
+  describe("neighborhood chat demo", () => {
+    it("opens from the control below Neighborhoods, displays verified results, and restores the map on close", async () => {
+      vi.mocked(interpretQuestion).mockResolvedValue({ action: "find", resource_type: "fire", resource_name: null, neighborhood: null, field: null });
+      const user = userEvent.setup();
+      render(<MemoryRouter initialEntries={["/map"]}><App /></MemoryRouter>);
+      await screen.findByLabelText("Council File 25-0358");
+      const controls = within(screen.getByLabelText("Map controls")).getAllByRole("button");
+      const neighborhoodIndex = controls.indexOf(screen.getByLabelText("Show neighborhood boundaries and resources"));
+      expect(controls[neighborhoodIndex + 1]).toHaveAccessibleName("Open CD2 neighborhood chat");
+      await user.click(controls[neighborhoodIndex + 1]);
+      const chat = await screen.findByLabelText("CD2 neighborhood chat");
+      expect(chat).toHaveClass("project-chat-panel");
+      expect(document.querySelector(".project-chat-root--docked")).not.toBeNull();
+      expect(within(chat).getByLabelText("Resize chat panel")).toBeInTheDocument();
+      const input = within(chat).getByLabelText("Your question");
+      await waitFor(() => expect(input).not.toBeDisabled());
+      await user.type(input, "Where are the fire stations?");
+      await user.click(within(chat).getByRole("button", { name: "Send" }));
+      const results = await screen.findByLabelText("Matching neighborhood resources");
+      expect(within(results).getByText("Fire Station 60")).toBeInTheDocument();
+      expect(screen.getByTestId("layer-cd2-neighborhood-chat-highlights")).toHaveAttribute("data-filter", expect.stringContaining("Fire Station 60"));
+      await user.click(within(chat).getByLabelText("Close neighborhood chat"));
+      expect(screen.queryByLabelText("CD2 neighborhood chat")).not.toBeInTheDocument();
+      expect(screen.queryByLabelText("Matching neighborhood resources")).not.toBeInTheDocument();
+      expect(await screen.findByLabelText("Council File 25-0358")).toBeInTheDocument();
+    });
   });
 
   describe("neighborhood mode", () => {

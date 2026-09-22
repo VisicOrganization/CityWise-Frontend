@@ -231,7 +231,7 @@ export function ResourceDetailPanel({
  * across the 81 source rows `email` is filled on 11 and `meeting_information` on 14, so a fixed
  * layout would be mostly empty labels.
  */
-function ResourceCard({
+export function ResourceCard({
   item,
   isFlashing,
   onSelect,
