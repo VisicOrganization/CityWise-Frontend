@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -101,6 +101,42 @@ vi.mock("react-map-gl/maplibre", () => ({
           }
         >
           mock csa hover venice
+        </button>
+        <button
+          type="button"
+          data-testid="mock-encampment-click"
+          onClick={() =>
+            onClick?.({
+              lngLat: { lng: -118.3706, lat: 34.1444 },
+              features: [
+                {
+                  layer: { id: "encampment-points" },
+                  geometry: { type: "Point", coordinates: [-118.370633, 34.144452] },
+                  properties: { caseNumber: "older-case", address: "4167 Fair Ave", created: "2026-03-01T09:00:00.000" },
+                },
+                {
+                  layer: { id: "encampment-points" },
+                  geometry: { type: "Point", coordinates: [-118.370633, 34.144452] },
+                  properties: { caseNumber: "newer-case", address: "4167 Fair Ave", created: "2026-08-01T09:00:00.000" },
+                },
+                { layer: { id: "csa-fill" }, properties: { CSA_Label: HOLLYWOOD } },
+              ],
+            })
+          }
+        >
+          mock encampment click
+        </button>
+        <button
+          type="button"
+          data-testid="mock-encampment-cluster-click"
+          onClick={() =>
+            onClick?.({
+              lngLat: { lng: -118.37, lat: 34.14 },
+              features: [{ layer: { id: "encampment-clusters" }, properties: { cluster_id: 7, point_count: 12 } }],
+            })
+          }
+        >
+          mock encampment cluster click
         </button>
         <button type="button" data-testid="mock-csa-mouseleave" onClick={() => onMouseLeave?.({})}>
           mock csa mouseleave
@@ -435,6 +471,68 @@ describe("HomelessCountPage", () => {
     expect(screen.getByTestId("layer-csa-fill")).toBeInTheDocument();
   });
 
+  describe("311 encampment reports layer", () => {
+    const TOGGLE_NAME = "311 encampment reports (2026)";
+
+    it("is off by default, and mounts a clustered source only once switched on", async () => {
+      const user = userEvent.setup();
+      renderPage();
+      await screen.findByTestId("layer-csa-fill");
+
+      // Off by default: no source mounted means MapLibre never fetches the file.
+      expect(screen.queryByTestId("source-encampments")).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole("checkbox", { name: TOGGLE_NAME }));
+      expect(screen.getByTestId("source-encampments")).toHaveAttribute("data-source-type", "geojson");
+      expect(screen.getByTestId("layer-encampment-clusters")).toBeInTheDocument();
+      expect(screen.getByTestId("layer-encampment-points")).toBeInTheDocument();
+      expect(screen.getByText(/Each dot is a 311 report/)).toBeInTheDocument();
+
+      await user.click(screen.getByRole("checkbox", { name: TOGGLE_NAME }));
+      expect(screen.queryByTestId("source-encampments")).not.toBeInTheDocument();
+    });
+
+    it("opens one card listing every report stacked at the clicked point, not the CSA underneath", async () => {
+      const user = userEvent.setup();
+      renderPage();
+      await user.click(await screen.findByRole("checkbox", { name: TOGGLE_NAME }));
+
+      await user.click(screen.getByTestId("mock-encampment-click"));
+
+      const popups = screen.getAllByTestId("mock-popup");
+      expect(popups).toHaveLength(1);
+      expect(popups[0]).toHaveTextContent("2 reports at this location");
+      // Newest first.
+      const cases = within(popups[0]).getAllByText(/-case$/).map((node) => node.textContent);
+      expect(cases).toEqual(["newer-case", "older-case"]);
+    });
+
+    it("replaces an open CSA card, and closes when the layer is switched off", async () => {
+      const user = userEvent.setup();
+      renderPage();
+      await user.click(await screen.findByRole("checkbox", { name: TOGGLE_NAME }));
+
+      await user.click(screen.getByTestId("mock-csa-click"));
+      expect(screen.getByRole("heading", { level: 2, name: VENICE })).toBeInTheDocument();
+
+      await user.click(screen.getByTestId("mock-encampment-click"));
+      expect(screen.queryByRole("heading", { level: 2, name: VENICE })).not.toBeInTheDocument();
+      expect(screen.getByText("2 reports at this location")).toBeInTheDocument();
+
+      await user.click(screen.getByRole("checkbox", { name: TOGGLE_NAME }));
+      expect(screen.queryByText("2 reports at this location")).not.toBeInTheDocument();
+    });
+
+    it("does not open a card for a cluster click — a cluster is a count, not a report", async () => {
+      const user = userEvent.setup();
+      renderPage();
+      await user.click(await screen.findByRole("checkbox", { name: TOGGLE_NAME }));
+
+      await user.click(screen.getByTestId("mock-encampment-cluster-click"));
+      expect(screen.queryByTestId("mock-popup")).not.toBeInTheDocument();
+    });
+  });
+
   it("restores the hidden set after the page unmounts and remounts", async () => {
     fetchMock.mockImplementation(() => Promise.resolve(new Response(JSON.stringify(shippedIndexPayload))));
     const user = userEvent.setup();
@@ -526,7 +624,7 @@ describe("HomelessCountPage", () => {
       }
     });
 
-    it("names the five datasets this page actually reads, with their real origins", () => {
+    it("names the six datasets this page actually reads, with their real origins", () => {
       // Pinned to the constants the app requests, not to prose: if `?datasets=` or a committed
       // file path changes, these fail instead of the panel quietly lying about provenance.
       const { container } = renderPage();
@@ -538,10 +636,12 @@ describe("HomelessCountPage", () => {
       expect(summaries[1]).toContain("?datasets=homeless_shelters_and_services");
       expect(summaries[2]).toContain("LA City Council Districts");
       expect(summaries[2]).toContain("public/data/la-city-council-districts.geojson");
-      expect(summaries[3]).toContain("Neighborhood index");
-      expect(summaries[3]).toContain("public/data/lahsa-2020-csa-index.json");
-      expect(summaries[4]).toContain("Basemap");
-      expect(summaries[4]).toContain("© OpenStreetMap contributors © CARTO");
+      expect(summaries[3]).toContain("311 encampment reports (2026)");
+      expect(summaries[3]).toContain("public/data/cd2-encampment-reports.geojson");
+      expect(summaries[4]).toContain("Neighborhood index");
+      expect(summaries[4]).toContain("public/data/lahsa-2020-csa-index.json");
+      expect(summaries[5]).toContain("Basemap");
+      expect(summaries[5]).toContain("© OpenStreetMap contributors © CARTO");
     });
 
     it("reflects the Layers toggles instead of offering a second set of checkboxes", async () => {
@@ -563,8 +663,8 @@ describe("HomelessCountPage", () => {
       const { container } = renderPage();
       const entries = readCollapsedEntries(container);
 
-      expect(entries[3].summaryText).toContain("Not a map layer");
-      expect(entries[4].summaryText).toContain("Always on");
+      expect(entries[4].summaryText).toContain("Not a map layer");
+      expect(entries[5].summaryText).toContain("Always on");
     });
   });
 

@@ -8546,6 +8546,14 @@ a {
 /* Council district outline. A dash, not a block — the swatch has to say "administrative
    boundary", the same thing the dash pattern says on the map (`districtBoundaryLineLayer`),
    rather than read as a third data color. `#111827` matches that layer's `line-color`. */
+.homeless-count-layer-swatch--encampments {
+  border-radius: 50%;
+  /* Same orange as `ENCAMPMENT_COLOR` (encampmentLayers.ts). */
+  background: #c2410c;
+  border: 1.5px solid #ffffff;
+  box-shadow: 0 0 0 1px rgba(23, 50, 77, 0.22);
+}
+
 .homeless-count-layer-swatch--district {
   align-self: center;
   height: 0;

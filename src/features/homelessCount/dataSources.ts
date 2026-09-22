@@ -2,6 +2,7 @@ import { LIGHT_BASE_MAP_STYLE } from "../../shared/map/lightBaseMapStyle";
 import { COUNCIL_DISTRICTS_GEOJSON_PATH, HOMELESS_COUNT_DISTRICT_ID } from "./councilDistrictBoundary";
 import { CSA_ATTRIBUTION, CSA_GEOJSON_PATH } from "./csaLayers";
 import { CSA_INDEX_PATH } from "./csaIndex";
+import { ENCAMPMENT_GEOJSON_PATH } from "./encampmentLayers";
 import { SHELTER_LOW_ZOOM_NOTE, SHELTER_TILES_URL } from "./shelterLayers";
 
 /**
@@ -18,8 +19,8 @@ import { SHELTER_LOW_ZOOM_NOTE, SHELTER_TILES_URL } from "./shelterLayers";
  * an import. See that constant's own comment.
  */
 
-/** Which of the page's three layer toggles (owned by the "Layers" section) an entry reflects. */
-export type DataSourceToggleKey = "choropleth" | "shelters" | "districtBoundary";
+/** Which of the page's four layer toggles (owned by the "Layers" section) an entry reflects. */
+export type DataSourceToggleKey = "choropleth" | "shelters" | "districtBoundary" | "encampments";
 
 export interface DataSourceEntry {
   id: string;
@@ -96,6 +97,20 @@ export const DATA_SOURCES: DataSourceEntry[] = [
       "Council district boundaries do not align with the CSA boundaries the count is reported by — the dashed outline and the shaded areas are different geographies.",
     ],
     toggleKey: "districtBoundary",
+  },
+  {
+    id: "encampment-reports",
+    name: "311 encampment reports (2026)",
+    origin: `MyLA311 service requests, normalized by scripts/build_encampment_reports.py — committed as ${repoPathForServedFile(ENCAMPMENT_GEOJSON_PATH)}`,
+    describes:
+      "Homeless-encampment reports filed through MyLA311 in Council District 2, January 1 – September 21, 2026, one point per report.",
+    notes: [
+      "A report is a request for service, not an encampment and not a count of people: one site can be reported many times (up to 48 reports share a single point), and reports can come from anyone.",
+      "Every record's status is \u201cReported\u201d. The export's close date matches the intake time to the second in 4,926 of 4,936 records, so it is shown only in the 10 where it differs.",
+      "44 reports fall outside any neighborhood council.",
+      "Collected six years after the 2020 count underneath, by a different method — the two layers are not comparable.",
+    ],
+    toggleKey: "encampments",
   },
   {
     id: "csa-index",

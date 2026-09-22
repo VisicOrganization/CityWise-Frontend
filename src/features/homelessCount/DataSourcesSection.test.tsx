@@ -10,11 +10,13 @@ const ALL_ON: Record<DataSourceToggleKey, boolean> = {
   choropleth: true,
   shelters: true,
   districtBoundary: true,
+  encampments: true,
 };
 const ALL_OFF: Record<DataSourceToggleKey, boolean> = {
   choropleth: false,
   shelters: false,
   districtBoundary: false,
+  encampments: false,
 };
 
 describe("DataSourcesSection", () => {

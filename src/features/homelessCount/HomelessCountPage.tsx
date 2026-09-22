@@ -1,3 +1,4 @@
+import type { GeoJSONSource } from "maplibre-gl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Map, {
   Layer,
@@ -27,6 +28,17 @@ import { CsaDistrictSummary } from "./CsaDistrictSummary";
 import { CsaFilterSection } from "./CsaFilterSection";
 import { useCsaIndex } from "./csaIndex";
 import { DataSourcesSection } from "./DataSourcesSection";
+import { EncampmentReportPopup } from "./EncampmentReportPopup";
+import {
+  encampmentClusterCountLayer,
+  encampmentClusterLayer,
+  encampmentPointLayer,
+  reportsAtClickedPoint,
+  ENCAMPMENT_CLUSTER_MAX_ZOOM,
+  ENCAMPMENT_CLUSTER_RADIUS,
+  ENCAMPMENT_GEOJSON_PATH,
+  ENCAMPMENT_NOTE,
+} from "./encampmentLayers";
 import { MapInfoPanel } from "./MapInfoPanel";
 import { readHiddenCsaLabels, writeHiddenCsaLabels } from "./hiddenCsaStorage";
 import {
@@ -65,6 +77,9 @@ const CSA_SOURCE_ID = "csa";
  * unmounting it when `showShelters` is off is what actually stops its per-tile requests.
  */
 const SHELTER_SOURCE_ID = "shelters";
+
+/** The 311 encampment-report GeoJSON `<Source>`; read back for cluster expansion and onError. */
+const ENCAMPMENT_SOURCE_ID = "encampments";
 
 /**
  * MapLibre merges a `sourceId` onto source-level "error" events at runtime (e.g. a failed tile
@@ -140,6 +155,13 @@ interface SelectedShelter {
   latitude: number;
 }
 
+interface SelectedEncampment {
+  /** Every report stacked at the clicked point, newest first (`reportsAtClickedPoint`). */
+  reports: Record<string, unknown>[];
+  longitude: number;
+  latitude: number;
+}
+
 export function HomelessCountPage() {
   const { rows, error: indexError, isLoading } = useCsaIndex();
   const mapRef = useRef<MapRef>(null);
@@ -151,6 +173,7 @@ export function HomelessCountPage() {
   const [hidden, setHidden] = useState<Set<string>>(() => storedHidden ?? new Set());
   const [selected, setSelected] = useState<SelectedCsa | null>(null);
   const [selectedShelter, setSelectedShelter] = useState<SelectedShelter | null>(null);
+  const [selectedEncampment, setSelectedEncampment] = useState<SelectedEncampment | null>(null);
   /** Desktop-only by nature — `onMouseMove` never fires from touch input, so touch devices just
    * never populate this and fall through to the tap-to-open `selected` card above, unchanged. */
   const [hovered, setHovered] = useState<HoveredCsa | null>(null);
@@ -165,6 +188,11 @@ export function HomelessCountPage() {
    * GeoJSON file that is already downloaded once the layer has been on — switching it off just
    * unmounts the layer; there are no per-tile requests left for it to stop. */
   const [showDistrictBoundary, setShowDistrictBoundary] = useState(true);
+  /** Off by default, unlike the three layers above: 2026 311 reports are a different kind of data
+   * from the 2020 count this page opens on, and leaving it off means the ~140 KB (gzipped) file is
+   * only fetched by someone who asks for it. Unmounting its `<Source>` is what skips the fetch. */
+  const [showEncampments, setShowEncampments] = useState(false);
+  const [hasEncampmentError, setHasEncampmentError] = useState(false);
   const districtBoundaryFeature = useCouncilDistrictBoundary(showDistrictBoundary);
   const needsDefaultDistrictRef = useRef(storedHidden === null);
   /** Only set by a real click through `updateHidden`, never by the default-district effect —
@@ -267,6 +295,7 @@ export function HomelessCountPage() {
   function selectCsa(properties: Record<string, unknown>, longitude: number, latitude: number) {
     setSelected({ properties, longitude, latitude });
     setSelectedShelter(null);
+    setSelectedEncampment(null);
   }
 
   function handleMapClick(event: MapLayerMouseEvent) {
@@ -278,6 +307,30 @@ export function HomelessCountPage() {
     if (!feature) {
       setSelected(null);
       setSelectedShelter(null);
+      setSelectedEncampment(null);
+      return;
+    }
+    if (feature.layer?.id === encampmentClusterLayer.id) {
+      // A cluster is a count, not a report — zoom to where it splits apart instead of opening a
+      // card. Stacks at one identical coordinate never split; past `ENCAMPMENT_CLUSTER_MAX_ZOOM`
+      // they render as points, which the branch below lists together.
+      const source = mapRef.current?.getSource?.(ENCAMPMENT_SOURCE_ID) as GeoJSONSource | undefined;
+      const clusterId = feature.properties.cluster_id;
+      if (source && typeof clusterId === "number") {
+        void source
+          .getClusterExpansionZoom(clusterId)
+          .then((zoom) => mapRef.current?.easeTo({ center: event.lngLat, zoom }));
+      }
+      return;
+    }
+    if (feature.layer?.id === encampmentPointLayer.id) {
+      setSelectedEncampment({
+        reports: reportsAtClickedPoint(event.features ?? []),
+        longitude: event.lngLat.lng,
+        latitude: event.lngLat.lat,
+      });
+      setSelected(null);
+      setSelectedShelter(null);
       return;
     }
     if (feature.layer?.id === shelterPointLayer.id) {
@@ -287,6 +340,7 @@ export function HomelessCountPage() {
         latitude: event.lngLat.lat,
       });
       setSelected(null);
+      setSelectedEncampment(null);
       return;
     }
     selectCsa(feature.properties, event.lngLat.lng, event.lngLat.lat);
@@ -338,6 +392,9 @@ export function HomelessCountPage() {
     if (event.sourceId === CSA_SOURCE_ID) {
       setHasTileError(true);
     }
+    if (event.sourceId === ENCAMPMENT_SOURCE_ID) {
+      setHasEncampmentError(true);
+    }
   }
 
   // The click card already names this neighborhood, so the hover label is suppressed for it —
@@ -350,6 +407,7 @@ export function HomelessCountPage() {
   const interactiveLayerIds = [
     ...(showChoropleth ? [csaFillLayer.id] : []),
     ...(showShelters ? [shelterPointLayer.id] : []),
+    ...(showEncampments ? [encampmentClusterLayer.id, encampmentPointLayer.id] : []),
   ];
 
   return (
@@ -412,6 +470,22 @@ export function HomelessCountPage() {
                 />
                 District {HOMELESS_COUNT_DISTRICT_ID} boundary
               </label>
+              <label className="homeless-count-layer-toggle">
+                <input
+                  type="checkbox"
+                  checked={showEncampments}
+                  onChange={(event) => {
+                    setShowEncampments(event.target.checked);
+                    // Same reasoning as hiding a selected CSA: no card for points no longer drawn.
+                    if (!event.target.checked) setSelectedEncampment(null);
+                  }}
+                />
+                <span
+                  className="homeless-count-layer-swatch homeless-count-layer-swatch--encampments"
+                  aria-hidden="true"
+                />
+                311 encampment reports (2026)
+              </label>
             </section>
 
             {rows ? (
@@ -465,6 +539,12 @@ export function HomelessCountPage() {
                   `SHELTER_LOW_ZOOM_FEATURE_COUNTS`), and a simple always-present note is enough to
                   stop a county-scale view from reading as the full list. */}
               {showShelters ? <p className="homeless-count-legend-footnote">{SHELTER_LOW_ZOOM_NOTE}</p> : null}
+              {showEncampments ? <p className="homeless-count-legend-footnote">{ENCAMPMENT_NOTE}</p> : null}
+              {showEncampments && hasEncampmentError ? (
+                <p className="homeless-count-legend-error" role="status">
+                  Encampment reports could not be loaded.
+                </p>
+              ) : null}
               {/* A silently blank map is the worst failure mode for a data map, so say so rather
                   than showing a bare basemap if the committed GeoJSON fails to load. */}
               {hasTileError ? (
@@ -481,6 +561,7 @@ export function HomelessCountPage() {
                 choropleth: showChoropleth,
                 shelters: showShelters,
                 districtBoundary: showDistrictBoundary,
+                encampments: showEncampments,
               }}
             />
           </aside>
@@ -548,6 +629,24 @@ export function HomelessCountPage() {
               </Source>
             ) : null}
 
+            {/* Last source, so its points draw above every other layer and win the hit-test that
+                `handleMapClick` reads off `features[0]`. Handed the URL, not parsed data — see
+                `ENCAMPMENT_GEOJSON_PATH`. */}
+            {showEncampments ? (
+              <Source
+                id={ENCAMPMENT_SOURCE_ID}
+                type="geojson"
+                data={ENCAMPMENT_GEOJSON_PATH}
+                cluster
+                clusterMaxZoom={ENCAMPMENT_CLUSTER_MAX_ZOOM}
+                clusterRadius={ENCAMPMENT_CLUSTER_RADIUS}
+              >
+                <Layer {...encampmentClusterLayer} />
+                <Layer {...encampmentClusterCountLayer} />
+                <Layer {...encampmentPointLayer} />
+              </Source>
+            ) : null}
+
             {selected ? (
               // maxWidth is the popup container's cap; it must be >= the card's border-box width
               // (.homeless-count-popup: 16rem, app.css) plus the 2px border MapLibre puts on
@@ -575,6 +674,18 @@ export function HomelessCountPage() {
                 maxWidth="calc(16rem + 2px)"
               >
                 <ShelterDetailPopup properties={selectedShelter.properties} />
+              </Popup>
+            ) : null}
+
+            {selectedEncampment ? (
+              <Popup
+                longitude={selectedEncampment.longitude}
+                latitude={selectedEncampment.latitude}
+                closeOnClick={false}
+                onClose={() => setSelectedEncampment(null)}
+                maxWidth="calc(16rem + 2px)"
+              >
+                <EncampmentReportPopup reports={selectedEncampment.reports} />
               </Popup>
             ) : null}
 
