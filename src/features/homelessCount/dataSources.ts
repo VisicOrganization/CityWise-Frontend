@@ -100,7 +100,7 @@ export const DATA_SOURCES: DataSourceEntry[] = [
   },
   {
     id: "encampment-reports",
-    name: "311 encampment reports (2026)",
+    name: "311 encampment reports (CD2, 2026)",
     origin: `MyLA311 service requests, normalized by scripts/build_encampment_reports.py — committed as ${repoPathForServedFile(ENCAMPMENT_GEOJSON_PATH)}`,
     describes:
       "Homeless-encampment reports filed through MyLA311 in Council District 2, January 1 – September 21, 2026, one point per report.",

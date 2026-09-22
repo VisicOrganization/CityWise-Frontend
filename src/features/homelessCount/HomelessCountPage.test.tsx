@@ -737,7 +737,7 @@ describe("HomelessCountPage", () => {
       expect(summaries[1]).toContain("?datasets=homeless_shelters_and_services");
       expect(summaries[2]).toContain("LA City Council Districts");
       expect(summaries[2]).toContain("public/data/la-city-council-districts.geojson");
-      expect(summaries[3]).toContain("311 encampment reports (2026)");
+      expect(summaries[3]).toContain("311 encampment reports (CD2, 2026)");
       expect(summaries[3]).toContain("public/data/cd2-encampment-reports.geojson");
       expect(summaries[4]).toContain("Neighborhood index");
       expect(summaries[4]).toContain("public/data/lahsa-2020-csa-index.json");
