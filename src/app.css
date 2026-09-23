@@ -9612,30 +9612,36 @@ a {
 
 /* Sits in the flyout's existing `.map-utility-header` flex row, where it replaces the old
    "Pins" caption. `align-self: center` because that header aligns on `baseline`, which would
-   otherwise hang a 1.25rem glyph box off the strong's baseline. */
+   otherwise hang the glyph box off the strong's baseline.
+
+   Border, radius and 1.9rem box are `.map-district-filter-action-btn`'s, the quick-action pills
+   two rows below: as a bare glyph this was the one control in the flyout with no edge, which
+   read as decoration next to 0.8rem option rows. Square rather than `flex: 1` because it is an
+   icon, so the pill radius makes it a circle. */
 .map-flyout-close-btn {
   flex: none;
   align-self: center;
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.9rem;
+  height: 1.9rem;
   padding: 0;
   margin: 0;
-  border: 0;
-  background: transparent;
+  border: 1px solid rgba(23, 50, 77, 0.18);
+  border-radius: 999px;
+  background: #ffffff;
   color: rgba(23, 50, 77, 0.6);
-  font-size: 1.05rem;
+  font-size: 1.15rem;
   line-height: 1;
   cursor: pointer;
 }
 
 .map-flyout-close-btn:hover {
+  background: #f8f9fb;
   color: #17324d;
 }
 
 .map-flyout-close-btn:focus-visible {
   outline: 2px solid rgba(29, 134, 94, 0.65);
   outline-offset: 2px;
-  border-radius: 6px;
 }
 
 /* Clearance under the quick-action row: the four checkbox rows used to start hard against the
