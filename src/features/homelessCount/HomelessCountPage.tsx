@@ -654,22 +654,27 @@ export function HomelessCountPage() {
               owns its own control corners. Top-right holds this, then the month filter, then the
               density key — all three stacked downward from it. See MapInfoPanel. */}
           <MapInfoPanel />
-          {/* Right edge, below both of those — always visible, since it decodes the layer this
-              page is about. */}
-          <HomelessCountLegend />
-          {/* Right edge, under the Info button. Only while the layer it filters is on — a filter
-              for dots that aren't drawn would read as broken. */}
-          {showEncampments && encampmentMonthOptions.length > 0 ? (
-            <EncampmentMonthFilter
-              options={encampmentMonthOptions}
-              hiddenMonths={hiddenEncampmentMonths}
-              onHiddenMonthsChange={(next) => {
-                setHiddenEncampmentMonths(next);
-                // The open card may list reports from a month that was just hidden.
-                setSelectedEncampment(null);
-              }}
-            />
-          ) : null}
+          {/* The two cards that sit under the Info button, in one flow column rather than each
+              pinned at its own `top`: either can be absent, and a column closes the gap the
+              missing one leaves instead of stranding the survivor halfway down the map. */}
+          <div className="homeless-count-map-chrome">
+            {/* Only while the layer it filters is on — a filter for dots that aren't drawn would
+                read as broken. */}
+            {showEncampments && encampmentMonthOptions.length > 0 ? (
+              <EncampmentMonthFilter
+                options={encampmentMonthOptions}
+                hiddenMonths={hiddenEncampmentMonths}
+                onHiddenMonthsChange={(next) => {
+                  setHiddenEncampmentMonths(next);
+                  // The open card may list reports from a month that was just hidden.
+                  setSelectedEncampment(null);
+                }}
+              />
+            ) : null}
+            {/* Same rule, same condition as the choropleth it decodes below: a six-step key for
+                polygons that aren't drawn describes nothing. */}
+            {showChoropleth && csaCollection ? <HomelessCountLegend /> : null}
+          </div>
           </div>
         </div>
       </main>

@@ -12,6 +12,7 @@ import {
 } from "./councilDistrictBoundary";
 import { COUNCIL_DISTRICTS } from "./councilDistricts";
 import { resetCsaIndexCacheForTests } from "./csaIndex";
+import { DENSITY_LEGEND_STOPS } from "./csaLayers";
 import { DATA_SOURCES } from "./dataSources";
 import { ENCAMPMENT_GEOJSON_PATH, resetEncampmentReportsCacheForTests } from "./encampmentLayers";
 import { HomelessCountPage } from "./HomelessCountPage";
@@ -558,6 +559,32 @@ describe("HomelessCountPage", () => {
 
       expect(screen.queryByTestId("layer-csa-fill")).not.toBeInTheDocument();
       expect(screen.getByTestId(BOUNDARY_LAYER)).toBeInTheDocument();
+    });
+  });
+
+  describe("density key", () => {
+    const KEY_HEADING = "Homeless residents per sq. mile (2020)";
+
+    it("names every class of the ramp the choropleth is painted with, as a list", async () => {
+      renderPage();
+
+      const key = within(await screen.findByRole("region", { name: KEY_HEADING }));
+      expect(key.getByRole("heading", { level: 2, name: KEY_HEADING })).toBeInTheDocument();
+      expect(key.getAllByRole("listitem").map((row) => row.textContent)).toEqual(
+        DENSITY_LEGEND_STOPS.map((stop) => stop.label),
+      );
+    });
+
+    it("is gone once the layer it decodes is switched off", async () => {
+      // A six-step key for polygons that are not drawn describes nothing — same rule the month
+      // filter already follows for the encampment layer.
+      const user = userEvent.setup();
+      renderPage();
+
+      await screen.findByTestId("layer-csa-fill");
+      await user.click(screen.getByRole("checkbox", { name: "Homeless count density" }));
+
+      expect(screen.queryByRole("region", { name: KEY_HEADING })).not.toBeInTheDocument();
     });
   });
 

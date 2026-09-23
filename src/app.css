@@ -9095,7 +9095,6 @@ a {
 .homeless-count-popup-stat:first-child dd {
   /* The dark end of the choropleth's own ramp (`DENSITY_LEGEND_STOPS`). */
   color: #00441b;
-  font-family: "Public Sans", "Schibsted Grotesk", "Segoe UI", sans-serif;
   font-weight: 700;
 }
 
@@ -9124,16 +9123,45 @@ a {
   line-height: 1.4;
 }
 
-/* --- Encampment "Month filed" filter ---------------------------------------
-   Everything visual comes from the /map page's own filter classes (`map-control-pill--tools`,
-   `map-figma-flyout--district-filter`, `map-district-filter-*`); this only places it on the right
-   edge, under `.homeless-count-map-info`'s Info button (top 0.6rem + its ~2rem height). Below the
-   info panel's z-index (3) so an open Info panel covers the filter rather than the reverse. */
-.homeless-count-map-filter {
+/* --- Top-right card column --------------------------------------------------
+   Holds the month filter and the density key, under `.homeless-count-map-info`'s Info button
+   (top 0.6rem + its ~2rem height). A flow column rather than a `top` per card, because neither
+   card is always there: the filter renders only with the encampment layer on (off by default)
+   and the key only with the choropleth on, so a fixed offset for the lower one leaves a gap the
+   width of whatever is missing above it.
+
+   `bottom` clears MapLibre's bottom-right attribution control (2.4rem covers both of its forms:
+   compact is 10px margin + 20px min-height + 4px padding, the expanded text line is 10px + 20px),
+   which the key would otherwise reach on a short map, and gives the column a definite height for
+   the key's `max-height: 100%` below. Like `.homeless-count-map-info`, that makes this a tall
+   invisible strip over the map, so `pointer-events: none` here — re-enabled on the two cards —
+   keeps clicks/hover reaching the map wherever no card is drawn.
+
+   Below the info panel's z-index (3) so an open Info panel covers these rather than the reverse. */
+.homeless-count-map-chrome {
   position: absolute;
   top: 3.4rem;
   right: 0.6rem;
+  bottom: 2.4rem;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  max-width: calc(100% - 1.2rem);
+  pointer-events: none;
+}
+
+/* --- Encampment "Month filed" filter ---------------------------------------
+   Everything visual comes from the /map page's own filter classes (`map-control-pill--tools`,
+   `map-figma-flyout--district-filter`, `map-district-filter-*`); this only places it in the
+   column above. Positioned (so it takes a z-index) above the static key below it, because its
+   flyout opens leftward across that card. */
+.homeless-count-map-filter {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  pointer-events: auto;
 }
 
 /* /map's month-agnostic grid is 3 columns of short labels; each option here also carries a count,
@@ -9154,23 +9182,40 @@ a {
 /* --- Density key on the map -------------------------------------------------
    Same reuse as the month filter above — the card, its heading and its rows are the /map filter
    flyout's own classes (`map-figma-flyout--district-filter`, `map-utility-header`,
-   `map-neighborhood-legend`, `map-district-filter-option`); this only places it and sizes the
-   swatch. Sits under the Filter pill (top 3.4rem + its ~4.4rem height), and below that pill's
-   z-index so an open month flyout — which opens leftward, across this card — covers it, the same
-   precedence the Info panel already takes over the filter. */
+   `map-neighborhood-legend`, `map-district-filter-option`); this class is on the card itself, and
+   only unpins it, narrows it and sizes the swatch.
+
+   `position: static` and the narrower min-width override the flyout classes, which are written
+   for a card anchored to a trigger pill and 18.5rem wide for a 3-column month grid; this one has
+   no trigger and six one-line rows. `max-height: 100%` is of the column above (definite height,
+   `top`/`bottom`), replacing `--district-filter`'s `min(72vh, 36rem)`: the map can be as short as
+   18rem (`.homeless-count-map-wrap`, which clips what overflows it), and a viewport-sized cap
+   says nothing about that. `--district-filter`'s own `overflow-y: auto` then does the scrolling. */
 .homeless-count-map-legend {
-  position: absolute;
-  top: 8.2rem;
-  right: 0.6rem;
-  z-index: 1;
+  position: static;
+  flex: 0 1 auto;
+  min-width: 12rem;
+  max-height: 100%;
+  pointer-events: auto;
 }
 
-/* The flyout classes are written for a card anchored to a trigger pill, and for rows that are
-   clickable options. This one is neither: it is always-visible, static chrome. The narrower
-   min-width overrides `--district-filter`'s 18.5rem, which is sized for a 3-column month grid. */
-.homeless-count-map-legend .map-figma-flyout {
-  position: static;
-  min-width: 12rem;
+/* The key's title is a real `<h2>` so it stays in the page's heading outline, but it has to read
+   as the flyout label `.map-utility-header strong` draws on /map — a heading brings its own
+   font-size and margins, and those are what is reset here. */
+.homeless-count-map-legend .map-utility-header h2 {
+  margin: 0;
+  font-size: inherit;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* The rows are a real `<ul>`/`<li>`; this strips the bullets and indent the flex row does not
+   want, leaving `.map-neighborhood-legend`'s own layout to do the rest. */
+.homeless-count-map-legend .map-neighborhood-legend {
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .homeless-count-map-legend .map-district-filter-option {

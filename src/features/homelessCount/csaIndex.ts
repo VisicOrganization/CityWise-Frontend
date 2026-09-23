@@ -27,21 +27,6 @@ export interface CsaRow {
   group: CsaGroupKey;
 }
 
-export interface CsaGroup {
-  key: CsaGroupKey;
-  title: string;
-  rows: CsaRow[];
-}
-
-/** Render order for the three families. */
-export const CSA_GROUP_ORDER: CsaGroupKey[] = ["losAngeles", "cities", "unincorporated"];
-
-export const CSA_GROUP_TITLES: Record<CsaGroupKey, string> = {
-  losAngeles: "Los Angeles",
-  cities: "Cities",
-  unincorporated: "Unincorporated areas",
-};
-
 /** Exported so the left panel's data-sources section can name the file this page actually
  * fetches instead of restating it — see `dataSources.ts`. */
 export const CSA_INDEX_PATH = new URL("data/lahsa-2020-csa-index.json", window.location.origin + import.meta.env.BASE_URL).toString();
@@ -83,32 +68,6 @@ export function parseCsaIndexPayload(data: unknown): CsaRow[] {
     rows.push({ CSA_Label: label, Total_Pop: total, ...stripCsaPrefix(label) });
   }
   return rows;
-}
-
-/** Groups in fixed family order, each sorted by display name. */
-export function groupCsaRows(rows: CsaRow[]): CsaGroup[] {
-  return CSA_GROUP_ORDER.map((key) => ({
-    key,
-    title: CSA_GROUP_TITLES[key],
-    rows: rows
-      .filter((row) => row.group === key)
-      .sort((left, right) => left.displayName.localeCompare(right.displayName)),
-  }));
-}
-
-/**
- * Matches the stripped display name *and* the raw label, so both "venice" and "unincorporated"
- * find rows. Case-insensitive, no debounce at the call site — 304 in-memory strings is instant.
- */
-export function filterCsaRows(rows: CsaRow[], query: string): CsaRow[] {
-  const needle = query.trim().toLowerCase();
-  if (!needle) {
-    return rows;
-  }
-  return rows.filter(
-    (row) =>
-      row.displayName.toLowerCase().includes(needle) || row.CSA_Label.toLowerCase().includes(needle),
-  );
 }
 
 let csaIndexPromise: Promise<CsaRow[]> | null = null;

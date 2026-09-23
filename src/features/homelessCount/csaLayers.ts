@@ -172,10 +172,14 @@ export interface DensityLegendStop {
  * counted" is a different statement from "the low end of the ramp", and a hue says so.
  *
  * Green, not the blue this used to be: blue is now the shelter-point color (`shelterLayers.ts`),
- * and the two cannot share a hue when the points sit on the fills. Steps are spaced by lightness
- * (L* ≈ 88 / 77 / 61 / 39 / 24) rather than by hue, so neighbouring classes stay tellable apart
- * under `fill-opacity: 0.72` over the desaturated basemap, and so the ramp still reads in order
- * for a red-green-deficient viewer, for whom lightness is the only channel left.
+ * and the two cannot share a hue when the points sit on the fills. The five green steps are
+ * spaced by lightness (L* ≈ 89 / 78 / 62 / 40 / 24) rather than by hue, so neighbouring classes
+ * stay tellable apart under `fill-opacity: 0.72` over the desaturated basemap, and so they still
+ * read in order for a red-green-deficient viewer, for whom lightness is the only channel left.
+ * That does NOT hold across the first boundary: the grey zero class (L* ≈ 93) and "Under 5"
+ * (L* ≈ 89) are ~4 L* apart and are told apart mainly by hue, so for such a viewer those two are
+ * separated by the key's row labels rather than by the fill. Widening that gap would mean
+ * darkening "Under 5" into the next step's territory, which costs more than it buys.
  *
  * Breaks are round numbers snapped to the real quantiles of the 304 rows (p25 5.11, p50 19.65,
  * p75 71.17, p90 203.0), which bins them 23 / 53 / 77 / 81 / 39 / 31.
