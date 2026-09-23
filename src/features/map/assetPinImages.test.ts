@@ -7,6 +7,8 @@ import {
   assetPinImageEntries,
   PIN_BOX_PX,
   PIN_RENDER_PX,
+  PIN_SHADOW_BLUR_PX,
+  PIN_SHADOW_OFFSET_Y_PX,
   PIN_SOURCE_PX,
   pinImageUrl,
 } from "./assetPinImages";
@@ -56,8 +58,16 @@ function stubCanvas(context: unknown) {
 
 const drawImage = vi.fn();
 const getImageData = vi.fn(() => ({ width: PIN_RENDER_PX, height: PIN_RENDER_PX }) as ImageData);
-/** Shared so the shadow test can read back what the loader set on it. */
+/** Shared so the shadow test can read back what the loader set on it — and cleared in
+ * `beforeEach` below, so one test's shadow state cannot stand in for another's. */
 const context = { drawImage, getImageData } as unknown as CanvasRenderingContext2D;
+
+function resetContext() {
+  const mutable = context as unknown as Record<string, unknown>;
+  delete mutable.shadowColor;
+  delete mutable.shadowBlur;
+  delete mutable.shadowOffsetY;
+}
 
 function fakeMap(existing: string[] = []) {
   const images = new Set(existing);
@@ -78,6 +88,7 @@ beforeEach(() => {
   imagesFail = false;
   drawImage.mockClear();
   getImageData.mockClear();
+  resetContext();
   vi.stubGlobal("Image", StubImage);
   stubCanvas(context);
 });
@@ -112,8 +123,10 @@ describe("pin image registry", () => {
   it("registers at a size that makes icon-size 1 equal ICON_RENDER_PX", () => {
     // The registered image is the padded box, but icon-size scales every source pixel alike, so
     // it is the artwork inside it that the layers divide by.
-    expect(PIN_RENDER_PX / 2).toBe(PIN_BOX_PX);
     expect(PIN_SOURCE_PX).toBe(ICON_RENDER_PX);
+    // The margin has to outlast the shadow it exists for, or the tail is clipped at the canvas
+    // edge — invisible in a unit test and easy to introduce by nudging the blur.
+    expect(PIN_BOX_PX - PIN_SOURCE_PX).toBeGreaterThan(2 * (PIN_SHADOW_BLUR_PX + PIN_SHADOW_OFFSET_Y_PX));
   });
 
   // Same URL construction as the geojson loads, so a subpath deploy resolves the artwork.

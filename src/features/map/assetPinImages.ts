@@ -26,13 +26,20 @@ import { ASSET_PIN_IMAGE_IDS, CATEGORY_ORDER } from "./neighborhoodMapLayers";
 /** Source artwork is 66x66; 2x covers retina without shipping a second set of files. */
 const PIN_PIXEL_RATIO = 2;
 export const PIN_SOURCE_PX = 66;
+/** The CSS shadow this bakes in: `drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25))`. */
+export const PIN_SHADOW_BLUR_PX = 4;
+export const PIN_SHADOW_OFFSET_Y_PX = 2;
+
 /**
- * Margin around the artwork for the baked shadow. `drop-shadow(0 2px 4px)` blurs with a 2px
- * deviation and drops 2px, so the tail reaches ~8px below the disc and ~6px to either side.
+ * Margin around the artwork for the baked shadow: the blur's own reach (a 4px radius is twice
+ * the 2px Gaussian deviation, so the tail dies out ~2 deviations past it) plus the drop.
+ * Derived rather than hardcoded — at 8px the tail lands exactly on the canvas edge, so a later
+ * blur increase would clip the shadow with nothing to catch it.
+ *
  * Applied on all four sides rather than only where the shadow falls, because a symbol is
  * anchored by its centre and an asymmetric margin would walk every pin off its coordinate.
  */
-const PIN_SHADOW_PAD_PX = 8;
+const PIN_SHADOW_PAD_PX = PIN_SHADOW_BLUR_PX + PIN_SHADOW_OFFSET_Y_PX + 2;
 /** What MapLibre sees as the image's CSS width: the artwork plus that margin. */
 export const PIN_BOX_PX = PIN_SOURCE_PX + PIN_SHADOW_PAD_PX * 2;
 export const PIN_RENDER_PX = PIN_BOX_PX * PIN_PIXEL_RATIO;
@@ -93,8 +100,8 @@ function rasterize(src: string): Promise<ImageData> {
       // deviation, so the 4 carries over unchanged; both it and the 2px drop are then scaled by
       // the pixel ratio because the canvas is in device pixels.
       context.shadowColor = "rgba(0, 0, 0, 0.25)";
-      context.shadowBlur = 4 * PIN_PIXEL_RATIO;
-      context.shadowOffsetY = 2 * PIN_PIXEL_RATIO;
+      context.shadowBlur = PIN_SHADOW_BLUR_PX * PIN_PIXEL_RATIO;
+      context.shadowOffsetY = PIN_SHADOW_OFFSET_Y_PX * PIN_PIXEL_RATIO;
       context.drawImage(
         image,
         PIN_SHADOW_PAD_RASTER_PX,

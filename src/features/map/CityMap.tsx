@@ -1515,8 +1515,8 @@ export function CityMap({
                     ))}
                   </div>
                   <p className="map-neighborhood-legend-note">
-                    Outlines are LAHSA areas that only approximate council districts — the dashed
-                    line is District {NEIGHBORHOOD_DISTRICT_ID}&rsquo;s actual edge.
+                    Outlines are LAHSA 2020 areas that only approximate council districts — the
+                    dashed line is District {NEIGHBORHOOD_DISTRICT_ID}&rsquo;s actual edge.
                   </p>
                 </div>
               ) : null}
