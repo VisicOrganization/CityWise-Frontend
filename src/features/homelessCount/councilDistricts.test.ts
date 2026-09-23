@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-import { buildHiddenForDistrict, COUNCIL_DISTRICTS } from "./councilDistricts";
+import { COUNCIL_DISTRICTS } from "./councilDistricts";
 import { parseCsaIndexPayload } from "./csaIndex";
 
 // Read via node:fs rather than a JSON import: the file lives under `public/`, outside the
@@ -22,19 +22,6 @@ describe("COUNCIL_DISTRICTS", () => {
       for (const label of district.csaLabels) {
         expect(shippedLabels.has(label)).toBe(true);
       }
-    }
-  });
-});
-
-describe("buildHiddenForDistrict", () => {
-  it("leaves exactly the district's CSAs visible and hides every other row", () => {
-    const district = COUNCIL_DISTRICTS.find((entry) => entry.id === "cd2")!;
-    const hidden = buildHiddenForDistrict(shippedRows, district);
-
-    expect(shippedRows).toHaveLength(304);
-    expect(hidden.size).toBe(297);
-    for (const label of district.csaLabels) {
-      expect(hidden.has(label)).toBe(false);
     }
   });
 });

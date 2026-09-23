@@ -8386,8 +8386,8 @@ a {
 /* ==========================================================================
    LAHSA 2020 homeless count (`/homeless-count`)
 
-   Page shell + map chrome (legend, click-to-inspect popup) and the 304-item
-   neighborhood filter dropdown. The choropleth is a single-hue green sequential
+   Page shell + map chrome (density key, click-to-inspect popup) and the
+   left-hand panel. The choropleth is a single-hue green sequential
    ramp (#e8eaed zero → #00441b) over a desaturated basemap, so every piece of
    chrome here stays neutral and never competes with the data for attention.
    ========================================================================== */
@@ -8497,8 +8497,8 @@ a {
 }
 
 /* --- Layer toggles -------------------------------------------------------
-   Flex: none — this section stays put at the top of the panel while the neighborhood filter
-   below it scrolls. */
+   Flex: none — this section stays put at the top of the panel while the panel below it
+   scrolls. */
 .homeless-count-layer-section {
   flex: none;
   display: flex;
@@ -8561,10 +8561,9 @@ a {
 }
 
 /* --- District readout ----------------------------------------------------
-   Sits between the Layers section and the neighborhood filter, `flex: none` like
+   Sits between the Layers section and the notes, `flex: none` like
    `.homeless-count-layer-section` above it — this is a small, fixed-height section (one
-   district's ~7 rows), not a scrolling region, so it cannot compete with
-   `.homeless-count-filter-list` for the panel's one flexible scroll area. */
+   district's 7 rows), not a scrolling region. */
 .homeless-count-district-summary {
   flex: none;
   display: flex;
@@ -8640,11 +8639,10 @@ a {
   border-top: 1px solid rgba(23, 50, 77, 0.1);
 }
 
-/* --- Legend --------------------------------------------------------------
-   Lives in the panel's lower fixed area now, not floating over the map, so its old absolute
-   positioning, max-height cap, and overscroll-behavior are gone — it is no longer a floating
-   card that needs to clip its own scroll or stay clear of the map underneath it. `flex: none`
-   keeps it pinned below the (flexible, scrolling) neighborhood filter. */
+/* --- Notes & caveats -----------------------------------------------------
+   The card that used to hold the density key; the key itself is map chrome now
+   (`.homeless-count-map-legend` below), and what is left is the footnotes and the two data-error
+   messages. Class names are unchanged so the card keeps its chrome. */
 .homeless-count-legend {
   flex: none;
   width: 100%;
@@ -9276,167 +9274,6 @@ a {
   line-height: 1.3;
 }
 
-/* --- Neighborhood filter section -----------------------------------------
-   Was `CsaFilterDropdown`, a click-to-open portaled popover; inside the persistent panel it is
-   always visible now, so the trigger button and the portaled floating panel are both gone —
-   deleted along with `CsaFilterDropdown.tsx` itself (see `CsaFilterSection.tsx`).
-   `flex: none` like the panel's other sections now that `.homeless-count-panel` itself scrolls:
-   this section sizes to its own content (search input + action rows + the capped
-   `.homeless-count-filter-list` below) instead of stretching to fill leftover panel space, so it
-   can't be squeezed when the panel's total content exceeds its box. */
-.homeless-count-filter-section {
-  flex: none;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.homeless-count-filter-search {
-  flex: none;
-  width: 100%;
-  min-height: 2.1rem;
-  padding: 0.35rem 0.65rem;
-  border: 1px solid rgba(23, 50, 77, 0.18);
-  border-radius: 8px;
-  background: #ffffff;
-  color: #17324d;
-  font-size: 0.82rem;
-  line-height: 1.3;
-}
-
-.homeless-count-filter-search::placeholder {
-  color: rgba(23, 50, 77, 0.5);
-}
-
-.homeless-count-filter-search:focus-visible {
-  outline: 2px solid rgba(29, 134, 94, 0.65);
-  outline-offset: 1px;
-}
-
-.homeless-count-filter-section .map-district-filter-actions {
-  flex: none;
-  margin-top: 0.6rem;
-}
-
-/* District shortcut row. Visually matches `.map-district-filter-action-btn` (the shared
-   Select all / Clear all button also used by CityMap's district filter) but does not reuse that
-   class: its `flex: 1 1 0` is written to split a two-button row evenly, which stretches a single
-   district button across the whole panel. Left-aligned and wrapping instead, so more districts
-   can be added later without the row needing to change. */
-.homeless-count-district-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  gap: 0.5rem;
-  margin-top: 0.6rem;
-}
-
-.homeless-count-district-btn {
-  flex: none;
-  min-height: 1.9rem;
-  padding: 0.3rem 0.5rem;
-  border: 1px solid rgba(23, 50, 77, 0.18);
-  border-radius: 999px;
-  background: #ffffff;
-  color: #17324d;
-  font-family: "Schibsted Grotesk", "Public Sans", "Segoe UI", sans-serif;
-  font-size: 0.76rem;
-  font-weight: 600;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.homeless-count-district-btn:hover {
-  background: #f8f9fb;
-}
-
-.homeless-count-district-btn:focus-visible {
-  outline: 2px solid rgba(29, 134, 94, 0.65);
-  outline-offset: 2px;
-}
-
-/* A nested scroll region on purpose: the 304-row list caps at `max-height` so it can't push the
-   legend and data-sources sections far down the panel, and scrolls within that cap on its own.
-   `.homeless-count-panel` (the outer scroll region) handles everything past that. */
-.homeless-count-filter-list {
-  flex: 1 1 auto;
-  min-height: 0;
-  max-height: 22rem;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  margin-top: 0.7rem;
-  padding-top: 0.65rem;
-  border-top: 1px solid rgba(227, 227, 227, 0.9);
-}
-
-.homeless-count-filter-empty {
-  margin: 0.25rem 0 0.5rem;
-  color: rgba(23, 50, 77, 0.68);
-  font-size: 0.8rem;
-}
-
-.homeless-count-filter-group + .homeless-count-filter-group {
-  margin-top: 0.8rem;
-  padding-top: 0.7rem;
-  border-top: 1px solid rgba(227, 227, 227, 0.9);
-}
-
-/* Sticky so the family stays named while scrolling a 136-row section — the 10 stripped
-   names that repeat across groups rely on this heading to disambiguate visually. */
-.homeless-count-filter-group-head {
-  position: sticky;
-  top: -0.65rem;
-  z-index: 1;
-  display: flex;
-  width: 100%;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.35rem 0.1rem;
-  background: #ffffff;
-}
-
-.homeless-count-filter-group-title {
-  flex: 1 1 auto;
-  min-width: 0;
-  font-weight: 700;
-}
-
-.homeless-count-filter-rows {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  margin-top: 0.1rem;
-}
-
-.homeless-count-filter-row {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  gap: 0.45rem;
-  min-height: 1.7rem;
-  padding: 0.1rem 0.15rem 0.1rem 1.35rem;
-  border-radius: 6px;
-}
-
-.homeless-count-filter-row:hover {
-  background: rgba(29, 134, 94, 0.06);
-}
-
-.homeless-count-filter-name {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.homeless-count-filter-count {
-  flex: none;
-  color: rgba(23, 50, 77, 0.6);
-  font-size: 0.74rem;
-  font-variant-numeric: tabular-nums;
-}
-
 /* Below this width the panel stacks above the map, full-width, instead of sitting beside it —
    the map keeps its own `min-height: 18rem` from `.homeless-count-map-wrap` above, unchanged.
    `max-height: 50%` still gives the panel a definite height here (percentages resolve off
@@ -9460,12 +9297,6 @@ a {
 @media (max-width: 720px) {
   .homeless-count-page {
     padding-top: 4.85rem;
-  }
-
-  /* 44px touch targets for the two rows of the filter list that are still tappable controls. */
-  .homeless-count-filter-group-head,
-  .homeless-count-filter-row {
-    min-height: 44px;
   }
 }
 

@@ -117,7 +117,7 @@ export const DATA_SOURCES: DataSourceEntry[] = [
     name: "Neighborhood index",
     origin: `Derived from the LA County ArcGIS FeatureServer (same 2020 layer) — committed as ${repoPathForServedFile(CSA_INDEX_PATH)}`,
     describes:
-      "The 304-row list of Countywide Statistical Areas backing the neighborhood filter above.",
+      "The 304-row list of Countywide Statistical Areas backing the district readout above.",
     notes: [
       "It exists because vector tiles only expose the features in the current viewport, so the full name list has to come from somewhere else.",
     ],

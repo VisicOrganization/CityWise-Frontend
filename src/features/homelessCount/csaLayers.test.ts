@@ -2,8 +2,8 @@ import { createExpression, featureFilter, v8 } from "@maplibre/maplibre-gl-style
 import { describe, expect, it } from "vitest";
 
 import {
-  buildHiddenCsaFilter,
   buildSelectedCsaFilter,
+  buildVisibleCsaFilter,
   csaFillColorExpression,
   csaFillLayer,
   csaHighlightLayer,
@@ -39,10 +39,10 @@ function hexToRgbaString(hex: string): string {
   return `rgba(${r},${g},${b},1)`;
 }
 
-/** Evaluates a `buildHiddenCsaFilter` result against fake tile-feature properties the same way
+/** Evaluates a `buildVisibleCsaFilter` result against fake tile-feature properties the same way
  * MapLibre would at render time. Returns `true` iff the feature would be rendered. */
-function evaluateHiddenFilter(hiddenLabels: string[], properties: Record<string, unknown>): boolean {
-  const filter = featureFilter(buildHiddenCsaFilter(hiddenLabels));
+function evaluateVisibleFilter(visibleLabels: string[], properties: Record<string, unknown>): boolean {
+  const filter = featureFilter(buildVisibleCsaFilter(visibleLabels));
   return filter.filter({ zoom: 0 } as never, {
     type: "Feature",
     properties,
@@ -107,38 +107,31 @@ describe("csaLayers", () => {
     expect(csaOutlineLayer.paint?.["line-color"]).toBe("#ffffff");
   });
 
-  it("renders every properly-labeled neighborhood when nothing is hidden", () => {
-    expect(buildHiddenCsaFilter([])).toEqual(["==", ["typeof", ["get", "CSA_Label"]], "string"]);
-    expect(evaluateHiddenFilter([], { CSA_Label: "Los Angeles - Venice" })).toBe(true);
-  });
-
-  it("excludes hidden labels with the expression form of `in`", () => {
-    expect(buildHiddenCsaFilter(["Los Angeles - Venice"])).toEqual([
+  it("renders exactly the named neighborhoods, with the expression form of `in`", () => {
+    expect(buildVisibleCsaFilter(["Los Angeles - Venice"])).toEqual([
       "all",
       ["==", ["typeof", ["get", "CSA_Label"]], "string"],
-      ["!", ["in", ["get", "CSA_Label"], ["literal", ["Los Angeles - Venice"]]]],
+      ["in", ["get", "CSA_Label"], ["literal", ["Los Angeles - Venice"]]],
     ]);
-    expect(evaluateHiddenFilter(["Los Angeles - Venice"], { CSA_Label: "Los Angeles - Venice" })).toBe(
-      false,
-    );
-    expect(evaluateHiddenFilter(["Los Angeles - Venice"], { CSA_Label: "Los Angeles - Echo Park" })).toBe(
+    expect(evaluateVisibleFilter(["Los Angeles - Venice"], { CSA_Label: "Los Angeles - Venice" })).toBe(
       true,
+    );
+    expect(evaluateVisibleFilter(["Los Angeles - Venice"], { CSA_Label: "Los Angeles - Echo Park" })).toBe(
+      false,
     );
   });
 
-  it("hides a feature with a missing or non-string CSA_Label, even when nothing is hidden", () => {
+  it("hides a feature with a missing or non-string CSA_Label", () => {
     // Regression test for the reported bug: at every reachable zoom, the live Scout `query`
     // layer carries non-CSA administrative polygons (council districts, supervisorial districts,
     // service planning areas, incorporated cities, the county outline) with no `CSA_Label`
     // attribute at all. The old exclusion-only filter treated "not in the hidden list" as
     // "visible", so these rendered unconditionally — and, scoped to District 2, they rendered
-    // right through the district filter too, since they were never in `hiddenLabels` either.
-    expect(evaluateHiddenFilter([], {})).toBe(false);
-    expect(evaluateHiddenFilter([], { CSA_Label: null })).toBe(false);
-    expect(evaluateHiddenFilter([], { CSA_Label: 42 })).toBe(false);
-    // Same must hold once District 2's hidden set is applied — a label-less feature must not
-    // leak through the "only ever show CD2" scoping either.
-    expect(evaluateHiddenFilter(["Los Angeles - Venice"], {})).toBe(false);
+    // right through the district filter too. Naming the keepers cannot fail that way.
+    const cd2 = ["Los Angeles - Venice"];
+    expect(evaluateVisibleFilter(cd2, {})).toBe(false);
+    expect(evaluateVisibleFilter(cd2, { CSA_Label: null })).toBe(false);
+    expect(evaluateVisibleFilter(cd2, { CSA_Label: 42 })).toBe(false);
   });
 
   it("highlights the selected border distinctly from the default white outline", () => {
@@ -150,8 +143,8 @@ describe("csaLayers", () => {
   });
 
   it("builds no filter when nothing is selected", () => {
-    // Mirrors `buildHiddenCsaFilter([])`: the no-op case is `undefined`, and callers are expected
-    // not to render the highlight layer at all rather than pass this through to MapLibre.
+    // The no-op case is `undefined`, and callers are expected not to render the highlight layer
+    // at all rather than pass this through to MapLibre.
     expect(buildSelectedCsaFilter(null)).toBeUndefined();
   });
 

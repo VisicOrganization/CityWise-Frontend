@@ -1,5 +1,3 @@
-import type { CsaRow } from "./csaIndex";
-
 /**
  * Jurisdiction-specific presets (currently just LA Council District 2) deliberately isolated in
  * their own module: adding another district, or another city's council map entirely, only ever
@@ -41,33 +39,8 @@ export const COUNCIL_DISTRICTS: CouncilDistrict[] = [
   },
 ];
 
-/** Hides every row NOT in the district, so selecting it leaves exactly the district's CSAs visible. */
-export function buildHiddenForDistrict(rows: CsaRow[], district: CouncilDistrict): Set<string> {
-  const visible = new Set(district.csaLabels);
-  return new Set(rows.filter((row) => !visible.has(row.CSA_Label)).map((row) => row.CSA_Label));
-}
-
-/**
- * True iff `hidden` is exactly the hidden-set `buildHiddenForDistrict` would produce for this
- * district — i.e. the live neighborhood filter still matches the district preset exactly, not
- * approximately. Used by the left-panel district readout (`HomelessCountPage.tsx`) to decide
- * whether to follow the user's current filter or fall back to a fixed default: if they have
- * hand-edited a checkbox since picking the preset, this goes false and the readout falls back
- * rather than trying to guess which district they meant.
- */
-export function isHiddenSetForDistrict(
-  hidden: Set<string>,
-  rows: CsaRow[],
-  district: CouncilDistrict,
-): boolean {
-  const expected = buildHiddenForDistrict(rows, district);
-  if (expected.size !== hidden.size) {
-    return false;
-  }
-  for (const label of expected) {
-    if (!hidden.has(label)) {
-      return false;
-    }
-  }
-  return true;
-}
+// `buildHiddenForDistrict` / `isHiddenSetForDistrict` lived here to translate a district into the
+// 297 labels a user-editable neighborhood filter had to hide, and to tell whether the live filter
+// still matched a preset. There is no such filter any more — `HomelessCountPage` names this
+// district's 7 `csaLabels` directly (`buildVisibleCsaFilter`) — so both are gone rather than kept
+// as a hidden-set vocabulary nothing speaks.

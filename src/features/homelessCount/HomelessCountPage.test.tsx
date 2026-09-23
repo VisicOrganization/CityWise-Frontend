@@ -10,8 +10,8 @@ import {
   COUNCIL_DISTRICTS_GEOJSON_PATH,
   resetCouncilDistrictBoundaryCacheForTests,
 } from "./councilDistrictBoundary";
-import { buildHiddenForDistrict, COUNCIL_DISTRICTS } from "./councilDistricts";
-import { resetCsaIndexCacheForTests, type CsaRow } from "./csaIndex";
+import { COUNCIL_DISTRICTS } from "./councilDistricts";
+import { resetCsaIndexCacheForTests } from "./csaIndex";
 import { DATA_SOURCES } from "./dataSources";
 import { ENCAMPMENT_GEOJSON_PATH, resetEncampmentReportsCacheForTests } from "./encampmentLayers";
 import { HomelessCountPage } from "./HomelessCountPage";
@@ -22,18 +22,15 @@ const VENICE = "Los Angeles - Venice";
 // and "hovering the selected feature" needs a feature that IS the click card's own label (VENICE).
 const HOLLYWOOD = "Los Angeles - Hollywood";
 
-// Every filter `buildHiddenCsaFilter` returns now requires this, fail-safe against tile features
-// with no usable `CSA_Label` (see `csaLayers.ts`) — there is no longer an "undefined/no filter"
-// case, even when nothing is hidden.
-const HAS_CSA_LABEL = ["==", ["typeof", ["get", "CSA_Label"]], "string"];
+const CD2 = COUNCIL_DISTRICTS.find((district) => district.id === "cd2")!;
 
-function hiddenCsaFilterJson(hiddenLabels: string[]): string {
-  return JSON.stringify([
-    "all",
-    HAS_CSA_LABEL,
-    ["!", ["in", ["get", "CSA_Label"], ["literal", hiddenLabels]]],
-  ]);
-}
+/** The one filter the page now hands MapLibre: exactly CD2's labels, and only features whose
+ * `CSA_Label` is a usable string (see `buildVisibleCsaFilter`). */
+const CD2_FILTER_JSON = JSON.stringify([
+  "all",
+  ["==", ["typeof", ["get", "CSA_Label"]], "string"],
+  ["in", ["get", "CSA_Label"], ["literal", CD2.csaLabels]],
+]);
 
 vi.mock("react-map-gl/maplibre", () => ({
   default: React.forwardRef(function MockMap(
@@ -201,45 +198,6 @@ vi.mock("react-map-gl/maplibre", () => ({
   ),
 }));
 
-// The filter section is a sibling component with its own tests; stubbing it keeps these
-// assertions on the page's filter wiring rather than on the section's internal DOM.
-vi.mock("./CsaFilterSection", () => ({
-  CsaFilterSection: ({
-    rows,
-    hiddenLabels,
-    onHiddenChange,
-  }: {
-    rows: CsaRow[];
-    hiddenLabels: Set<string>;
-    onHiddenChange: (next: Set<string>) => void;
-  }) => (
-    <div>
-      <span data-testid="stub-row-count">{rows.length}</span>
-      <span data-testid="stub-hidden-count">{hiddenLabels.size}</span>
-      <button type="button" data-testid="stub-hide-venice" onClick={() => onHiddenChange(new Set([VENICE]))}>
-        hide venice
-      </button>
-      <button type="button" data-testid="stub-show-all" onClick={() => onHiddenChange(new Set())}>
-        show all
-      </button>
-      {/* Stands in for the real "District 2" button, which lives in CsaFilterSection itself
-          (stubbed out above); exercises the real `buildHiddenForDistrict` against whatever rows
-          the page loaded, same as the real dropdown would. */}
-      <button
-        type="button"
-        data-testid="stub-select-cd2"
-        onClick={() => onHiddenChange(buildHiddenForDistrict(rows, COUNCIL_DISTRICTS[0]))}
-      >
-        District 2
-      </button>
-    </div>
-  ),
-}));
-
-// Mirrors hiddenCsaStorage.ts's own (unexported) key — kept in sync manually since there is
-// nothing to import it from.
-const HIDDEN_CSA_STORAGE_KEY = "citywise:homelessCountHidden";
-
 const fetchMock = vi.fn();
 vi.stubGlobal("fetch", fetchMock);
 
@@ -331,9 +289,6 @@ describe("HomelessCountPage", () => {
     // The index path is resolved at module scope, so an unstubbed fetch renders the empty state
     // and every assertion below fails for the wrong reason.
     mockFetchByPath(indexPayload);
-    // A stale hidden set from a previous test would make the "no filter by default" assertion
-    // below fail for the wrong reason now that the page persists to localStorage.
-    localStorage.clear();
   });
 
   afterEach(() => {
@@ -349,65 +304,19 @@ describe("HomelessCountPage", () => {
     expect(
       screen.getByText(/Point-in-Time count by Countywide Statistical Area/),
     ).toHaveTextContent("Los Angeles Homeless Services Authority (LAHSA)");
-    expect(await screen.findByTestId("stub-row-count")).toHaveTextContent("2");
   });
 
-  it("defaults to District 2 on a fresh load with nothing stored", async () => {
-    // The 2-row `indexPayload` can't distinguish "District 2" from "everything hidden" — only
-    // the real 304-row index proves exactly the 7 District 2 CSAs stayed visible.
+  it("draws exactly District 2's seven neighborhoods, with no way to change that", async () => {
+    // The page is locked to CD2: the filter names the labels to keep rather than the 297 to
+    // hide, and there is no control anywhere on the page that can widen it.
     fetchMock.mockImplementation(() => Promise.resolve(new Response(JSON.stringify(shippedIndexPayload))));
     renderPage();
 
-    // The default is applied in an effect that runs *after* the rows-loaded render, one tick
-    // later than the dropdown stub itself appears — `findByTestId` alone would resolve too early.
-    await waitFor(() => expect(screen.getByTestId("stub-hidden-count")).toHaveTextContent("297"));
-    const hiddenInFilter: string[] = JSON.parse(
-      screen.getByTestId("layer-csa-fill").getAttribute("data-filter") ?? "null",
-    )[2][1][2][1];
-    expect(hiddenInFilter).toHaveLength(297);
-    for (const label of COUNCIL_DISTRICTS[0].csaLabels) {
-      expect(hiddenInFilter).not.toContain(label);
-    }
-  });
-
-  it("shows every neighborhood when the stored selection is an explicit empty array", async () => {
-    // An empty array is a real "Select all" choice, not "nothing was ever stored" — it must NOT
-    // be clobbered back to the District 2 default. This is the regression guard for that bug.
-    localStorage.setItem(HIDDEN_CSA_STORAGE_KEY, JSON.stringify([]));
-    fetchMock.mockImplementation(() => Promise.resolve(new Response(JSON.stringify(shippedIndexPayload))));
-    renderPage();
-
-    expect(await screen.findByTestId("stub-hidden-count")).toHaveTextContent("0");
-    // No longer "no filter at all" — every feature must still carry a real `CSA_Label` to render,
-    // even with nothing explicitly hidden (see `buildHiddenCsaFilter` in `csaLayers.ts`).
-    const expected = JSON.stringify(HAS_CSA_LABEL);
-    expect(screen.getByTestId("layer-csa-fill")).toHaveAttribute("data-filter", expected);
-    expect(screen.getByTestId("layer-csa-outline")).toHaveAttribute("data-filter", expected);
-  });
-
-  it("restores a non-empty stored selection exactly, without applying the District 2 default", async () => {
-    localStorage.setItem(HIDDEN_CSA_STORAGE_KEY, JSON.stringify([VENICE]));
-    renderPage();
-
-    // If the default had been applied instead, this would be 2 (both indexPayload rows, since
-    // neither is a District 2 CSA), not the 1 label that was actually stored.
-    expect(await screen.findByTestId("stub-hidden-count")).toHaveTextContent("1");
-    expect(screen.getByTestId("layer-csa-fill")).toHaveAttribute("data-filter", hiddenCsaFilterJson([VENICE]));
-  });
-
-  it("excludes a hidden neighborhood, and restores it when it is shown again", async () => {
-    const user = userEvent.setup();
-    renderPage();
-
-    await user.click(await screen.findByTestId("stub-hide-venice"));
-    const expected = hiddenCsaFilterJson([VENICE]);
-    expect(screen.getByTestId("layer-csa-fill")).toHaveAttribute("data-filter", expected);
-    expect(screen.getByTestId("layer-csa-outline")).toHaveAttribute("data-filter", expected);
-
-    await user.click(screen.getByTestId("stub-show-all"));
-    const allShown = JSON.stringify(HAS_CSA_LABEL);
-    expect(screen.getByTestId("layer-csa-fill")).toHaveAttribute("data-filter", allShown);
-    expect(screen.getByTestId("layer-csa-outline")).toHaveAttribute("data-filter", allShown);
+    expect(await screen.findByTestId("layer-csa-fill")).toHaveAttribute("data-filter", CD2_FILTER_JSON);
+    expect(screen.getByTestId("layer-csa-outline")).toHaveAttribute("data-filter", CD2_FILTER_JSON);
+    expect(CD2.csaLabels).toHaveLength(7);
+    expect(screen.queryByLabelText("Filter neighborhoods")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "District 2" })).not.toBeInTheDocument();
   });
 
   it("mounts the CSA layer on a geojson source, not a vector tile source, with no source-layer prop", async () => {
@@ -439,19 +348,6 @@ describe("HomelessCountPage", () => {
     expect(popup).toHaveTextContent("47 per sq. mile");
     expect(popup).toHaveTextContent("LAHSA 2020 Greater Los Angeles Homeless Count");
     expect(popup).toHaveTextContent("2020 Point-in-Time count");
-  });
-
-  it("clears the selection when the selected neighborhood becomes hidden", async () => {
-    // Edge case: selecting a CSA and then hiding it via the filter must not leave the highlight
-    // outlining a polygon that is no longer drawn, or the card describing a now-invisible area.
-    const user = userEvent.setup();
-    renderPage();
-
-    await user.click(screen.getByTestId("mock-csa-click"));
-    expect(await screen.findByTestId("mock-popup")).toHaveTextContent(VENICE);
-
-    await user.click(screen.getByTestId("stub-hide-venice"));
-    expect(screen.queryByTestId("mock-popup")).not.toBeInTheDocument();
   });
 
   it("shows a hover label naming the hovered neighborhood", async () => {
@@ -486,26 +382,6 @@ describe("HomelessCountPage", () => {
 
     await user.click(screen.getByTestId("mock-csa-mouseleave"));
     expect(screen.queryByTestId("mock-popup")).not.toBeInTheDocument();
-  });
-
-  it("hides every non-District-2 label when the District 2 preset is picked", async () => {
-    fetchMock.mockImplementation(() => Promise.resolve(new Response(JSON.stringify(shippedIndexPayload))));
-    const user = userEvent.setup();
-    renderPage();
-
-    await user.click(await screen.findByTestId("stub-select-cd2"));
-
-    expect(await screen.findByTestId("stub-hidden-count")).toHaveTextContent("297");
-    // The map filter hides the *complement* of the district (see `buildHiddenCsaFilter`), so the
-    // district's own 7 labels must be absent from it, not present.
-    const filter = JSON.parse(
-      screen.getByTestId("layer-csa-fill").getAttribute("data-filter") ?? "null",
-    );
-    const hiddenInFilter: string[] = filter[2][1][2][1];
-    expect(hiddenInFilter).toHaveLength(297);
-    for (const label of COUNCIL_DISTRICTS[0].csaLabels) {
-      expect(hiddenInFilter).not.toContain(label);
-    }
   });
 
   it("unmounts the shelters layer's source when its toggle is switched off", async () => {
@@ -632,19 +508,6 @@ describe("HomelessCountPage", () => {
       await user.click(screen.getByTestId("mock-encampment-cluster-click"));
       expect(screen.queryByTestId("mock-popup")).not.toBeInTheDocument();
     });
-  });
-
-  it("restores the hidden set after the page unmounts and remounts", async () => {
-    fetchMock.mockImplementation(() => Promise.resolve(new Response(JSON.stringify(shippedIndexPayload))));
-    const user = userEvent.setup();
-    const { unmount } = renderPage();
-
-    await user.click(await screen.findByTestId("stub-select-cd2"));
-    expect(await screen.findByTestId("stub-hidden-count")).toHaveTextContent("297");
-    unmount();
-
-    renderPage();
-    expect(await screen.findByTestId("stub-hidden-count")).toHaveTextContent("297");
   });
 
   describe("council district boundary layer", () => {

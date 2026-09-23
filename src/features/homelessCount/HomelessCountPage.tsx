@@ -11,12 +11,7 @@ import Map, {
 
 import { LIGHT_BASE_MAP_STYLE } from "../../shared/map/lightBaseMapStyle";
 import { AppShell } from "../../shared/ui/AppShell";
-import {
-  buildHiddenForDistrict,
-  COUNCIL_DISTRICTS,
-  isHiddenSetForDistrict,
-  type CouncilDistrict,
-} from "./councilDistricts";
+import { COUNCIL_DISTRICTS } from "./councilDistricts";
 import {
   districtBoundaryLineLayer,
   DISTRICT_BOUNDARY_SOURCE_ID,
@@ -25,7 +20,6 @@ import {
 } from "./councilDistrictBoundary";
 import { CsaDetailPopup } from "./CsaDetailPopup";
 import { CsaDistrictSummary } from "./CsaDistrictSummary";
-import { CsaFilterSection } from "./CsaFilterSection";
 import { useCsaIndex } from "./csaIndex";
 import { DataSourcesSection } from "./DataSourcesSection";
 import { EncampmentMonthFilter } from "./EncampmentMonthFilter";
@@ -44,9 +38,8 @@ import {
 } from "./encampmentLayers";
 import { HomelessCountLegend } from "./HomelessCountLegend";
 import { MapInfoPanel } from "./MapInfoPanel";
-import { readHiddenCsaLabels, writeHiddenCsaLabels } from "./hiddenCsaStorage";
 import {
-  buildHiddenCsaFilter,
+  buildVisibleCsaFilter,
   buildSelectedCsaFilter,
   csaFillLayer,
   csaHighlightLayer,
@@ -132,16 +125,21 @@ function polygonCenter(geometry: unknown): { longitude: number; latitude: number
   return { longitude: (minLng + maxLng) / 2, latitude: (minLat + maxLat) / 2 };
 }
 
-/** This demo is scoped to Council District 2, so it's also the default filter and viewport. */
-const DEFAULT_DISTRICT = COUNCIL_DISTRICTS.find((district) => district.id === "cd2")!;
+/** This demo is scoped to Council District 2 — the only district, the only viewport, and the only
+ * set of CSAs the map ever draws. There is no picker: see `CSA_FILTER`. */
+const DISTRICT = COUNCIL_DISTRICTS.find((district) => district.id === "cd2")!;
 
-const MAP_FIT_BOUNDS_PADDING = 24;
+/** Fixed for the life of the page, so it is built once at module scope rather than memoized off
+ * state that can no longer change. The 7 labels are named positively (`buildVisibleCsaFilter`),
+ * not as the complement of the other 297: the district is the thing this page is about, and the
+ * filter should say so. */
+const CSA_FILTER = buildVisibleCsaFilter(DISTRICT.csaLabels);
 
-/** Opens fitted to the default district's extent rather than a fixed lng/lat/zoom, so the
- * default viewport and the default filter agree. */
+/** Opens fitted to the district's extent rather than a fixed lng/lat/zoom, so the viewport and
+ * the filter agree. */
 const INITIAL_VIEW_STATE = {
-  bounds: DEFAULT_DISTRICT.bounds,
-  fitBoundsOptions: { padding: MAP_FIT_BOUNDS_PADDING },
+  bounds: DISTRICT.bounds,
+  fitBoundsOptions: { padding: 24 },
 };
 
 interface SelectedCsa {
@@ -172,12 +170,6 @@ interface SelectedEncampment {
 export function HomelessCountPage() {
   const { rows, error: indexError, isLoading } = useCsaIndex();
   const mapRef = useRef<MapRef>(null);
-  /** Computed once, on mount: `null` means no explicit choice was ever stored, as opposed to a
-   * stored empty array ("show everything"), which must NOT be treated the same. */
-  const [storedHidden] = useState(() => readHiddenCsaLabels());
-  /** Empty set = all 304 neighborhoods shown. Falls back to empty until `rows` load and the
-   * default-district effect below can compute the real default (it needs every CSA label). */
-  const [hidden, setHidden] = useState<Set<string>>(() => storedHidden ?? new Set());
   const [selected, setSelected] = useState<SelectedCsa | null>(null);
   const [selectedShelter, setSelectedShelter] = useState<SelectedShelter | null>(null);
   const [selectedEncampment, setSelectedEncampment] = useState<SelectedEncampment | null>(null);
@@ -212,14 +204,6 @@ export function HomelessCountPage() {
     [encampmentCollection, hiddenEncampmentMonths],
   );
   const districtBoundaryFeature = useCouncilDistrictBoundary(showDistrictBoundary);
-  const needsDefaultDistrictRef = useRef(storedHidden === null);
-  /** Only set by a real click through `updateHidden`, never by the default-district effect —
-   * gates the persistence effect below so applying the *default* is never written back as if it
-   * were an explicit choice (that would make "nothing stored" indistinguishable from "user
-   * picked CD2" on the next load, freezing today's default into storage forever). */
-  const hasUserActionRef = useRef(false);
-
-  const filter = useMemo(() => buildHiddenCsaFilter([...hidden]), [hidden]);
 
   /** The committed 304-feature collection, loaded once (see `loadCsaGeojsonOnce`) and shared by
    * the map source below and the district readout's live split — neither re-fetches it. */
@@ -244,67 +228,6 @@ export function HomelessCountPage() {
       ignore = true;
     };
   }, []);
-
-  /** Falls back to the default district the moment the live filter no longer matches any preset
-   * exactly — e.g. the user hand-edited a checkbox after picking District 2. Deliberately no
-   * attempt to infer which district was "meant"; see `isHiddenSetForDistrict`. */
-  const activeDistrict = useMemo(() => {
-    if (!rows) {
-      return DEFAULT_DISTRICT;
-    }
-    return (
-      COUNCIL_DISTRICTS.find((district) => isHiddenSetForDistrict(hidden, rows, district)) ??
-      DEFAULT_DISTRICT
-    );
-  }, [rows, hidden]);
-
-  // Applies the default district exactly once, as soon as every CSA label is known — the
-  // `useState` initialiser above runs before `rows` has loaded, so it can't compute this.
-  useEffect(() => {
-    if (!rows || !needsDefaultDistrictRef.current) {
-      return;
-    }
-    needsDefaultDistrictRef.current = false;
-    setHidden(buildHiddenForDistrict(rows, DEFAULT_DISTRICT));
-  }, [rows]);
-
-  // Persists across reloads and route changes (React Router unmounts this page on navigation).
-  useEffect(() => {
-    if (!hasUserActionRef.current) {
-      return;
-    }
-    writeHiddenCsaLabels(hidden);
-  }, [hidden]);
-
-  // Edge case: a CSA can be selected and then hidden via the neighborhood filter. Left alone,
-  // the highlight layer would outline a polygon that is no longer drawn, and the detail card
-  // would keep describing an area the map no longer shows — so hiding it also clears the
-  // selection.
-  //
-  // Gated on `hasUserActionRef`, same guard the persistence effect above already uses: this must
-  // fire only for an explicit hide (checkbox/dropdown), not for the one-time default-district
-  // effect populating `hidden` for the first time. Also keyed off `hidden` alone (via the
-  // functional `setSelected` updater), not `[hidden, selected]` — it must fire only when a
-  // selection transitions from visible to hidden, not merely whenever something new gets
-  // selected.
-  useEffect(() => {
-    if (!hasUserActionRef.current) {
-      return;
-    }
-    setSelected((current) => {
-      const label = typeof current?.properties.CSA_Label === "string" ? current.properties.CSA_Label : null;
-      return label && hidden.has(label) ? null : current;
-    });
-  }, [hidden]);
-
-  function updateHidden(next: Set<string>) {
-    hasUserActionRef.current = true;
-    setHidden(next);
-  }
-
-  function handleSelectDistrict(district: CouncilDistrict) {
-    mapRef.current?.fitBounds?.(district.bounds, { padding: MAP_FIT_BOUNDS_PADDING });
-  }
 
   /** The one place a CSA becomes "selected" — opens the detail card and (via `selectedLabel`
    * below) the orange highlight. Both a real polygon click (`handleMapClick`) and a district
@@ -385,7 +308,7 @@ export function HomelessCountPage() {
     // real polygon centroid. `CsaDetailPopup`'s existing "—" placeholders already cover every
     // other field being absent.
     const row = rows?.find((candidate) => candidate.CSA_Label === label);
-    const [[west, south], [east, north]] = activeDistrict.bounds;
+    const [[west, south], [east, north]] = DISTRICT.bounds;
     selectCsa(
       row ? { CSA_Label: label, Total_Pop: row.Total_Pop } : { CSA_Label: label },
       (west + east) / 2,
@@ -508,19 +431,10 @@ export function HomelessCountPage() {
 
             {rows ? (
               <CsaDistrictSummary
-                district={activeDistrict}
+                district={DISTRICT}
                 rows={rows}
                 liveAttributesByLabel={csaAttrsByLabel}
                 onSelectLabel={handleSelectCsaFromList}
-              />
-            ) : null}
-
-            {rows ? (
-              <CsaFilterSection
-                rows={rows}
-                hiddenLabels={hidden}
-                onHiddenChange={updateHidden}
-                onSelectDistrict={handleSelectDistrict}
               />
             ) : (
               <p className="homeless-count-controls-status">
@@ -612,8 +526,8 @@ export function HomelessCountPage() {
                 data={csaCollection}
                 attribution={CSA_ATTRIBUTION}
               >
-                <Layer {...csaFillLayer} filter={filter} beforeId={OVERLAY_ANCHOR_LAYER_ID} />
-                <Layer {...csaOutlineLayer} filter={filter} beforeId={OVERLAY_ANCHOR_LAYER_ID} />
+                <Layer {...csaFillLayer} filter={CSA_FILTER} beforeId={OVERLAY_ANCHOR_LAYER_ID} />
+                <Layer {...csaOutlineLayer} filter={CSA_FILTER} beforeId={OVERLAY_ANCHOR_LAYER_ID} />
                 {selectedLabel ? (
                   <Layer
                     {...csaHighlightLayer}

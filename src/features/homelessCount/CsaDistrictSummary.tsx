@@ -4,9 +4,9 @@ import { stripCsaPrefix, type CsaRow } from "./csaIndex";
 /**
  * Left-panel readout of one council district's neighborhoods, so the district picture is visible
  * without clicking each polygon one at a time. Lives directly in the panel (see
- * `HomelessCountPage.tsx`), between the Layers section and the neighborhood filter — always
- * showing exactly one district's rows, never a picker of its own (see `HomelessCountPage.tsx`'s
- * `activeDistrict` for how that one district is chosen).
+ * `HomelessCountPage.tsx`), under the Layers section — always showing exactly one district's
+ * rows, never a picker of its own. The page is locked to Council District 2 (see its
+ * `DISTRICT`), so that is the only district this ever receives.
  *
  * CRITICAL, read before touching this file: this section prints NO summed total across its rows,
  * anywhere, for any reason, and that is deliberate, not an oversight. LAHSA's own service

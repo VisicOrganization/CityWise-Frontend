@@ -42,9 +42,9 @@ import type {
  *
  * NOTE: this file now carries `CSA_Label` and `Total_Pop` for all 304 areas, which makes it
  * partially redundant with `public/data/lahsa-2020-csa-index.json` (see `CSA_INDEX_PATH`). The
- * index still backs the neighborhood filter list and is deliberately left in place: collapsing
- * the two would make the filter dropdown wait on a 1.1 MB download it does not otherwise need,
- * and that is a separate decision from this one.
+ * index still backs the district readout and is deliberately left in place: collapsing the two
+ * would make that readout wait on a 1.1 MB download it does not otherwise need, and that is a
+ * separate decision from this one.
  */
 export const CSA_GEOJSON_PATH = new URL("data/lahsa-2020-csa.geojson", window.location.origin + import.meta.env.BASE_URL).toString();
 
@@ -105,7 +105,7 @@ export function loadCsaGeojsonOnce(): Promise<CsaFeatureCollection> {
 /**
  * Attributes keyed by `CSA_Label`, for the left panel's readout. Skips any feature without a
  * usable string label rather than keying on `undefined` — same fail-safe stance as
- * `buildHiddenCsaFilter`, and the reason a caller can treat a hit here as real data.
+ * `buildVisibleCsaFilter`, and the reason a caller can treat a hit here as real data.
  */
 export function csaPropertiesByLabel(
   collection: CsaFeatureCollection | null,
@@ -273,7 +273,7 @@ export const csaHighlightLayer: Omit<LineLayerSpecification, "source"> = {
  * Builds the highlight layer's filter from the selected CSA's label. `null` (nothing selected)
  * returns `undefined` rather than a filter that matches nothing — callers are expected to not
  * render the highlight layer at all when nothing is selected (see `HomelessCountPage.tsx`), so
- * this never actually reaches MapLibre in the null case. Unlike `buildHiddenCsaFilter`, this one
+ * this never actually reaches MapLibre in the null case. Unlike `buildVisibleCsaFilter`, this one
  * has no fail-open risk to guard against: it only ever runs against a label a real feature
  * already produced (a click or a district preset), never against tile features in general, so
  * there is no "no-op" case for it to get wrong.
@@ -286,43 +286,29 @@ export function buildSelectedCsaFilter(selectedLabel: string | null): FilterSpec
 }
 
 /**
- * Filters the *hidden* set, not the visible one — but every filter this returns also requires
- * `CSA_Label` to actually be a usable string, which is the part that used to be missing.
+ * Names the CSAs to KEEP, not the ones to drop. This replaced an exclusion-list filter built from
+ * a user-editable hidden set, now that the page is locked to one council district's 7 labels.
  *
- * The exclusion-list shape used to short-circuit to literally `undefined` ("no filter") when
- * nothing was hidden, on the theory that "everything shown" needs no special case and a
- * 304-entry hidden list correctly renders nothing for free. That reasoning assumed every feature
- * in the source is a CSA carrying a `CSA_Label` string — which was false for the old tile
- * source, whose layer also carried non-CSA administrative polygons (council districts,
+ * The direction matters beyond tidiness. The exclusion filter failed *open*: `["in",
+ * ["get","CSA_Label"], ["literal", hiddenLabels]]` is `false` for a feature carrying no
+ * `CSA_Label` (it can't be "in" a list of strings), so `!false` rendered it — and the old tile
+ * source's layer really did carry non-CSA administrative polygons (council districts,
  * supervisorial districts, service planning areas, incorporated cities, the county outline) with
- * no `CSA_Label` attribute at all. `["in", ["get","CSA_Label"], ["literal", hiddenLabels]]` is
- * `false` for a feature with no `CSA_Label` (it can't be "in" a list of strings), so `!false`
- * was `true` and the feature rendered — fail-*open*. That is exactly backwards for a page whose
- * requirement is "only ever show CD2": a feature the filter can't positively identify as a kept
- * CSA must be hidden, not shown, and the same holds with nothing hidden at all — "select all"
- * must mean "all 304 CSAs", not "everything in the source".
+ * no such attribute, which drew right through the district scoping. An inclusion filter cannot
+ * fail that way: a feature that isn't positively identified as one of the named CSAs is simply
+ * not drawn.
  *
- * The committed GeoJSON contains only the 304 labelled CSAs, so this guard is not load-bearing
- * for today's data either (same standing as the `to-number` wrappers above). It stays because
- * the failure it prevents is silent and the direction it fails in is the safe one: an
- * unidentifiable feature is hidden rather than drawn over a district the user scoped the map to.
+ * The explicit `typeof` guard is kept anyway, as defense in depth rather than as the load-bearing
+ * part it used to be — the committed GeoJSON contains only the 304 labelled CSAs (same standing
+ * as the `to-number` wrappers above), and `in` would already reject a non-string.
  *
- * So there is no longer an unconditional no-op case: every returned filter requires
- * `CSA_Label` to be a string, and additionally excludes anything in `hiddenLabels`. "Clear all"
- * (a 304-entry `hiddenLabels`) still renders nothing, same as before — that part of the
- * original reasoning still holds.
- *
- * Still uses the expression form of `in` (`["in", needle, ["literal", […]]]`), not the legacy
- * filter form — only the expression form composes with `!`/`all`.
+ * Uses the expression form of `in` (`["in", needle, ["literal", […]]]`), not the legacy filter
+ * form — only the expression form composes with `all`.
  */
-export function buildHiddenCsaFilter(hiddenLabels: string[]): FilterSpecification {
-  const hasCsaLabel = ["==", ["typeof", ["get", "CSA_Label"]], "string"] as ExpressionSpecification;
-  if (hiddenLabels.length === 0) {
-    return hasCsaLabel as FilterSpecification;
-  }
+export function buildVisibleCsaFilter(visibleLabels: string[]): FilterSpecification {
   return [
     "all",
-    hasCsaLabel,
-    ["!", ["in", ["get", "CSA_Label"], ["literal", hiddenLabels]]],
+    ["==", ["typeof", ["get", "CSA_Label"]], "string"] as ExpressionSpecification,
+    ["in", ["get", "CSA_Label"], ["literal", visibleLabels]],
   ] as FilterSpecification;
 }
