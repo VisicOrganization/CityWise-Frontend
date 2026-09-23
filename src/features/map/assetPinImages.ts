@@ -31,15 +31,17 @@ export const PIN_SHADOW_BLUR_PX = 4;
 export const PIN_SHADOW_OFFSET_Y_PX = 2;
 
 /**
- * Margin around the artwork for the baked shadow: the blur's own reach (a 4px radius is twice
- * the 2px Gaussian deviation, so the tail dies out ~2 deviations past it) plus the drop.
- * Derived rather than hardcoded — at 8px the tail lands exactly on the canvas edge, so a later
- * blur increase would clip the shadow with nothing to catch it.
+ * Margin around the artwork for the baked shadow: 3 Gaussian deviations (where the tail is
+ * spent) plus the drop. Canvas reads `shadowBlur` as twice the deviation, so 3σ is 1.5 × blur.
+ *
+ * Derived rather than hardcoded, because the tail lands right at the canvas edge: raising the
+ * blur without the margin clips the shadow, and nothing on screen says so. The current numbers
+ * give the same 8px this started with, so the registered image is unchanged.
  *
  * Applied on all four sides rather than only where the shadow falls, because a symbol is
  * anchored by its centre and an asymmetric margin would walk every pin off its coordinate.
  */
-const PIN_SHADOW_PAD_PX = PIN_SHADOW_BLUR_PX + PIN_SHADOW_OFFSET_Y_PX + 2;
+const PIN_SHADOW_PAD_PX = PIN_SHADOW_BLUR_PX * 1.5 + PIN_SHADOW_OFFSET_Y_PX;
 /** What MapLibre sees as the image's CSS width: the artwork plus that margin. */
 export const PIN_BOX_PX = PIN_SOURCE_PX + PIN_SHADOW_PAD_PX * 2;
 export const PIN_RENDER_PX = PIN_BOX_PX * PIN_PIXEL_RATIO;

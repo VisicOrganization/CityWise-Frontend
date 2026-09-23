@@ -125,8 +125,11 @@ describe("pin image registry", () => {
     // it is the artwork inside it that the layers divide by.
     expect(PIN_SOURCE_PX).toBe(ICON_RENDER_PX);
     // The margin has to outlast the shadow it exists for, or the tail is clipped at the canvas
-    // edge — invisible in a unit test and easy to introduce by nudging the blur.
-    expect(PIN_BOX_PX - PIN_SOURCE_PX).toBeGreaterThan(2 * (PIN_SHADOW_BLUR_PX + PIN_SHADOW_OFFSET_Y_PX));
+    // edge — invisible in a unit test and easy to introduce by nudging the blur. Stated as the
+    // requirement (3σ past the drop, and canvas blur is 2σ) rather than by importing the pad, so
+    // replacing the derivation with a literal is what this catches.
+    const reachPerSide = PIN_SHADOW_BLUR_PX * 1.5 + PIN_SHADOW_OFFSET_Y_PX;
+    expect(PIN_BOX_PX - PIN_SOURCE_PX).toBeGreaterThanOrEqual(2 * reachPerSide);
   });
 
   // Same URL construction as the geojson loads, so a subpath deploy resolves the artwork.
