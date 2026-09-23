@@ -9088,12 +9088,15 @@ a {
   border-bottom: 1px solid rgba(23, 50, 77, 0.1);
 }
 
+/* Weight and ink, not size: at 1.2rem this one figure was half again the height of every other
+   row and read as a separate heading rather than as the first of a set. The rule above already
+   separates it, so it stays at the stats' own 0.78rem and is set apart by the ramp's darkest
+   green and a heavier weight. */
 .homeless-count-popup-stat:first-child dd {
   /* The dark end of the choropleth's own ramp (`DENSITY_LEGEND_STOPS`). */
   color: #00441b;
   font-family: "Public Sans", "Schibsted Grotesk", "Segoe UI", sans-serif;
-  font-size: 1.2rem;
-  line-height: 1.15;
+  font-weight: 700;
 }
 
 /* Groups the three per-sq-mile stats (total/unsheltered/sheltered) into one visual family,

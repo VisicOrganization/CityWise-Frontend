@@ -3,9 +3,8 @@
  *
  * Follows `CsaDetailPopup`'s defensive-read pattern: values arrive from a third-party tile, not
  * our own types, so every field is read defensively. `readText` is copied here rather than
- * imported from `CsaDetailPopup` (that module doesn't export it) — the same call made for
- * `TristateCheckbox`, which is copied verbatim into `CsaFilterSection.tsx` rather than shared,
- * since these are small, stateless shims with nothing to drift. `readNumber` isn't copied: none
+ * imported from `CsaDetailPopup` (that module doesn't export it) — it is a small, stateless shim
+ * with nothing to drift. `readNumber` isn't copied: none
  * of the fields this card renders are numeric, and an unused helper is worse than no helper.
  *
  * Unlike the CSA card's fixed stat rows, every field here is genuinely optional per record, so
