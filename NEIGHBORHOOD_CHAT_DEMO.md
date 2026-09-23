@@ -23,7 +23,7 @@ The model does not provide addresses, coordinates, distance, URLs, IDs, or factu
 
 ## Run locally
 
-The frontend `.env` uses `VITE_API_BASE_URL=http://localhost:18100`. The backend worktree is `/private/tmp/citywise-cd2-neighborhood-backend` on branch `codex/cd2-neighborhood-chat`, created from the latest `origin/main`. The existing backend checkout and its uncommitted work were not changed.
+The frontend `.env` uses `VITE_API_BASE_URL=http://localhost:18100`. A local database holds no council files, so `.env` also sets `VITE_PROJECTS_API_BASE_URL=https://dev.api.citywise.app`: the legislation pins under **Also show council file pins** and their detail panels read from the deployed backend, while the chat endpoint stays local. Unset it and the pins disappear, because there are no local projects to draw. The backend worktree is `/private/tmp/citywise-cd2-neighborhood-backend` on branch `codex/cd2-neighborhood-chat`, created from the latest `origin/main`. The existing backend checkout and its uncommitted work were not changed.
 
 Start the isolated backend and database from that worktree:
 

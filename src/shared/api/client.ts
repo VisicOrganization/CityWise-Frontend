@@ -18,6 +18,27 @@ function getApiBaseUrl(): string {
   return trimmed || "http://localhost:18100";
 }
 
+/**
+ * Base URL for the two council-file (project) endpoints, which may point at a different backend
+ * from the rest of the app.
+ *
+ * The CD2 neighborhoods demo runs against a local backend for `/neighborhood-chat/interpret`, but
+ * that local database holds no projects (`/districts/2/projects` returns 0), so the legislation
+ * pins were simply missing. Setting `VITE_PROJECTS_API_BASE_URL` points only the project reads at
+ * the deployed backend, which has the real CD2 council files, while everything else stays local.
+ * Unset, it is exactly `getApiBaseUrl()` and nothing changes.
+ */
+function getProjectsApiBaseUrl(): string {
+  const isVitest = typeof process !== "undefined" && Boolean(process.env.VITEST);
+  const fromProcess =
+    typeof process !== "undefined"
+      ? (process.env.VITE_PROJECTS_API_BASE_URL as string | undefined)
+      : undefined;
+  const fromImportMeta = import.meta.env.VITE_PROJECTS_API_BASE_URL as string | undefined;
+  const raw = (isVitest ? fromProcess : fromProcess ?? fromImportMeta) ?? "";
+  return raw.trim() || getApiBaseUrl();
+}
+
 // Bump the version whenever the API response shape changes so stale localStorage
 // payloads are ignored (v2: added project `affiliations`; v3: member-affiliation file
 // `has_geocode` + `role`).
@@ -165,13 +186,17 @@ export async function getDistrictProjects(
 ): Promise<DistrictProjectsResponse> {
   const hasGeocode = options?.hasGeocode ?? true;
   const boundaryFilter = options?.boundaryFilter ?? "none";
-  const cacheKey = `district-projects:${districtId}:${page}:${pageSize}:has_geocode=${hasGeocode}:boundary_filter=${boundaryFilter}`;
+  // Keyed by host as well: the projects base URL can differ from the rest of the app (see
+  // `getProjectsApiBaseUrl`), and without this an empty list cached from a local backend would
+  // keep being served after the demo is pointed at the deployed one.
+  const projectsBaseUrl = getProjectsApiBaseUrl();
+  const cacheKey = `district-projects:${projectsBaseUrl}:${districtId}:${page}:${pageSize}:has_geocode=${hasGeocode}:boundary_filter=${boundaryFilter}`;
   const cached = readFromCache<DistrictProjectsResponse>(cacheKey);
   if (cached) {
     return cached;
   }
 
-  const url = new URL(`/districts/${districtId}/projects`, getApiBaseUrl());
+  const url = new URL(`/districts/${districtId}/projects`, projectsBaseUrl);
   url.searchParams.set("page", String(page));
   url.searchParams.set("page_size", String(pageSize));
   url.searchParams.set("has_geocode", String(hasGeocode));
@@ -190,13 +215,14 @@ export async function getDistrictProjects(
 }
 
 export async function getProjectDetail(projectId: string): Promise<ProjectDetail> {
-  const cacheKey = `project-detail:${projectId}`;
+  const projectsBaseUrl = getProjectsApiBaseUrl();
+  const cacheKey = `project-detail:${projectsBaseUrl}:${projectId}`;
   const cached = readFromCache<ProjectDetail>(cacheKey);
   if (cached) {
     return cached;
   }
 
-  const url = new URL(`/projects/${projectId}`, getApiBaseUrl());
+  const url = new URL(`/projects/${projectId}`, projectsBaseUrl);
   const response = await fetch(url);
 
   if (!response.ok) {

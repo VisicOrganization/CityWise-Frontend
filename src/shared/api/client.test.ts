@@ -11,6 +11,56 @@ afterEach(() => {
 });
 
 describe("api client", () => {
+  describe("VITE_PROJECTS_API_BASE_URL", () => {
+    const original = process.env.VITE_PROJECTS_API_BASE_URL;
+
+    afterEach(() => {
+      if (original === undefined) {
+        delete process.env.VITE_PROJECTS_API_BASE_URL;
+      } else {
+        process.env.VITE_PROJECTS_API_BASE_URL = original;
+      }
+    });
+
+    function emptyProjectsResponse() {
+      return new Response(
+        JSON.stringify({ district_id: 2, page: 1, page_size: 1, total: 0, total_pages: 0, items: [] }),
+      );
+    }
+
+    it("reads project pins and detail from the override host, not the app's own API base", async () => {
+      process.env.VITE_PROJECTS_API_BASE_URL = "https://projects.example.test";
+      fetchMock.mockImplementation(() => Promise.resolve(emptyProjectsResponse()));
+      await getDistrictProjects(2, 1, 1);
+      expect(String(fetchMock.mock.calls[0][0])).toContain("https://projects.example.test/districts/2/projects");
+
+      fetchMock.mockResolvedValue(new Response(JSON.stringify({ project: { id: "25-0677" } })));
+      await getProjectDetail("25-0677");
+      expect(String(fetchMock.mock.calls[1][0])).toBe("https://projects.example.test/projects/25-0677");
+    });
+
+    it("falls back to the app's API base when the override is unset", async () => {
+      delete process.env.VITE_PROJECTS_API_BASE_URL;
+      fetchMock.mockImplementation(() => Promise.resolve(emptyProjectsResponse()));
+      await getDistrictProjects(2, 1, 1);
+      expect(String(fetchMock.mock.calls[0][0])).toContain("http://localhost:18100/districts/2/projects");
+    });
+
+    it("does not serve one host's cached projects for another host", async () => {
+      // The demo's local backend answers with zero projects; pointing at the deployed backend
+      // afterwards must re-request rather than replay that empty list.
+      delete process.env.VITE_PROJECTS_API_BASE_URL;
+      // A fresh Response per call: a body can only be read once.
+      fetchMock.mockImplementation(() => Promise.resolve(emptyProjectsResponse()));
+      await getDistrictProjects(2, 1, 1);
+
+      process.env.VITE_PROJECTS_API_BASE_URL = "https://projects.example.test";
+      await getDistrictProjects(2, 1, 1);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(String(fetchMock.mock.calls[1][0])).toContain("https://projects.example.test");
+    });
+  });
+
   it("requests district projects with has_geocode=true", async () => {
     fetchMock.mockResolvedValue(
       new Response(
