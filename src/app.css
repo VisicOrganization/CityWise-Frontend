@@ -1525,7 +1525,10 @@ a {
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.02em;
-  line-height: 1;
+  /* Not 1: `overflow: hidden` is what makes the max-width reveal below animate, and at a
+     line-height of exactly the font size it also crops the box to the em square, cutting the
+     descender off "Neighborhoods". 1.35 leaves room for one below the baseline. */
+  line-height: 1.35;
   transition:
     max-width 200ms ease,
     opacity 160ms ease,
