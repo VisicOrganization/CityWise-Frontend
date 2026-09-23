@@ -1431,9 +1431,8 @@ export function CityMap({
                     </button>
                   </div>
                   <p>
-                    Councils, parks, public-safety facilities and district projects across the
-                    neighborhoods of District {NEIGHBORHOOD_DISTRICT_ID}. Some serve the district
-                    from just outside it.
+                    Councils, parks, public-safety sites and projects in and around District{" "}
+                    {NEIGHBORHOOD_DISTRICT_ID}.
                   </p>
                   <div className="map-neighborhood-legislation-toggle">
                     <label className="map-district-filter-option">
@@ -1501,9 +1500,8 @@ export function CityMap({
                     ))}
                   </div>
                   <p className="map-neighborhood-legend-note">
-                    Outlines are LAHSA 2020 Community Statistical Areas, which approximate but do
-                    not match council district boundaries — the dashed line is District{" "}
-                    {NEIGHBORHOOD_DISTRICT_ID}&rsquo;s actual edge.
+                    Outlines are LAHSA areas that only approximate council districts — the dashed
+                    line is District {NEIGHBORHOOD_DISTRICT_ID}&rsquo;s actual edge.
                   </p>
                 </div>
               ) : null}
