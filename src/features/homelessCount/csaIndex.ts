@@ -3,10 +3,11 @@ import { useEffect, useState } from "react";
 /**
  * Static index of the 304 Countywide Statistical Areas in the LAHSA 2020 homeless count.
  *
- * The map itself reads every attribute straight off the Scout vector tiles, but the filter
- * dropdown needs the *full* list of neighborhoods up front — and tiles only ever expose the
- * features currently loaded in the viewport. So the name list comes from this committed file
- * instead. Keys deliberately match the tile attribute names so there is no mapping layer.
+ * `CsaDistrictSummary` needs each of District 2's neighborhoods by name and population whether
+ * or not its polygon has loaded, so the list comes from this committed file rather than from the
+ * map. (It predates the CD2 lock, when a filter dropdown needed all 304 up front; the file still
+ * ships the full index because regenerating it is a single query, not because the page lists
+ * them.) Keys deliberately match the tile attribute names so there is no mapping layer.
  *
  * Regenerate with (verified 2026-09-17, returns exactly 304 features, no paging needed):
  *
