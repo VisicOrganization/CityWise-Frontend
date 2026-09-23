@@ -8665,36 +8665,6 @@ a {
   line-height: 1.3;
 }
 
-.homeless-count-legend-rows {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.homeless-count-legend-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-height: 1.35rem;
-}
-
-.homeless-count-legend-swatch {
-  flex: none;
-  width: 0.95rem;
-  height: 0.95rem;
-  border-radius: 3px;
-  /* The two palest ramp steps sit below 3:1 on white, so each swatch gets a hairline
-     edge — and the swatch is never the only cue: every row keeps its text label. */
-  border: 1px solid rgba(23, 50, 77, 0.22);
-}
-
-.homeless-count-legend-label {
-  min-width: 0;
-  color: rgba(23, 50, 77, 0.88);
-  font-size: 0.76rem;
-  line-height: 1.35;
-}
-
 .homeless-count-legend-footnote {
   margin: 0.6rem 0 0;
   padding-top: 0.55rem;
@@ -8702,6 +8672,14 @@ a {
   color: rgba(23, 50, 77, 0.66);
   font-size: 0.7rem;
   line-height: 1.4;
+}
+
+/* The first note follows the heading directly now that the density key it used to be separated
+   from lives on the map (`HomelessCountLegend`), so there is nothing above it to divide. */
+.homeless-count-legend-footnote:first-of-type {
+  margin-top: 0.35rem;
+  padding-top: 0;
+  border-top: none;
 }
 
 .homeless-count-legend-error {
@@ -9169,6 +9147,43 @@ a {
     top: 0;
     bottom: auto;
   }
+}
+
+/* --- Density key on the map -------------------------------------------------
+   Same reuse as the month filter above — the card, its heading and its rows are the /map filter
+   flyout's own classes (`map-figma-flyout--district-filter`, `map-utility-header`,
+   `map-neighborhood-legend`, `map-district-filter-option`); this only places it and sizes the
+   swatch. Sits under the Filter pill (top 3.4rem + its ~4.4rem height), and below that pill's
+   z-index so an open month flyout — which opens leftward, across this card — covers it, the same
+   precedence the Info panel already takes over the filter. */
+.homeless-count-map-legend {
+  position: absolute;
+  top: 8.2rem;
+  right: 0.6rem;
+  z-index: 1;
+}
+
+/* The flyout classes are written for a card anchored to a trigger pill, and for rows that are
+   clickable options. This one is neither: it is always-visible, static chrome. The narrower
+   min-width overrides `--district-filter`'s 18.5rem, which is sized for a 3-column month grid. */
+.homeless-count-map-legend .map-figma-flyout {
+  position: static;
+  min-width: 12rem;
+}
+
+.homeless-count-map-legend .map-district-filter-option {
+  cursor: default;
+}
+
+/* A square chip rather than `.map-neighborhood-legend-swatch`'s round pin mark — this key decodes
+   polygon fills, not points. The two palest ramp steps sit below 3:1 on white, so each swatch
+   gets a hairline edge; it is never the only cue, since every row keeps its text label. */
+.homeless-count-map-legend-swatch {
+  flex: none;
+  width: 0.95rem;
+  height: 0.95rem;
+  border-radius: 3px;
+  border: 1px solid rgba(23, 50, 77, 0.22);
 }
 
 /* --- 311 encampment report card -------------------------------------------

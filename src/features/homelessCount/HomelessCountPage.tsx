@@ -42,6 +42,7 @@ import {
   ENCAMPMENT_CLUSTER_RADIUS,
   ENCAMPMENT_NOTE,
 } from "./encampmentLayers";
+import { HomelessCountLegend } from "./HomelessCountLegend";
 import { MapInfoPanel } from "./MapInfoPanel";
 import { readHiddenCsaLabels, writeHiddenCsaLabels } from "./hiddenCsaStorage";
 import {
@@ -56,7 +57,6 @@ import {
   useCsaGeojson,
   CSA_ATTRIBUTION,
   CSA_MIN_ZOOM,
-  DENSITY_LEGEND_STOPS,
 } from "./csaLayers";
 import { ShelterDetailPopup } from "./ShelterDetailPopup";
 import {
@@ -532,21 +532,11 @@ export function HomelessCountPage() {
               className="homeless-count-legend"
               aria-labelledby="homeless-count-legend-heading"
             >
+              {/* The density key itself moved onto the map (`HomelessCountLegend`); what is left
+                  here is the reading the map cannot carry — caveats and failure messages. */}
               <h2 id="homeless-count-legend-heading" className="homeless-count-legend-title">
-                Homeless residents per sq. mile (2020)
+                Notes &amp; caveats
               </h2>
-              <ul className="homeless-count-legend-rows">
-                {DENSITY_LEGEND_STOPS.map((stop) => (
-                  <li key={stop.label} className="homeless-count-legend-row">
-                    <span
-                      className="homeless-count-legend-swatch"
-                      style={{ backgroundColor: stop.color }}
-                      aria-hidden
-                    />
-                    <span className="homeless-count-legend-label">{stop.label}</span>
-                  </li>
-                ))}
-              </ul>
               <p className="homeless-count-legend-footnote">
                 Tract-level estimates aggregated to communities; LAHSA advises against summing them to
                 other geographies. Glendale, Pasadena, and Long Beach are reported citywide rather than
@@ -747,9 +737,12 @@ export function HomelessCountPage() {
             ) : null}
           </Map>
           {/* Sibling of <Map>, not a child: it is page chrome over the map surface, and MapLibre
-              owns its own control corners. Top-right holds only this and, under it, the month
-              filter below — see MapInfoPanel. */}
+              owns its own control corners. Top-right holds this, then the month filter, then the
+              density key — all three stacked downward from it. See MapInfoPanel. */}
           <MapInfoPanel />
+          {/* Right edge, below both of those — always visible, since it decodes the layer this
+              page is about. */}
+          <HomelessCountLegend />
           {/* Right edge, under the Info button. Only while the layer it filters is on — a filter
               for dots that aren't drawn would read as broken. */}
           {showEncampments && encampmentMonthOptions.length > 0 ? (
