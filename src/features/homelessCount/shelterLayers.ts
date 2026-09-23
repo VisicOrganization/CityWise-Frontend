@@ -44,13 +44,16 @@ export const SHELTER_LOW_ZOOM_NOTE =
 // attribution text would be worse than omitting it.
 
 /**
- * Sits on top of `csaFillLayer`'s blue sequential choropleth (`#cde2fb` → `#0d366b` at the dark
+ * Sits on top of `csaFillLayer`'s green sequential choropleth (`#c7e9c0` → `#00441b` at the dark
  * end), so the fill has to stay legible over the darkest fill class, not just the palest.
- * `#1d865e` is the repo's brand forest green — already used for the searched-address pin in
- * `CityMap.tsx` (`ADDRESS_PIN_COLOR`) — which is dark enough to read as a distinct color (not a
- * shadow) against `#0d366b` while still contrasting with the pale end. A white stroke separates
- * the marker from the fill at both ends of the ramp, the same role `csaOutlineLayer` plays for
- * polygon edges.
+ *
+ * `#1d4ed8` is blue — the hue the choropleth gave up when it went green. These points used to be
+ * the repo's brand forest green (`#1d865e`, the searched-address pin in `CityMap.tsx`), which
+ * worked over a blue ramp and disappears into a green one: a dot cannot be told from the polygon
+ * it stands on when both are the same hue, whatever their lightness. Blue is far enough from
+ * every ramp step to read as a distinct mark at both ends, and dark enough not to wash out over
+ * the palest class. A white stroke separates the marker from the fill at both ends of the ramp,
+ * the same role `csaOutlineLayer` plays for polygon edges.
  *
  * Radius grows modestly with zoom via `interpolate`: point-in-time markers are location
  * indicators, not the analytical content, so they should stay readable at a glance rather than
@@ -61,7 +64,7 @@ export const shelterPointLayer: Omit<CircleLayerSpecification, "source"> = {
   id: "shelter-points",
   type: "circle",
   paint: {
-    "circle-color": "#1d865e",
+    "circle-color": "#1d4ed8",
     "circle-stroke-color": "#ffffff",
     "circle-stroke-width": 1.5,
     "circle-radius": [

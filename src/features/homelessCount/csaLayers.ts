@@ -166,9 +166,16 @@ export interface DensityLegendStop {
 }
 
 /**
- * Single-hue sequential ramp, light to dark, in ramp order. The first entry is the dedicated
- * true-zero class: 23 CSAs counted nobody, and merging them with "one person across 300 sq mi"
- * is a real misread on a homelessness map.
+ * Single-hue sequential green ramp, light to dark, in ramp order. The first entry is the
+ * dedicated true-zero class: 23 CSAs counted nobody, and merging them with "one person across
+ * 300 sq mi" is a real misread on a homelessness map. That class stays a neutral grey — "none
+ * counted" is a different statement from "the low end of the ramp", and a hue says so.
+ *
+ * Green, not the blue this used to be: blue is now the shelter-point color (`shelterLayers.ts`),
+ * and the two cannot share a hue when the points sit on the fills. Steps are spaced by lightness
+ * (L* ≈ 88 / 77 / 61 / 39 / 24) rather than by hue, so neighbouring classes stay tellable apart
+ * under `fill-opacity: 0.72` over the desaturated basemap, and so the ramp still reads in order
+ * for a red-green-deficient viewer, for whom lightness is the only channel left.
  *
  * Breaks are round numbers snapped to the real quantiles of the 304 rows (p25 5.11, p50 19.65,
  * p75 71.17, p90 203.0), which bins them 23 / 53 / 77 / 81 / 39 / 31.
@@ -176,11 +183,11 @@ export interface DensityLegendStop {
  */
 export const DENSITY_LEGEND_STOPS: DensityLegendStop[] = [
   { label: "0 counted", color: "#e8eaed" },
-  { label: "Under 5", color: "#cde2fb" },
-  { label: "5–20", color: "#9ec5f4" },
-  { label: "20–75", color: "#5598e7" },
-  { label: "75–200", color: "#256abf" },
-  { label: "200+", color: "#0d366b" },
+  { label: "Under 5", color: "#c7e9c0" },
+  { label: "5–20", color: "#8ed18a" },
+  { label: "20–75", color: "#41ab5d" },
+  { label: "75–200", color: "#006d2c" },
+  { label: "200+", color: "#00441b" },
 ];
 
 /** Lower bound of each density class after the first. Length is `DENSITY_LEGEND_STOPS - 2`. */
@@ -246,7 +253,7 @@ export const csaOutlineLayer: Omit<LineLayerSpecification, "source"> = {
  * Selected-neighborhood border highlight. The existing `csaOutlineLayer` is a thin (0.8px),
  * mostly-transparent white line meant to separate every polygon from its neighbors — it is not
  * built to be noticed. This layer needs the opposite job: a single CSA's border has to visibly
- * pop against both ends of the blue ramp at once (`#cde2fb` pale, `#0d366b` dark), so it reuses
+ * pop against both ends of the green ramp at once (`#c7e9c0` pale, `#00441b` dark), so it reuses
  * `#f97316`, the same selection-orange `districtHighlightLayer` already uses elsewhere in this
  * app (`shared/map/districtLayers.ts`) for the same "this one is selected" role. Rendered only
  * when something is selected (see `HomelessCountPage.tsx`), with a heavier weight and full

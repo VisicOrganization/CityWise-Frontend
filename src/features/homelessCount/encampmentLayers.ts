@@ -28,9 +28,11 @@ export const ENCAMPMENT_CLUSTER_MAX_ZOOM = 15;
 export const ENCAMPMENT_CLUSTER_RADIUS = 40;
 
 /**
- * Orange-700 with a white stroke: distinct from the blue choropleth and the green shelter points,
- * and dark enough to read over the palest choropleth class (`#cde2fb`); the stroke carries it
- * over the darkest (`#0d366b`), the same role it plays on `shelterPointLayer`.
+ * Orange-700 with a white stroke: distinct from the green choropleth and the blue shelter points,
+ * and dark enough to read over the palest choropleth class (`#c7e9c0`); the stroke carries it
+ * over the darkest (`#00441b`), the same role it plays on `shelterPointLayer`. Orange is the
+ * ramp's complement now, so these dots separate from the fills more cleanly than before, not
+ * less — no change was needed here.
  */
 export const ENCAMPMENT_COLOR = "#c2410c";
 

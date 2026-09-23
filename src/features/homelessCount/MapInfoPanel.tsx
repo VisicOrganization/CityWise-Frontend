@@ -108,7 +108,7 @@ export function MapInfoPanel() {
               areas, so this page never shows a district-wide total.
             </p>
 
-            <h3 className="homeless-count-map-info-subhead">The green dots</h3>
+            <h3 className="homeless-count-map-info-subhead">The blue dots</h3>
             <p>
               Shelters and service locations, from the county’s homeless shelters and services
               dataset. Click one for its details. Zoom in to see all of them.

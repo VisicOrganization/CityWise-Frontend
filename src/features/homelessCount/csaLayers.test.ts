@@ -61,21 +61,21 @@ describe("csaLayers", () => {
       [
         "step",
         ["to-number", ["get", "Density_Total"], 0],
-        "#cde2fb",
+        "#c7e9c0",
         5,
-        "#9ec5f4",
+        "#8ed18a",
         20,
-        "#5598e7",
+        "#41ab5d",
         75,
-        "#256abf",
+        "#006d2c",
         200,
-        "#0d366b",
+        "#00441b",
       ],
     ]);
   });
 
   it("colors a normal feature by its actual density, unaffected by the null-safety wrapper", () => {
-    expect(evaluateFillColor({ Total_Pop: 500, Density_Total: 10 })).toBe(hexToRgbaString("#9ec5f4"));
+    expect(evaluateFillColor({ Total_Pop: 500, Density_Total: 10 })).toBe(hexToRgbaString("#8ed18a"));
     expect(evaluateFillColor({ Total_Pop: 0, Density_Total: 0 })).toBe(hexToRgbaString("#e8eaed"));
   });
 
@@ -86,7 +86,7 @@ describe("csaLayers", () => {
     // in the Scout `query` layer outside the 304 known CSAs is missing this attribute.
     const color = evaluateFillColor({ Total_Pop: 500 /* Density_Total absent */ });
     expect(color).not.toBe(hexToRgbaString("#000000"));
-    expect(color).toBe(hexToRgbaString("#cde2fb"));
+    expect(color).toBe(hexToRgbaString("#c7e9c0"));
   });
 
   it("keeps the legend swatches identical to the paint ramp", () => {

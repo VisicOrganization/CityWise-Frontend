@@ -8387,8 +8387,8 @@ a {
    LAHSA 2020 homeless count (`/homeless-count`)
 
    Page shell + map chrome (legend, click-to-inspect popup) and the 304-item
-   neighborhood filter dropdown. The choropleth is a single-hue blue sequential
-   ramp (#e8eaed zero → #0d366b) over a desaturated basemap, so every piece of
+   neighborhood filter dropdown. The choropleth is a single-hue green sequential
+   ramp (#e8eaed zero → #00441b) over a desaturated basemap, so every piece of
    chrome here stays neutral and never competes with the data for attention.
    ========================================================================== */
 
@@ -8528,17 +8528,17 @@ a {
 
 .homeless-count-layer-swatch--choropleth {
   border-radius: 3px;
-  /* Mid-tone step of the choropleth's own blue ramp (see `DENSITY_LEGEND_STOPS`), not the
+  /* Mid-tone step of the choropleth's own green ramp (see `DENSITY_LEGEND_STOPS`), not the
      palest or darkest end, so the swatch reads clearly on its own. */
-  background: #5598e7;
+  background: #41ab5d;
   border: 1px solid rgba(23, 50, 77, 0.22);
 }
 
 .homeless-count-layer-swatch--shelters {
   border-radius: 50%;
-  /* Same green as `shelterPointLayer`'s `circle-color` (shelterLayers.ts) — the point layer's
+  /* Same blue as `shelterPointLayer`'s `circle-color` (shelterLayers.ts) — the point layer's
      actual on-map color, not a restated approximation. */
-  background: #1d865e;
+  background: #1d4ed8;
   border: 1.5px solid #ffffff;
   box-shadow: 0 0 0 1px rgba(23, 50, 77, 0.22);
 }
@@ -9091,7 +9091,8 @@ a {
 }
 
 .homeless-count-popup-stat:first-child dd {
-  color: #0d366b;
+  /* The dark end of the choropleth's own ramp (`DENSITY_LEGEND_STOPS`). */
+  color: #00441b;
   font-family: "Public Sans", "Schibsted Grotesk", "Segoe UI", sans-serif;
   font-size: 1.2rem;
   line-height: 1.15;

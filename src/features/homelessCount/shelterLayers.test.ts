@@ -19,9 +19,11 @@ describe("shelterLayers", () => {
     expect(SHELTER_TILE_MAX_ZOOM).toBe(12);
   });
 
-  it("renders shelter points in the brand green with a white separating stroke", () => {
+  it("renders shelter points in blue with a white separating stroke", () => {
+    // Not green: the choropleth underneath is a green ramp now, and a dot cannot be told apart
+    // from the polygon it stands on when the two share a hue (see `shelterPointLayer`).
     expect(shelterPointLayer.id).toBe("shelter-points");
-    expect(shelterPointLayer.paint?.["circle-color"]).toBe("#1d865e");
+    expect(shelterPointLayer.paint?.["circle-color"]).toBe("#1d4ed8");
     expect(shelterPointLayer.paint?.["circle-stroke-color"]).toBe("#ffffff");
   });
 
