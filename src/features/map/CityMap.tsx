@@ -159,6 +159,18 @@ function buildDistrictFillDimLayer() {
   } satisfies typeof districtFillLayer;
 }
 
+/**
+ * Whether a resolved selection gets a panel here.
+ *
+ * The neighborhoods view docks one panel per neighbourhood, and has no district-wide one: a
+ * district-projects pin keeps its popup and leaves whatever panel is open alone. The
+ * `{ kind: "district" }` branches in `resolvePanelSelection` and `ResourceDetailPanel` stay --
+ * `EmbedPage` is built on them.
+ */
+function opensPanel(selection: PanelSelection | null): boolean {
+  return selection?.kind !== "district";
+}
+
 /** Checkbox that can render the indeterminate (partial) state, which has no React prop. */
 function TristateCheckbox({
   checked,
@@ -769,7 +781,10 @@ export function CityMap({
       if (chatResult && !chatResultKeys.includes(asset.key)) neighborhoodChat.clearResults();
       neighborhoodChat.chooseResource(asset);
       setShowChatResults(false);
-      setPanelSelection(resolvePanelSelection(asset.properties, panelSelection));
+      const nextSelection = resolvePanelSelection(asset.properties, panelSelection);
+      if (opensPanel(nextSelection)) {
+        setPanelSelection(nextSelection);
+      }
     }
     setSelectedAsset({
       longitude: asset.longitude,
@@ -827,7 +842,7 @@ export function CityMap({
         setShowChatResults(false);
       }
       const nextSelection = resolvePanelSelection(properties, panelSelection);
-      if (nextSelection) {
+      if (nextSelection && opensPanel(nextSelection)) {
         focusNonceRef.current += 1;
         setPanelSelection(nextSelection);
         setAssetFocus({ key: assetKey(properties), nonce: focusNonceRef.current });

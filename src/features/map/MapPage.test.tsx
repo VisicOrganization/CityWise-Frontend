@@ -1382,32 +1382,29 @@ describe("mock app routes", () => {
       expect(screen.queryByLabelText("Valley Village resources")).not.toBeInTheDocument();
     });
 
-    it("opens the district-wide panel from a District projects & office pin", async () => {
+    // This view docks a panel per neighbourhood and no district-wide one; the pin keeps its
+    // popup. The embed still opens that panel -- see ResourceDetailPanel.test.tsx.
+    it("opens no panel from a District projects & office pin", async () => {
       const user = await enterNeighborhoodMode();
 
       await user.click(screen.getByTestId("mock-district-asset-click"));
 
-      const panel = await screen.findByLabelText("District-wide resources");
-      expect(within(panel).getByText("Council District 2")).toBeInTheDocument();
-      // Straight from the sheet's source_url column, via the generated neighborhoods file.
-      expect(
-        within(panel).getByRole("link", { name: "cd2.lacity.gov/district-2" }),
-      ).toBeInTheDocument();
-      // Scoped to the panel: the pin's own click popup carries the same label.
-      expect(within(panel).getByText("Vineland Avenue Median")).toBeInTheDocument();
+      // The pin's own click popup, so the click did land on the pin.
+      expect(await screen.findByText("Vineland Avenue Median")).toBeInTheDocument();
+      expect(screen.queryByLabelText("District-wide resources")).not.toBeInTheDocument();
     });
 
-    // The whole point of the routing: the open panel is no obstacle to clicking a pin that
-    // belongs somewhere else.
-    it("switches panels when the clicked pin belongs to a different one", async () => {
+    // The pin is inert as far as the dock is concerned: it must not close what you are reading
+    // either.
+    it("leaves an open neighborhood panel alone on a District projects & office pin", async () => {
       const user = await enterNeighborhoodMode();
 
-      await user.click(screen.getByTestId("mock-district-asset-click"));
-      expect(await screen.findByLabelText("District-wide resources")).toBeInTheDocument();
-
-      await user.click(screen.getByTestId("mock-asset-click"));
-
+      await user.click(screen.getByTestId("mock-neighborhood-click"));
       expect(await screen.findByLabelText("Valley Village resources")).toBeInTheDocument();
+
+      await user.click(screen.getByTestId("mock-district-asset-click"));
+
+      expect(screen.getByLabelText("Valley Village resources")).toBeInTheDocument();
       expect(screen.queryByLabelText("District-wide resources")).not.toBeInTheDocument();
     });
 
