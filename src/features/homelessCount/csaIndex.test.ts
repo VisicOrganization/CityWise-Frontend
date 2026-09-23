@@ -38,7 +38,6 @@ describe("parseCsaIndexPayload", () => {
         CSA_Label: "Los Angeles - Venice",
         Total_Pop: 2053,
         displayName: "Venice",
-        group: "losAngeles",
       },
     ]);
   });
@@ -46,19 +45,13 @@ describe("parseCsaIndexPayload", () => {
 
 describe("stripCsaPrefix", () => {
   it("splits the three label families", () => {
-    expect(stripCsaPrefix("Los Angeles - Venice")).toEqual({
-      group: "losAngeles",
-      displayName: "Venice",
-    });
-    expect(stripCsaPrefix("City of Long Beach")).toEqual({ group: "cities", displayName: "Long Beach" });
-    expect(stripCsaPrefix("Unincorporated - Altadena")).toEqual({
-      group: "unincorporated",
-      displayName: "Altadena",
-    });
+    expect(stripCsaPrefix("Los Angeles - Venice")).toBe("Venice");
+    expect(stripCsaPrefix("City of Long Beach")).toBe("Long Beach");
+    expect(stripCsaPrefix("Unincorporated - Altadena")).toBe("Altadena");
   });
 
   it("keeps an unrecognised label visible rather than dropping it", () => {
-    expect(stripCsaPrefix("Catalina Island")).toEqual({ group: "cities", displayName: "Catalina Island" });
+    expect(stripCsaPrefix("Catalina Island")).toBe("Catalina Island");
   });
 });
 

@@ -13,6 +13,7 @@ import {
 import { COUNCIL_DISTRICTS } from "./councilDistricts";
 import { resetCsaIndexCacheForTests } from "./csaIndex";
 import { DENSITY_LEGEND_STOPS } from "./csaLayers";
+import { CSA_GEOJSON_PATH, resetCsaGeojsonCacheForTests } from "./csaLayers";
 import { DATA_SOURCES } from "./dataSources";
 import { ENCAMPMENT_GEOJSON_PATH, resetEncampmentReportsCacheForTests } from "./encampmentLayers";
 import { HomelessCountPage } from "./HomelessCountPage";
@@ -573,6 +574,23 @@ describe("HomelessCountPage", () => {
       expect(key.getAllByRole("listitem").map((row) => row.textContent)).toEqual(
         DENSITY_LEGEND_STOPS.map((stop) => stop.label),
       );
+    });
+
+    it("stays away while the neighborhood data has not loaded", async () => {
+      // The other half of the gate: the key describes polygons, so it must wait for them rather
+      // than label an empty map during the fetch (or after it fails).
+      resetCsaGeojsonCacheForTests();
+      fetchMock.mockImplementation((input: unknown) =>
+        String(input) === CSA_GEOJSON_PATH
+          ? Promise.reject(new Error("offline"))
+          : Promise.resolve(new Response(JSON.stringify(indexPayload))),
+      );
+      renderPage();
+
+      // The error message this failure raises proves the load settled before we assert absence.
+      expect(await screen.findByText("Neighborhood boundaries could not be loaded.")).toBeInTheDocument();
+      expect(screen.queryByRole("region", { name: KEY_HEADING })).not.toBeInTheDocument();
+      resetCsaGeojsonCacheForTests();
     });
 
     it("is gone once the layer it decodes is switched off", async () => {

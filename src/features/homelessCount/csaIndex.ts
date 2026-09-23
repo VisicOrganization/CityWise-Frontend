@@ -17,15 +17,12 @@ import { useEffect, useState } from "react";
  * `orderByFields` keeps the committed file deterministic so regenerating produces a clean diff.
  */
 
-export type CsaGroupKey = "losAngeles" | "cities" | "unincorporated";
-
 export interface CsaRow {
   /** Full label as it appears in the tile attributes, e.g. "Los Angeles - Venice". */
   CSA_Label: string;
   Total_Pop: number;
   /** Label with its family prefix removed, e.g. "Venice". Display only — never a lookup key. */
   displayName: string;
-  group: CsaGroupKey;
 }
 
 /** Exported so the left panel's data-sources section can name the file this page actually
@@ -34,20 +31,20 @@ export const CSA_INDEX_PATH = new URL("data/lahsa-2020-csa-index.json", window.l
 
 /**
  * All 304 labels fall into exactly these three prefixes (verified against the live layer).
- * An unrecognised label keeps its raw text and lands in `cities` rather than being dropped —
- * the file can change out from under us, and a visible odd entry beats a silently missing one.
+ * An unrecognised label keeps its raw text rather than being dropped — the file can change out
+ * from under us, and a visible odd entry beats a silently missing one.
+ *
+ * Returns the display name alone: the family each label belongs to was only ever read by the
+ * neighborhood picker's group headings, which went with the picker when the map was locked to
+ * District 2.
  */
-export function stripCsaPrefix(label: string): { group: CsaGroupKey; displayName: string } {
-  if (label.startsWith("Los Angeles - ")) {
-    return { group: "losAngeles", displayName: label.slice("Los Angeles - ".length) };
+export function stripCsaPrefix(label: string): string {
+  for (const prefix of ["Los Angeles - ", "City of ", "Unincorporated - "]) {
+    if (label.startsWith(prefix)) {
+      return label.slice(prefix.length);
+    }
   }
-  if (label.startsWith("City of ")) {
-    return { group: "cities", displayName: label.slice("City of ".length) };
-  }
-  if (label.startsWith("Unincorporated - ")) {
-    return { group: "unincorporated", displayName: label.slice("Unincorporated - ".length) };
-  }
-  return { group: "cities", displayName: label };
+  return label;
 }
 
 export function parseCsaIndexPayload(data: unknown): CsaRow[] {
@@ -66,7 +63,7 @@ export function parseCsaIndexPayload(data: unknown): CsaRow[] {
     if (!label || typeof total !== "number" || !Number.isFinite(total)) {
       continue;
     }
-    rows.push({ CSA_Label: label, Total_Pop: total, ...stripCsaPrefix(label) });
+    rows.push({ CSA_Label: label, Total_Pop: total, displayName: stripCsaPrefix(label) });
   }
   return rows;
 }

@@ -23,13 +23,11 @@ const ROWS: CsaRow[] = [
     CSA_Label: "Los Angeles - Sun Valley",
     Total_Pop: 1291,
     displayName: "Sun Valley",
-    group: "losAngeles",
   },
   {
     CSA_Label: "Los Angeles - Van Nuys",
     Total_Pop: 549,
     displayName: "Van Nuys",
-    group: "losAngeles",
   },
 ];
 

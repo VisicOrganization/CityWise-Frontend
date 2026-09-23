@@ -59,7 +59,7 @@ export function CsaDistrictSummary({
       <ul className="homeless-count-district-summary-rows">
         {district.csaLabels.map((label) => {
           const row = rows.find((candidate) => candidate.CSA_Label === label);
-          const displayName = row?.displayName ?? stripCsaPrefix(label).displayName;
+          const displayName = row?.displayName ?? stripCsaPrefix(label);
           const live = liveAttributesByLabel[label];
           const unsheltered = readNumber(live?.Total_Unsheltered_Pop);
           const sheltered = readNumber(live?.Total_Sheltered_Pop);
