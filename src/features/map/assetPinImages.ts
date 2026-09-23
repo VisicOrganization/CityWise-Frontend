@@ -14,18 +14,28 @@ import { ASSET_PIN_IMAGE_IDS, CATEGORY_ORDER } from "./neighborhoodMapLayers";
  *
  * SVG needs rasterising first -- `map.addImage` takes bitmaps, not markup, and MapLibre's own
  * `loadImage` does not decode SVG. Each file is drawn into a canvas at `PIN_RENDER_PX`, which is
- * the source viewBox (66) times a 2x pixel ratio, so the icon stays sharp on a retina display
- * and `icon-size` still reasons in CSS pixels.
+ * the artwork plus its shadow margin times a 2x pixel ratio, so the icon stays sharp on a retina
+ * display and `icon-size` still reasons in CSS pixels.
  *
  * Note for anyone sizing the layers: registering at `pixelRatio: 2` means MapLibre treats the
- * 132px raster as 66 CSS px, so `icon-size: 1` draws 66px, not 132. `ICON_RENDER_PX` in
- * `neighborhoodMapLayers.ts` is that 66 and must track PIN_SOURCE_PX, not PIN_RENDER_PX.
+ * raster as half its width in CSS px, and `icon-size` scales every source pixel alike. So
+ * `ICON_RENDER_PX` in `neighborhoodMapLayers.ts`, which the pin and circle sizes are derived
+ * from, tracks PIN_SOURCE_PX -- the artwork -- not PIN_BOX_PX and not PIN_RENDER_PX.
  */
 
 /** Source artwork is 66x66; 2x covers retina without shipping a second set of files. */
 const PIN_PIXEL_RATIO = 2;
-const PIN_SOURCE_PX = 66;
-export const PIN_RENDER_PX = PIN_SOURCE_PX * PIN_PIXEL_RATIO;
+export const PIN_SOURCE_PX = 66;
+/**
+ * Margin around the artwork for the baked shadow. `drop-shadow(0 2px 4px)` blurs with a 2px
+ * deviation and drops 2px, so the tail reaches ~8px below the disc and ~6px to either side.
+ * Applied on all four sides rather than only where the shadow falls, because a symbol is
+ * anchored by its centre and an asymmetric margin would walk every pin off its coordinate.
+ */
+const PIN_SHADOW_PAD_PX = 8;
+/** What MapLibre sees as the image's CSS width: the artwork plus that margin. */
+export const PIN_BOX_PX = PIN_SOURCE_PX + PIN_SHADOW_PAD_PX * 2;
+export const PIN_RENDER_PX = PIN_BOX_PX * PIN_PIXEL_RATIO;
 
 /** Category -> the artwork behind its icon id. Ids live in `neighborhoodMapLayers.ts`. */
 export const ASSET_PIN_SOURCES: Record<string, string> = {
@@ -58,13 +68,16 @@ export function assertPinImagesAreTotal(): void {
   }
 }
 
+const PIN_ARTWORK_RASTER_PX = PIN_SOURCE_PX * PIN_PIXEL_RATIO;
+const PIN_SHADOW_PAD_RASTER_PX = PIN_SHADOW_PAD_PX * PIN_PIXEL_RATIO;
+
 function rasterize(src: string): Promise<ImageData> {
   return new Promise((resolve, reject) => {
     const image = new Image();
     // Explicit width/height: an SVG with no intrinsic size would otherwise rasterise at the
     // browser's default 300x150 and come out stretched.
-    image.width = PIN_RENDER_PX;
-    image.height = PIN_RENDER_PX;
+    image.width = PIN_ARTWORK_RASTER_PX;
+    image.height = PIN_ARTWORK_RASTER_PX;
     image.onload = () => {
       const canvas = document.createElement("canvas");
       canvas.width = PIN_RENDER_PX;
@@ -74,7 +87,21 @@ function rasterize(src: string): Promise<ImageData> {
         reject(new Error("no 2d context for pin rasterisation"));
         return;
       }
-      context.drawImage(image, 0, 0, PIN_RENDER_PX, PIN_RENDER_PX);
+      // The council-file pins take their shadow from a CSS filter, which never reaches a symbol
+      // layer, so `drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25))` is painted into the raster
+      // instead. CSS's blur radius and canvas's `shadowBlur` both mean twice the Gaussian
+      // deviation, so the 4 carries over unchanged; both it and the 2px drop are then scaled by
+      // the pixel ratio because the canvas is in device pixels.
+      context.shadowColor = "rgba(0, 0, 0, 0.25)";
+      context.shadowBlur = 4 * PIN_PIXEL_RATIO;
+      context.shadowOffsetY = 2 * PIN_PIXEL_RATIO;
+      context.drawImage(
+        image,
+        PIN_SHADOW_PAD_RASTER_PX,
+        PIN_SHADOW_PAD_RASTER_PX,
+        PIN_ARTWORK_RASTER_PX,
+        PIN_ARTWORK_RASTER_PX,
+      );
       resolve(context.getImageData(0, 0, PIN_RENDER_PX, PIN_RENDER_PX));
     };
     image.onerror = () => reject(new Error(`pin image failed to load: ${src}`));

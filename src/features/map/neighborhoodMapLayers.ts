@@ -223,34 +223,42 @@ export const categoryIconExpression = [
 ] as unknown as ExpressionSpecification;
 
 /**
- * Icon scale by zoom. The artwork renders at 33 CSS px, so these are 18px at the panel's opening
- * framing and 33px zoomed in.
+ * Icon scale by zoom. The artwork renders at 26 CSS px at the panel's opening framing and 48px
+ * zoomed in.
  *
  * Bigger than the 9-16px circles this replaced, because a glyph has to be legible where a dot
  * only had to be visible. That is a real density cost: ~68 pins share the district view, and at
- * 18px they touch in the dense parts of Studio City. Sizing down far enough to stop that makes
+ * 26px they touch in the dense parts of Studio City. Sizing down far enough to stop that makes
  * the glyph unreadable, which would forfeit the whole reason for the icons.
  */
 /**
  * The artwork's own CSS-pixel size at `icon-size: 1`.
  *
- * `assetPinImages.ts` rasterises the 66px viewBox at 132px and registers it with
- * `pixelRatio: 2`, and MapLibre divides by that ratio -- so one icon-size unit is 66 CSS px,
- * the source viewBox, NOT the 132px raster. Getting this wrong makes every circle layer derived
- * from it half the width it should be.
+ * `assetPinImages.ts` rasterises the 66px viewBox at 2x and registers it with `pixelRatio: 2`,
+ * and MapLibre divides by that ratio -- so one icon-size unit is 66 CSS px of artwork, NOT the
+ * raster. The registered image is wider than this (`PIN_BOX_PX`): it carries a margin for the
+ * baked shadow. That margin stays out of this number on purpose, because `icon-size` scales
+ * every source pixel alike -- dividing by the padded box would draw the disc undersized and
+ * push every circle layer derived from here out past the pin's own edge.
  */
 export const ICON_RENDER_PX = 66;
 
 /**
  * icon-size at the two zoom stops every pin layer interpolates between.
  *
- * Sized so a pin ends up ~40px across at the near stop, matching the 39x48 council-file pins on
- * /map (`.map-project-marker` in app.css) -- the two pin sets share a map, so they read as peers
- * rather than one being the headline. Those are fixed-size DOM markers and these scale with
- * zoom, so they can only agree at one stop; the near stop is the one where both are legible.
+ * Sized so a pin ends up 48px across at the near stop, matching the HEIGHT of the 39x48
+ * council-file pins on /map (`.map-marker-pin-img` in app.css) rather than their 39px width.
+ * The council artwork is a teardrop, so its 48px is the dimension the eye measures it by, while
+ * this artwork is a full-bleed 66x66 disc; matched to the narrower dimension the disc reads as
+ * the lesser of the two pin sets, and they share a map, so they should read as peers. Those are
+ * fixed-size DOM markers and these scale with zoom, so they can only agree at one stop; the
+ * near stop is the one where both are legible.
+ *
+ * The far stop is the previous 22px carried up by the same 48/40 ratio, so the interpolation
+ * keeps its shape.
  */
-const ICON_TARGET_NEAR_PX = 40;
-const ICON_TARGET_FAR_PX = 22;
+const ICON_TARGET_NEAR_PX = 48;
+const ICON_TARGET_FAR_PX = 26;
 const ICON_SCALE_NEAR = ICON_TARGET_NEAR_PX / ICON_RENDER_PX;
 const ICON_SCALE_FAR = ICON_TARGET_FAR_PX / ICON_RENDER_PX;
 

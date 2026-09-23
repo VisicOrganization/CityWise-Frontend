@@ -5,7 +5,9 @@ import {
   addAssetPinImages,
   assertPinImagesAreTotal,
   assetPinImageEntries,
+  PIN_BOX_PX,
   PIN_RENDER_PX,
+  PIN_SOURCE_PX,
   pinImageUrl,
 } from "./assetPinImages";
 import { ASSET_PIN_IMAGE_IDS, CATEGORY_ORDER, ICON_RENDER_PX } from "./neighborhoodMapLayers";
@@ -54,6 +56,8 @@ function stubCanvas(context: unknown) {
 
 const drawImage = vi.fn();
 const getImageData = vi.fn(() => ({ width: PIN_RENDER_PX, height: PIN_RENDER_PX }) as ImageData);
+/** Shared so the shadow test can read back what the loader set on it. */
+const context = { drawImage, getImageData } as unknown as CanvasRenderingContext2D;
 
 function fakeMap(existing: string[] = []) {
   const images = new Set(existing);
@@ -75,7 +79,7 @@ beforeEach(() => {
   drawImage.mockClear();
   getImageData.mockClear();
   vi.stubGlobal("Image", StubImage);
-  stubCanvas({ drawImage, getImageData });
+  stubCanvas(context);
 });
 
 afterEach(() => {
@@ -106,7 +110,10 @@ describe("pin image registry", () => {
    * pin renders at the wrong size and nothing else fails.
    */
   it("registers at a size that makes icon-size 1 equal ICON_RENDER_PX", () => {
-    expect(PIN_RENDER_PX / 2).toBe(ICON_RENDER_PX);
+    // The registered image is the padded box, but icon-size scales every source pixel alike, so
+    // it is the artwork inside it that the layers divide by.
+    expect(PIN_RENDER_PX / 2).toBe(PIN_BOX_PX);
+    expect(PIN_SOURCE_PX).toBe(ICON_RENDER_PX);
   });
 
   // Same URL construction as the geojson loads, so a subpath deploy resolves the artwork.
@@ -127,14 +134,28 @@ describe("addAssetPinImages", () => {
       expect(map.images.has(ASSET_PIN_IMAGE_IDS[category])).toBe(true);
     }
     expect(map.addImage.mock.calls[0][2]).toEqual({ pixelRatio: 2 });
-    // Explicit size, or an SVG with no intrinsic dimensions rasterises at jsdom's default.
+    // Explicit size, or an SVG with no intrinsic dimensions rasterises at jsdom's default. Drawn
+    // inset by the shadow margin, centred, so the disc still sits on the pin's coordinate.
+    const artworkPx = PIN_SOURCE_PX * 2;
+    const insetPx = (PIN_RENDER_PX - artworkPx) / 2;
     expect(drawImage).toHaveBeenCalledWith(
       expect.anything(),
-      0,
-      0,
-      PIN_RENDER_PX,
-      PIN_RENDER_PX,
+      insetPx,
+      insetPx,
+      artworkPx,
+      artworkPx,
     );
+  });
+
+  // The council-file pins take `drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25))` from CSS, which
+  // never reaches a symbol layer, so the same shadow has to be in the bitmap -- at 2x, because
+  // the canvas is in device pixels.
+  it("bakes the council-file pins' drop shadow into the raster", async () => {
+    await addAssetPinImages(fakeMap());
+
+    expect(context.shadowColor).toBe("rgba(0, 0, 0, 0.25)");
+    expect(context.shadowBlur).toBe(8);
+    expect(context.shadowOffsetY).toBe(4);
   });
 
   // The style survives re-renders, and MapLibre throws on a duplicate id, so a second call has

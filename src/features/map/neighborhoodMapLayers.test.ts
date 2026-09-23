@@ -109,20 +109,21 @@ describe("layer specs", () => {
    * The regression this guards is not "someone changed a number" -- it is that icon-size is a
    * multiple of a size set three files away, in `assetPinImages.ts`, by the pixelRatio passed to
    * addImage. Nothing else in the codebase fails if those two disagree; the pins just silently
-   * render at the wrong size. 40px is the council-file pin width on /map.
+   * render at the wrong size. 48px is the council-file pin height on /map.
    */
-  it("draws pins at the same ~40px footprint as the /map council-file pins", () => {
+  it("draws pins at the same ~48px footprint as the /map council-file pins", () => {
     const [farPx, nearPx] = iconWidthPx(assetPointLayer);
-    expect(farPx).toBeCloseTo(22, 1);
-    expect(nearPx).toBeCloseTo(40, 1);
+    expect(farPx).toBeCloseTo(26, 1);
+    expect(nearPx).toBeCloseTo(48, 1);
   });
 
   it("derives icon-size from the registered image size, not a repeated literal", () => {
-    // 66 is the SVG viewBox, which is what pixelRatio 2 on a 132px raster yields.
+    // 66 is the SVG viewBox, which is what pixelRatio 2 yields on its 2x raster. The shadow
+    // margin the raster also carries is not part of it -- see ICON_RENDER_PX.
     expect(ICON_RENDER_PX).toBe(66);
     const [, farScale, , nearScale] = numbersIn(assetPointLayer.layout?.["icon-size"]);
-    expect(farScale * ICON_RENDER_PX).toBeCloseTo(22, 1);
-    expect(nearScale * ICON_RENDER_PX).toBeCloseTo(40, 1);
+    expect(farScale * ICON_RENDER_PX).toBeCloseTo(26, 1);
+    expect(nearScale * ICON_RENDER_PX).toBeCloseTo(48, 1);
   });
 
   // A symbol layer, not a circle layer: the pins carry artwork now. Collision must stay off or
